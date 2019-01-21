@@ -23,3 +23,7 @@ class FST:
     @classmethod
     def from_file(self, path: PathLike) -> 'FST':
         ...
+
+
+def parse_text(fst_text: str):
+    raise NotImplementedError
