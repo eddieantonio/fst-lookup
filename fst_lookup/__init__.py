@@ -14,8 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Union
+from pathlib import Path
+PathLike = Union[str, Path]
+
 
 class FST:
     @classmethod
-    def from_file(self):
+    def from_file(self, path: PathLike) -> 'FST':
         ...
