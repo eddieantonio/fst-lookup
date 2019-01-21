@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1ca5b282e43775219fca206bf1d92ec238e9807fe2523793d53dec0bfea701c7"
+            "sha256": "9d8795d0b6348fb76572d78e9bc546be4b67fe7c4dbfc0be492be137c2a42622"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -30,6 +30,10 @@
                 "sha256:ca4be454458f9dec299268d472aaa5a11f67a4ff70093396e1ceae9c76cf4bbb"
             ],
             "version": "==18.2.0"
+        },
+        "fst-lookup": {
+            "editable": true,
+            "path": "."
         },
         "hypothesis": {
             "hashes": [
