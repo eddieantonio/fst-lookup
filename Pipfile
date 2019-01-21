@@ -8,6 +8,7 @@ mypy = "*"
 hypothesis = "*"
 pycodestyle = "*"
 pytest = "*"
+pytest-datadir = "*"
 
 [packages]
 

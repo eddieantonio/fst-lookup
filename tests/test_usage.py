@@ -4,5 +4,5 @@
 from fst_lookup import FST
 
 
-def test_load_from_file():
-    fst = FST.from_file()
+def test_load_from_file(datadir):
+    fst = FST.from_file(datadir / 'eat.att.gz')

@@ -1,0 +1,22 @@
+!!! eat.lexc !!!
+Multichar_Symbols +N +V +PastPart +Past +PresPart +3P +Sg +Mass
+
+
+LEXICON Root
+
+Eat ;
+
+
+LEXICON Eat
+
+eat+N+Mass:eats #;
+eat+V+Past:ate  #;
+eat             Vinf;
+
+
+LEXICON Vinf
+
++V:0                #;
++V+3P+Sg:eats       #;
++V+PastPart:eaten   #;
++V+PresPart:eating  #;
