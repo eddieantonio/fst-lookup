@@ -26,7 +26,7 @@ setup(
     # There are some restrictions on what makes a valid project name
     # specification here:
     # https://packaging.python.org/specifications/core-metadata/#name
-    name='fst_lookup',  # Required
+    name='fst-lookup',  # Required
 
     # Versions should comply with PEP 440:
     # https://www.python.org/dev/peps/pep-0440/
@@ -88,7 +88,7 @@ setup(
         'Development Status :: 3 - Alpha',
 
         # Pick your license as you wish
-        'License :: OSI Approved :: Apache License',
+        'License :: OSI Approved :: Apache Software License',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.

@@ -10,6 +10,9 @@ pycodestyle = "*"
 pytest = "*"
 pytest-datadir = "*"
 fst-lookup = {editable = true,path = "."}
+setuptools = "*"
+wheel = "*"
+twine = "*"
 
 [packages]
 

@@ -2,6 +2,7 @@ FST Lookup
 ==========
 
 [![Build Status](https://travis-ci.org/eddieantonio/fst-lookup.svg?branch=master)](https://travis-ci.org/eddieantonio/fst-lookup)
+[![PyPI version](https://img.shields.io/pypi/v/fst-lookup.svg)](https://pypi.org/project/fst-lookup/)
 
 Implements lookup for gzip'd AT&T format finite state transducers (FOMA
 saves in this format).

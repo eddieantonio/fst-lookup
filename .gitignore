@@ -1,1 +1,4 @@
-fst_lookup.egg-info
+# Packaging things.
+*.egg-info/
+build/
+dist/
