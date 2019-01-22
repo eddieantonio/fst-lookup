@@ -96,12 +96,15 @@ class FST:
                       transduction: List[int]) -> Iterable[Tuple[int, ...]]:
         print(">> Transition to state", state)
         if state in self.accepting_states:
+            if len(symbols) > 0:
+                # TODO: Handle cyclic accepting state.
+                print("Could not accept")
+                return
             print(">> Accepting state; transduction", tuple(transduction))
             yield tuple(transduction)
             return
         print(">> Evaluating", len(self.arcs_from[state]), "out edge(s)..")
         for arc in self.arcs_from[state]:
-            print(">> In state", state)
             print(">>", arc.debug_string(labels=lambda sym: self.sigma.get(sym, str(sym))))
             next_symbol = symbols[0] if len(symbols) else INVALID
             if arc.lower == EPSILON:
