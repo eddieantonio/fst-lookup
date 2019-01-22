@@ -16,7 +16,7 @@ eat             Vinf;
 
 LEXICON Vinf
 
-+V:0                #;
-+V+3P+Sg:eats       #;
-+V+PastPart:eaten   #;
-+V+PresPart:eating  #;
++V:0             #;
++V+3P+Sg:s       #;
++V+PastPart:en   #;
++V+PresPart:ing  #;
