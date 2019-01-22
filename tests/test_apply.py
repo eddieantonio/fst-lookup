@@ -20,7 +20,7 @@ from fst_lookup import FST
 ])
 def test_apply_up_eat_fst(surface_form: str, analyses: set, eat_fst_txt: str):
     """
-    Parse a simple FST WITHOUT flag diacritics.
+    Apply up (lookup) on an FST **WITHOUT** flag diacritics.
     """
     fst = FST.from_text(eat_fst_txt)
-    set(fst.lookup(surface_form)) == analyses
+    assert set(fst.lookup(surface_form)) == analyses
