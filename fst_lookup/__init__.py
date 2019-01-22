@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union
+import re
+from collections import namedtuple
 from pathlib import Path
+from typing import Union
 PathLike = Union[str, Path]
 
 
@@ -25,5 +27,65 @@ class FST:
         ...
 
 
+FSMParse = namedtuple('FSMParse', 'sigma')
+
+
 def parse_text(fst_text: str):
-    raise NotImplementedError
+    INITIAL_STATE = 0
+    PROPS_STATE = 1
+    SIGMA_STATE = 2
+    ARC_STATE = 3
+    ACCEPT_STATE = 4
+    state = INITIAL_STATE
+
+    sigma = {}
+    arcs = []
+    current_state = None
+
+    for line in fst_text.splitlines():
+        # Check header
+        if line.startswith('##'):
+            header = line[2:-2]
+            state = {
+                'foma-net 1.0': INITIAL_STATE,
+                'props': PROPS_STATE,
+                'sigma': SIGMA_STATE,
+                'states': ARC_STATE,
+                'end': ACCEPT_STATE,
+            }[header]
+        elif state == SIGMA_STATE:
+            # Add line to sigma
+            idx_str, symbol = line.split()
+            idx = int(idx_str)
+            sigma[idx] = symbol
+        elif state == ARC_STATE:
+            # Add an arc
+            arc_def = tuple(int(x) for x in line.split())
+            if len(arc_def) == 2:
+                if current_state is None:
+                    raise ValueError('No current state')
+                label, dest = arc_def
+                arcs.append((current_state, dest, label, label))
+            elif len(arc_def) == 3:
+                if current_state is None:
+                    raise ValueError('No current state')
+                in_label, out_label, dest = arc_def
+                arcs.append((current_state, dest, in_label, out_label))
+            elif len(arc_def) == 4:
+                src, label, dest, _weight = arc_def
+                current_state = src
+                arcs.append((src, dest, label, label))
+            elif len(arc_def) == 5:
+                src, in_label, out_label, dest, _weight = arc_def
+                current_state = src
+                arcs.append((src, dest, in_label, out_label))
+
+        elif state in (INITIAL_STATE, PROPS_STATE, ACCEPT_STATE):
+            pass  # Nothing to do for these states
+        else:
+            raise ValueError('Invalid state: ' + repr(state))
+
+    # Get rid of epsilon (assumed)
+    del sigma[0]
+
+    return FSMParse(sigma=sigma)

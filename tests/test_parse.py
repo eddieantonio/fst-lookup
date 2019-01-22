@@ -21,7 +21,8 @@ def test_parse_simple(shared_datadir):
 
     result = parse_text(text)
     assert len(result.sigma) == 15
-    multichar_symbols = set('+3P +Mass +N +Past +PastPart'.split())
+    multichar_symbols = set('+3P +Mass +N +Past +PastPart '
+                            '+PresPart +Sg +V'.split())
     letters = set('eats,eaten,eating,ate') - set(',')
     assert len(multichar_symbols) + len(letters) == len(result.sigma)
     assert set(result.multichar_symbols) == multichar_symbols
