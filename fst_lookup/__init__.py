@@ -31,8 +31,20 @@ class FST:
 
 
 # TODO: namedtuple for arc
-FSMParse = namedtuple('FSMParse', 'sigma multichar_symbols graphemes '
-                                  'states arcs accepting_states')
+class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
+                                      'arcs '
+                                      'intermediate_states accepting_states')):
+    """
+    The parsed data from an FST, in a nice neat pile.
+    """
+
+    @property
+    def sigma(self):
+        return {**self.multichar_symbols, **self.graphemes}
+
+    @property
+    def states(self):
+        return self.intermediate_states | self.accepting_states
 
 
 class Arc(namedtuple('ArcBase', 'state in_label out_label destination')):
@@ -48,7 +60,7 @@ class Arc(namedtuple('ArcBase', 'state in_label out_label destination')):
         )
 
 
-def parse_text(fst_text: str) -> FSMParse:
+def parse_text(fst_text: str) -> FSTParse:
     class ParserState:
         INITIAL = 0
         PROPS = 1
@@ -137,12 +149,10 @@ def parse_text(fst_text: str) -> FSMParse:
     graphemes = {idx: symbol for idx, symbol in sigma.items()
                  if len(symbol) == 1}
 
-    states = {arc[0] for arc in arcs}
+    states = {arc.state for arc in arcs}
 
-    return FSMParse(sigma=sigma,
-                    multichar_symbols=multichar_symbols,
+    return FSTParse(multichar_symbols=multichar_symbols,
                     graphemes=graphemes,
-                    states=states | accepting_states,
-                    # exclude arcs out of accepting state
-                    arcs={arc for arc in arcs},
+                    arcs=set(arcs),
+                    intermediate_states=states,
                     accepting_states=accepting_states)
