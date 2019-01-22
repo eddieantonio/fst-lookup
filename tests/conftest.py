@@ -13,7 +13,7 @@ def eat_fst_txt(shared_datadir: Path) -> str:
     Return the text content of the "eat" FST.
 
         foma[0]: read lexc eat.lexc
-        1007 bytes. 20 states, 24 arcs, 6 paths.
+        927 bytes. 15 states, 19 arcs, 6 paths.
         foma[1]: sigma
         Sigma: +3P +Mass +N +Past +PastPart +PresPart +Sg +V a e g i n s t
         Size: 15.

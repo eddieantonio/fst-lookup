@@ -20,6 +20,6 @@ def test_parse_simple(eat_fst_txt: str):
     assert len(multichar_symbols) + len(graphemes) == len(result.sigma)
     assert set(result.multichar_symbols.values()) == set(multichar_symbols)
     assert set(result.graphemes.values()) == graphemes
-    assert len(result.states) == 20
-    assert len(result.arcs) == 24
-    assert result.accepting_states == {19}
+    assert len(result.states) == 15
+    assert len(result.arcs) == 19
+    assert result.accepting_states == {14}
