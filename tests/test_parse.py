@@ -26,6 +26,7 @@ def test_parse_simple(eat_fst_txt: str):
     assert set(result.graphemes.values()) == graphemes
     assert len(result.states) == 20
     assert len(result.arcs) == 24
+    assert result.accepting_states == {19}
 
 
 @pytest.fixture

@@ -28,7 +28,7 @@ class FST:
 
 
 FSMParse = namedtuple('FSMParse', 'sigma multichar_symbols graphemes '
-                                  'states arcs')
+                                  'states arcs accepting_states')
 
 
 def parse_text(fst_text: str):
@@ -41,6 +41,7 @@ def parse_text(fst_text: str):
 
     sigma = {}
     arcs = []
+    accepting_states = set()
     current_state = None
 
     for line in fst_text.splitlines():
@@ -77,6 +78,10 @@ def parse_text(fst_text: str):
                 arcs.append((current_state, dest, in_label, out_label))
             elif len(arc_def) == 4:
                 src, label, dest, _weight = arc_def
+                if label == -1 or dest == -1:
+                    # This is an accepting state
+                    accepting_states.add(src)
+                    continue
                 current_state = src
                 arcs.append((src, dest, label, label))
             elif len(arc_def) == 5:
@@ -89,7 +94,7 @@ def parse_text(fst_text: str):
         else:
             raise ValueError('Invalid state: ' + repr(state))
 
-    # Get rid of epsilon (assumed)
+    # Get rid of epsilon (it is always assumed!)
     del sigma[0]
 
     multichar_symbols = {idx: symbol for idx, symbol in sigma.items()
@@ -102,6 +107,7 @@ def parse_text(fst_text: str):
     return FSMParse(sigma=sigma,
                     multichar_symbols=multichar_symbols,
                     graphemes=graphemes,
-                    states=states,
+                    states=states | accepting_states,
                     # exclude arcs out of accepting state
-                    arcs={arc for arc in arcs if arc[1] != -1})
+                    arcs={arc for arc in arcs},
+                    accepting_states=accepting_states)
