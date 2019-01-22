@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import re
+import gzip
 from collections import namedtuple, defaultdict
 from enum import Enum
 from pathlib import Path
@@ -115,11 +116,18 @@ class FST:
                 transduction.pop()
 
     @classmethod
-    def from_file(self, path: PathLike) -> 'FST':
-        ...
+    def from_file(cls, path: PathLike) -> 'FST':
+        """
+        Read the FST as output by FOMA (gzip'd AT&T format).
+        """
+        with gzip.open(str(path), 'rt', encoding='UTF-8') as text_file:
+            return cls.from_text(text_file.read())
 
     @classmethod
     def from_text(self, att_text: str) -> 'FST':
+        """
+        Parse the FST in AT&T's transducer text format.
+        """
         parse = parse_text(att_text)
         return FST(parse)
 
