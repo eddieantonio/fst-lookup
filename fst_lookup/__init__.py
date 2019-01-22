@@ -33,6 +33,19 @@ FSMParse = namedtuple('FSMParse', 'sigma multichar_symbols graphemes '
                                   'states arcs accepting_states')
 
 
+class Arc(namedtuple('ArcBase', 'state in_label out_label destination')):
+    """
+    An arc (transition) in the FST.
+    """
+    def __str__(self) -> str:
+        return '{:d} -{:s}:{:s}→ {:d}'.format(
+                self.state,
+                self.in_label,
+                self.out_label,
+                self.destination
+        )
+
+
 def parse_text(fst_text: str):
     class ParserState:
         INITIAL = 0
@@ -61,7 +74,7 @@ def parse_text(fst_text: str):
                 'end': ParserState.END,
             }[header]
         elif state == ParserState.SIGMA:
-            # Add line to sigma
+            # Add an entry to sigma
             idx_str, symbol = line.split()
             idx = int(idx_str)
             sigma[idx] = symbol
@@ -75,12 +88,12 @@ def parse_text(fst_text: str):
                 if implied_state is None:
                     raise ValueError('No current state')
                 label, dest = arc_def
-                arcs.append((implied_state, dest, label, label))
+                arcs.append(Arc(implied_state, dest, label, label))
             elif len(arc_def) == 3:
                 if implied_state is None:
                     raise ValueError('No current state')
                 in_label, out_label, dest = arc_def
-                arcs.append((implied_state, dest, in_label, out_label))
+                arcs.append(Arc(implied_state, dest, in_label, out_label))
             elif len(arc_def) == 4:
                 src, label, dest, _weight = arc_def
                 if label == -1 or dest == -1:
@@ -88,11 +101,11 @@ def parse_text(fst_text: str):
                     accepting_states.add(src)
                     continue
                 implied_state = src
-                arcs.append((src, dest, label, label))
+                arcs.append(Arc(src, dest, label, label))
             elif len(arc_def) == 5:
                 src, in_label, out_label, dest, _weight = arc_def
                 implied_state = src
-                arcs.append((src, dest, in_label, out_label))
+                arcs.append(Arc(src, dest, in_label, out_label))
         elif state in (ParserState.INITIAL, ParserState.PROPS, ParserState.END):
             pass  # Nothing to do for these states
         else:
