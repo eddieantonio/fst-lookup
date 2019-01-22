@@ -59,7 +59,6 @@ class FST:
             symbols.append(self.inverse_sigma[match.group(0)])
             text = text[match.end():]
 
-        print(">", surface_form)
         for transduction in self._lookup_state(self.initial_state, symbols, []):
             yield self.format_transduction(transduction)
 
@@ -94,27 +93,22 @@ class FST:
                       state: StateID,
                       symbols: Sequence[int],
                       transduction: List[int]) -> Iterable[Tuple[int, ...]]:
-        print(">> Transition to state", state)
+
         if state in self.accepting_states:
+            # TODO: Handle cyclic accepting state.
             if len(symbols) > 0:
-                # TODO: Handle cyclic accepting state.
-                print("Could not accept")
                 return
-            print(">> Accepting state; transduction", tuple(transduction))
             yield tuple(transduction)
             return
-        print(">> Evaluating", len(self.arcs_from[state]), "out edge(s)..")
+
         for arc in self.arcs_from[state]:
-            print(">>", arc.debug_string(labels=lambda sym: self.sigma.get(sym, str(sym))))
             next_symbol = symbols[0] if len(symbols) else INVALID
             if arc.lower == EPSILON:
-                print(">> following ε")
                 # Transduce WITHOUT consuming input
                 transduction.append(arc.upper)
                 yield from self._lookup_state(arc.destination, symbols, transduction)
                 transduction.pop()
             elif arc.lower == next_symbol:
-                print(">> accepting", self.sigma[arc.lower])
                 # Transduce, consuming the symbol as a label
                 transduction.append(arc.upper)
                 yield from self._lookup_state(arc.destination, symbols[1:], transduction)
