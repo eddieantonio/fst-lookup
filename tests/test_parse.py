@@ -23,9 +23,9 @@ def test_parse_simple(shared_datadir):
     assert len(result.sigma) == 15
     multichar_symbols = set('+3P +Mass +N +Past +PastPart '
                             '+PresPart +Sg +V'.split())
-    letters = set('eats,eaten,eating,ate') - set(',')
-    assert len(multichar_symbols) + len(letters) == len(result.sigma)
-    assert set(result.multichar_symbols) == multichar_symbols
-    assert len(result.letters) == letters
+    graphemes = set('eats eaten eating ate'.replace(' ', ''))
+    assert len(multichar_symbols) + len(graphemes) == len(result.sigma)
+    assert set(result.multichar_symbols.values()) == set(multichar_symbols)
+    assert set(result.graphemes.values()) == graphemes
     assert len(result.states) == 20
     assert len(result.arcs) == 24

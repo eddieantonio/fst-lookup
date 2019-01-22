@@ -27,7 +27,8 @@ class FST:
         ...
 
 
-FSMParse = namedtuple('FSMParse', 'sigma')
+FSMParse = namedtuple('FSMParse', 'sigma multichar_symbols graphemes '
+                                  'states arcs')
 
 
 def parse_text(fst_text: str):
@@ -61,7 +62,10 @@ def parse_text(fst_text: str):
         elif state == ARC_STATE:
             # Add an arc
             arc_def = tuple(int(x) for x in line.split())
-            if len(arc_def) == 2:
+            if arc_def == (-1, -1, -1, -1, -1):
+                # Sentinel value: there are no more arcs to define.
+                continue
+            elif len(arc_def) == 2:
                 if current_state is None:
                     raise ValueError('No current state')
                 label, dest = arc_def
@@ -88,4 +92,16 @@ def parse_text(fst_text: str):
     # Get rid of epsilon (assumed)
     del sigma[0]
 
-    return FSMParse(sigma=sigma)
+    multichar_symbols = {idx: symbol for idx, symbol in sigma.items()
+                         if len(symbol) > 1}
+    graphemes = {idx: symbol for idx, symbol in sigma.items()
+                 if len(symbol) == 1}
+
+    states = {arc[0] for arc in arcs}
+
+    return FSMParse(sigma=sigma,
+                    multichar_symbols=multichar_symbols,
+                    graphemes=graphemes,
+                    states=states,
+                    # exclude arcs out of accepting state
+                    arcs={arc for arc in arcs if arc[1] != -1})
