@@ -16,6 +16,7 @@
 
 import re
 from collections import namedtuple
+from enum import Enum
 from pathlib import Path
 from typing import Union
 PathLike = Union[str, Path]
@@ -27,72 +28,76 @@ class FST:
         ...
 
 
+# TODO: namedtuple for arc
 FSMParse = namedtuple('FSMParse', 'sigma multichar_symbols graphemes '
                                   'states arcs accepting_states')
 
 
 def parse_text(fst_text: str):
-    INITIAL_STATE = 0
-    PROPS_STATE = 1
-    SIGMA_STATE = 2
-    ARC_STATE = 3
-    ACCEPT_STATE = 4
-    state = INITIAL_STATE
+    class ParserState:
+        INITIAL = 0
+        PROPS = 1
+        SIGMA = 2
+        ARC = 3
+        END = 4
 
+    state = ParserState.INITIAL
+
+    # Start with an empty FST
     sigma = {}
     arcs = []
     accepting_states = set()
-    current_state = None
+    implied_state = None
 
     for line in fst_text.splitlines():
         # Check header
         if line.startswith('##'):
             header = line[2:-2]
             state = {
-                'foma-net 1.0': INITIAL_STATE,
-                'props': PROPS_STATE,
-                'sigma': SIGMA_STATE,
-                'states': ARC_STATE,
-                'end': ACCEPT_STATE,
+                'foma-net 1.0': ParserState.INITIAL,
+                'props': ParserState.PROPS,
+                'sigma': ParserState.SIGMA,
+                'states': ParserState.ARC,
+                'end': ParserState.END,
             }[header]
-        elif state == SIGMA_STATE:
+        elif state == ParserState.SIGMA:
             # Add line to sigma
             idx_str, symbol = line.split()
             idx = int(idx_str)
             sigma[idx] = symbol
-        elif state == ARC_STATE:
+        elif state == ParserState.ARC:
             # Add an arc
             arc_def = tuple(int(x) for x in line.split())
             if arc_def == (-1, -1, -1, -1, -1):
                 # Sentinel value: there are no more arcs to define.
                 continue
             elif len(arc_def) == 2:
-                if current_state is None:
+                if implied_state is None:
                     raise ValueError('No current state')
                 label, dest = arc_def
-                arcs.append((current_state, dest, label, label))
+                arcs.append((implied_state, dest, label, label))
             elif len(arc_def) == 3:
-                if current_state is None:
+                if implied_state is None:
                     raise ValueError('No current state')
                 in_label, out_label, dest = arc_def
-                arcs.append((current_state, dest, in_label, out_label))
+                arcs.append((implied_state, dest, in_label, out_label))
             elif len(arc_def) == 4:
                 src, label, dest, _weight = arc_def
                 if label == -1 or dest == -1:
                     # This is an accepting state
                     accepting_states.add(src)
                     continue
-                current_state = src
+                implied_state = src
                 arcs.append((src, dest, label, label))
             elif len(arc_def) == 5:
                 src, in_label, out_label, dest, _weight = arc_def
-                current_state = src
+                implied_state = src
                 arcs.append((src, dest, in_label, out_label))
-
-        elif state in (INITIAL_STATE, PROPS_STATE, ACCEPT_STATE):
+        elif state in (ParserState.INITIAL, ParserState.PROPS, ParserState.END):
             pass  # Nothing to do for these states
         else:
             raise ValueError('Invalid state: ' + repr(state))
+    assert state == ParserState.END
 
     # Get rid of epsilon (it is always assumed!)
     del sigma[0]
