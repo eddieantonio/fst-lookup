@@ -18,17 +18,24 @@ import re
 from collections import namedtuple
 from enum import Enum
 from pathlib import Path
-from typing import Union, Tuple, List, Set
+from typing import Union, Tuple, List, Set, Iterable
 
 
 PathLike = Union[str, Path]
 
 
 class FST:
+    def lookup(self, surface_form: str) -> Iterable[Tuple[str, ...]]:
+        yield from []
+
     @classmethod
     def from_file(self, path: PathLike) -> 'FST':
         ...
-
+    
+    @classmethod
+    def from_text(self, att_text: str) -> 'FST':
+        parse = parse_text(att_text)
+        return FST()
 
 # TODO: namedtuple for arc
 class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
