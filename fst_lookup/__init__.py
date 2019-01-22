@@ -15,29 +15,118 @@
 # limitations under the License.
 
 import re
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from enum import Enum
 from pathlib import Path
-from typing import Union, Tuple, List, Set, Iterable
+from typing import (
+        Union, Tuple, List, Set, Iterable, Dict, NewType, Sequence, Callable
+)
 
 
 PathLike = Union[str, Path]
+StateID = NewType('StateID', int)
+Symbol = int  # TODO: fancy union of int
+
+INVALID = -1
+EPSILON = 0
 
 
 class FST:
+    def __init__(self, parse: 'FSTParse') -> None:
+        self.initial_state = min(parse.states)
+        self.accepting_states = frozenset(parse.accepting_states)
+        self.sigma = dict(parse.sigma)  # Type: Dict[int, str]
+        self.inverse_sigma = {text: idx for idx, text in self.sigma.items()}
+        self.multichar_symbols = parse.multichar_symbols
+        self.graphemes = parse.graphemes
+
+        self.arcs_from = defaultdict(set)  # type: Dict[StateID, Set[Arc]]
+        for arc in parse.arcs:
+            self.arcs_from[arc.state].add(arc)
+
     def lookup(self, surface_form: str) -> Iterable[Tuple[str, ...]]:
-        yield from []
+        state = self.initial_state
+        symbols = []
+
+        # tokenize the surface form to symbols
+        text = surface_form
+        pattern = re.compile('|'.join(re.escape(entry) for entry in self.sigma.values()))
+        while text:
+            match = pattern.match(text)
+            if not match:
+                raise ValueError("Cannot symbolify form: " + repr(surface_form))
+            # Convert to a symbol
+            symbols.append(self.inverse_sigma[match.group(0)])
+            text = text[match.end():]
+
+        print(">", surface_form)
+        for transduction in self._lookup_state(self.initial_state, symbols, []):
+            yield self.format_transduction(transduction)
+
+    def format_transduction(self, transduction: Iterable[Symbol]) -> Tuple[str, ...]:
+        # TODO: REFACTOR THIS GROSS FUNCTION
+        def generate():
+            current_lemma = ''
+            for symbol in transduction:
+                if symbol == EPSILON:
+                    if current_lemma:
+                        yield current_lemma
+                        current_lemma = ''
+                    # ignore epsilons
+                    continue
+                elif symbol in self.multichar_symbols:
+                    if current_lemma:
+                        yield current_lemma
+                        current_lemma = ''
+                    yield self.sigma[symbol]
+                else:
+                    assert symbol in self.graphemes
+                    current_lemma += self.sigma[symbol]
+
+            if current_lemma:
+                yield current_lemma
+                current_lemma = ''
+
+        return tuple(generate())
+
+    # TODO: Sequence[Symbol], List[Symbol]
+    def _lookup_state(self,
+                      state: StateID,
+                      symbols: Sequence[int],
+                      transduction: List[int]) -> Iterable[Tuple[int, ...]]:
+        print(">> Transition to state", state)
+        if state in self.accepting_states:
+            print(">> Accepting state; transduction", tuple(transduction))
+            yield tuple(transduction)
+            return
+        print(">> Evaluating", len(self.arcs_from[state]), "out edge(s)..")
+        for arc in self.arcs_from[state]:
+            print(">> In state", state)
+            print(">>", arc.debug_string(labels=lambda sym: self.sigma.get(sym, str(sym))))
+            next_symbol = symbols[0] if len(symbols) else INVALID
+            if arc.lower == EPSILON:
+                print(">> following ε")
+                # Transduce WITHOUT consuming input
+                transduction.append(arc.upper)
+                yield from self._lookup_state(arc.destination, symbols, transduction)
+                transduction.pop()
+            elif arc.lower == next_symbol:
+                print(">> accepting", self.sigma[arc.lower])
+                # Transduce, consuming the symbol as a label
+                transduction.append(arc.upper)
+                yield from self._lookup_state(arc.destination, symbols[1:], transduction)
+                transduction.pop()
 
     @classmethod
     def from_file(self, path: PathLike) -> 'FST':
         ...
-    
+
     @classmethod
     def from_text(self, att_text: str) -> 'FST':
         parse = parse_text(att_text)
-        return FST()
+        return FST(parse)
 
-# TODO: namedtuple for arc
+
 class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
                                       'arcs '
                                       'intermediate_states accepting_states')):
@@ -46,7 +135,7 @@ class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
     """
 
     @property
-    def sigma(self):
+    def sigma(self) -> Dict[int, str]:
         return {**self.multichar_symbols, **self.graphemes}
 
     @property
@@ -59,12 +148,23 @@ class Arc(namedtuple('ArcBase', 'state in_label out_label destination')):
     An arc (transition) in the FST.
     """
     def __str__(self) -> str:
-        return '{:d} -{:s}:{:s}→ {:d}'.format(
+        return self.debug_string(labels=str)
+
+    def debug_string(self, labels: Callable[[int], str]) -> str:
+        return '{:d} – {:s}:{:s} → {:d}'.format(
                 self.state,
-                self.in_label,
-                self.out_label,
+                labels(self.in_label),
+                labels(self.out_label),
                 self.destination
         )
+
+    @property
+    def lower(self) -> Symbol:
+        return self.out_label  # type: ignore
+
+    @property
+    def upper(self) -> Symbol:
+        return self.in_label  # type: ignore
 
 
 def parse_text(fst_text: str) -> FSTParse:
@@ -110,7 +210,7 @@ def parse_text(fst_text: str) -> FSTParse:
             src, in_label, out_label, dest, _weight = arc_def
 
         implied_state = src
-        arcs.append(Arc(src, dest, in_label, out_label))
+        arcs.append(Arc(state=src, destination=dest, in_label=in_label, out_label=out_label))
 
     state = ParserState.INITIAL
 
