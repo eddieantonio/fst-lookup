@@ -18,7 +18,9 @@ import re
 from collections import namedtuple
 from enum import Enum
 from pathlib import Path
-from typing import Union
+from typing import Union, Tuple, List, Set
+
+
 PathLike = Union[str, Path]
 
 
@@ -46,7 +48,7 @@ class Arc(namedtuple('ArcBase', 'state in_label out_label destination')):
         )
 
 
-def parse_text(fst_text: str):
+def parse_text(fst_text: str) -> FSMParse:
     class ParserState:
         INITIAL = 0
         PROPS = 1
@@ -54,12 +56,49 @@ def parse_text(fst_text: str):
         ARC = 3
         END = 4
 
+    def parse_arc(arc_def: Tuple[int, ...]) -> None:
+        """
+        Either:
+          - appends an arc to the list;
+          - adds an accepting state; or
+          - finds the sentinel value
+        """
+        nonlocal implied_state
+
+        if arc_def == (-1, -1, -1, -1, -1):
+            # Sentinel value: there are no more arcs to define.
+            return
+
+        if len(arc_def) == 2:
+            if implied_state is None:
+                raise ValueError('No implied state')
+            src = implied_state
+            in_label, dest = arc_def
+            out_label = in_label
+        elif len(arc_def) == 3:
+            if implied_state is None:
+                raise ValueError('No implied state')
+            src = implied_state
+            in_label, out_label, dest = arc_def
+        elif len(arc_def) == 4:
+            src, in_label, dest, _weight = arc_def
+            out_label = in_label
+            if in_label == -1 or dest == -1:
+                # This is an accepting state
+                accepting_states.add(src)
+                return
+        elif len(arc_def) == 5:
+            src, in_label, out_label, dest, _weight = arc_def
+
+        implied_state = src
+        arcs.append(Arc(src, dest, in_label, out_label))
+
     state = ParserState.INITIAL
 
     # Start with an empty FST
     sigma = {}
-    arcs = []
-    accepting_states = set()
+    arcs = []  # type: List[Arc]
+    accepting_states = set()  # type: Set[int]
     implied_state = None
 
     for line in fst_text.splitlines():
@@ -81,35 +120,13 @@ def parse_text(fst_text: str):
         elif state == ParserState.ARC:
             # Add an arc
             arc_def = tuple(int(x) for x in line.split())
-            if arc_def == (-1, -1, -1, -1, -1):
-                # Sentinel value: there are no more arcs to define.
-                continue
-            elif len(arc_def) == 2:
-                if implied_state is None:
-                    raise ValueError('No current state')
-                label, dest = arc_def
-                arcs.append(Arc(implied_state, dest, label, label))
-            elif len(arc_def) == 3:
-                if implied_state is None:
-                    raise ValueError('No current state')
-                in_label, out_label, dest = arc_def
-                arcs.append(Arc(implied_state, dest, in_label, out_label))
-            elif len(arc_def) == 4:
-                src, label, dest, _weight = arc_def
-                if label == -1 or dest == -1:
-                    # This is an accepting state
-                    accepting_states.add(src)
-                    continue
-                implied_state = src
-                arcs.append(Arc(src, dest, label, label))
-            elif len(arc_def) == 5:
-                src, in_label, out_label, dest, _weight = arc_def
-                implied_state = src
-                arcs.append(Arc(src, dest, in_label, out_label))
+            parse_arc(arc_def)
         elif state in (ParserState.INITIAL, ParserState.PROPS, ParserState.END):
             pass  # Nothing to do for these states
         else:
             raise ValueError('Invalid state: ' + repr(state))
+
+    # After parsing, we should be in the ##end## state.
     assert state == ParserState.END
 
     # Get rid of epsilon (it is always assumed!)
