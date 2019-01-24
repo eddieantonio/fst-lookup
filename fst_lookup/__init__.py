@@ -48,33 +48,29 @@ class FST:
         symbols = list(self.to_symbols(surface_form))
 
         for transduction in self._lookup_state(self.initial_state, symbols, []):
-            yield self.format_transduction(transduction)
+            yield tuple(self.format_transduction(transduction))
 
-    def format_transduction(self, transduction: Iterable[Symbol]) -> Tuple[str, ...]:
+    def format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
         # TODO: REFACTOR THIS GROSS FUNCTION
-        def generate():
-            current_lemma = ''
-            for symbol in transduction:
-                if symbol == EPSILON:
-                    if current_lemma:
-                        yield current_lemma
-                        current_lemma = ''
-                    # ignore epsilons
-                    continue
-                elif symbol in self.multichar_symbols:
-                    if current_lemma:
-                        yield current_lemma
-                        current_lemma = ''
-                    yield self.sigma[symbol]
-                else:
-                    assert symbol in self.graphemes
-                    current_lemma += self.sigma[symbol]
+        current_lemma = ''
+        for symbol in transduction:
+            if symbol == EPSILON:
+                if current_lemma:
+                    yield current_lemma
+                    current_lemma = ''
+                # ignore epsilons
+                continue
+            elif symbol in self.multichar_symbols:
+                if current_lemma:
+                    yield current_lemma
+                    current_lemma = ''
+                yield self.sigma[symbol]
+            else:
+                assert symbol in self.graphemes
+                current_lemma += self.sigma[symbol]
 
-            if current_lemma:
-                yield current_lemma
-                current_lemma = ''
-
-        return tuple(generate())
+        if current_lemma:
+            yield current_lemma
 
     def to_symbols(self, surface_form: str) -> Iterable[Symbol]:
         """
