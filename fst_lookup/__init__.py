@@ -26,17 +26,17 @@ from typing import (
 
 PathLike = Union[str, Path]
 StateID = NewType('StateID', int)
-Symbol = int  # TODO: fancy union of int
+Symbol = NewType('Symbol', int)
 
-INVALID = -1
-EPSILON = 0
+INVALID = Symbol(-1)
+EPSILON = Symbol(0)
 
 
 class FST:
     def __init__(self, parse: 'FSTParse') -> None:
         self.initial_state = min(parse.states)
         self.accepting_states = frozenset(parse.accepting_states)
-        self.sigma = dict(parse.sigma)  # Type: Dict[int, str]
+        self.sigma = dict(parse.sigma)  # Type: Dict[Symbol, str]
         self.inverse_sigma = {text: idx for idx, text in self.sigma.items()}
         self.multichar_symbols = parse.multichar_symbols
         self.graphemes = parse.graphemes
@@ -95,11 +95,11 @@ class FST:
         return symbols
 
 
-    # TODO: Sequence[Symbol], List[Symbol]
-    def _lookup_state(self,
-                      state: StateID,
-                      symbols: Sequence[int],
-                      transduction: List[int]) -> Iterable[Tuple[int, ...]]:
+    def _lookup_state(
+            self, state: StateID,
+            symbols: Sequence[Symbol],
+            transduction: List[Symbol]
+        ) -> Iterable[Tuple[Symbol, ...]]:
 
         if state in self.accepting_states:
             # TODO: Handle cyclic accepting state.
@@ -161,7 +161,7 @@ class Arc(namedtuple('ArcBase', 'state in_label out_label destination')):
     def __str__(self) -> str:
         return self.debug_string(labels=str)
 
-    def debug_string(self, labels: Callable[[int], str]) -> str:
+    def debug_string(self, labels: Callable[[Symbol], str]) -> str:
         return '{:d} – {:s}:{:s} → {:d}'.format(
                 self.state,
                 labels(self.in_label),
@@ -228,7 +228,7 @@ def parse_text(fst_text: str) -> FSTParse:
     # Start with an empty FST
     sigma = {}
     arcs = []  # type: List[Arc]
-    accepting_states = set()  # type: Set[int]
+    accepting_states = set()  # type: Set[StateID]
     implied_state = None
 
     for line in fst_text.splitlines():
