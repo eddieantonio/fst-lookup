@@ -47,18 +47,7 @@ class FST:
 
     def lookup(self, surface_form: str) -> Iterable[Tuple[str, ...]]:
         state = self.initial_state
-        symbols = []
-
-        # tokenize the surface form to symbols
-        text = surface_form
-        pattern = re.compile('|'.join(re.escape(entry) for entry in self.sigma.values()))
-        while text:
-            match = pattern.match(text)
-            if not match:
-                raise ValueError("Cannot symbolify form: " + repr(surface_form))
-            # Convert to a symbol
-            symbols.append(self.inverse_sigma[match.group(0)])
-            text = text[match.end():]
+        symbols = self.to_symbols(surface_form)
 
         for transduction in self._lookup_state(self.initial_state, symbols, []):
             yield self.format_transduction(transduction)
@@ -88,6 +77,23 @@ class FST:
                 current_lemma = ''
 
         return tuple(generate())
+
+    def to_symbols(self, surface_form: str) -> List[Symbol]:
+        symbols = []
+
+        # tokenize the surface form to symbols
+        text = surface_form
+        pattern = re.compile('|'.join(re.escape(entry) for entry in self.sigma.values()))
+        while text:
+            match = pattern.match(text)
+            if not match:
+                raise ValueError("Cannot symbolify form: " + repr(surface_form))
+            # Convert to a symbol
+            symbols.append(self.inverse_sigma[match.group(0)])
+            text = text[match.end():]
+
+        return symbols
+
 
     # TODO: Sequence[Symbol], List[Symbol]
     def _lookup_state(self,
