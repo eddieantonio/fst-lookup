@@ -36,7 +36,7 @@ class FST:
     def __init__(self, parse: 'FSTParse') -> None:
         self.initial_state = min(parse.states)
         self.accepting_states = frozenset(parse.accepting_states)
-        self.sigma = dict(parse.sigma)  # Type: Dict[Symbol, str]
+        self.sigma = dict(parse.sigma)
         self.inverse_sigma = {text: idx for idx, text in self.sigma.items()}
         self.multichar_symbols = parse.multichar_symbols
         self.graphemes = parse.graphemes
@@ -94,12 +94,11 @@ class FST:
 
         return symbols
 
-
     def _lookup_state(
             self, state: StateID,
             symbols: Sequence[Symbol],
             transduction: List[Symbol]
-        ) -> Iterable[Tuple[Symbol, ...]]:
+            ) -> Iterable[Tuple[Symbol, ...]]:
 
         if state in self.accepting_states:
             # TODO: Handle cyclic accepting state.
@@ -146,7 +145,7 @@ class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
     """
 
     @property
-    def sigma(self) -> Dict[int, str]:
+    def sigma(self) -> Dict[Symbol, str]:
         return {**self.multichar_symbols, **self.graphemes}
 
     @property
