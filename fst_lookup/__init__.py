@@ -19,9 +19,7 @@ import gzip
 from collections import namedtuple, defaultdict
 from enum import Enum
 from pathlib import Path
-from typing import (
-        Union, Tuple, List, Set, Iterable, Dict, NewType, Sequence, Callable
-)
+from typing import Callable, Dict, Iterable, List, NewType, Set, Tuple, Union
 
 
 PathLike = Union[str, Path]
@@ -47,7 +45,7 @@ class FST:
 
     def lookup(self, surface_form: str) -> Iterable[Tuple[str, ...]]:
         state = self.initial_state
-        symbols = self.to_symbols(surface_form)
+        symbols = list(self.to_symbols(surface_form))
 
         for transduction in self._lookup_state(self.initial_state, symbols, []):
             yield self.format_transduction(transduction)
@@ -78,10 +76,10 @@ class FST:
 
         return tuple(generate())
 
-    def to_symbols(self, surface_form: str) -> List[Symbol]:
-        symbols = []
-
-        # tokenize the surface form to symbols
+    def to_symbols(self, surface_form: str) -> Iterable[Symbol]:
+        """
+        Tokenizes a form into symbols.
+        """
         text = surface_form
         pattern = re.compile('|'.join(re.escape(entry) for entry in self.sigma.values()))
         while text:
@@ -89,14 +87,12 @@ class FST:
             if not match:
                 raise ValueError("Cannot symbolify form: " + repr(surface_form))
             # Convert to a symbol
-            symbols.append(self.inverse_sigma[match.group(0)])
+            yield self.inverse_sigma[match.group(0)]
             text = text[match.end():]
-
-        return symbols
 
     def _lookup_state(
             self, state: StateID,
-            symbols: Sequence[Symbol],
+            symbols: List[Symbol],
             transduction: List[Symbol]
             ) -> Iterable[Tuple[Symbol, ...]]:
 
