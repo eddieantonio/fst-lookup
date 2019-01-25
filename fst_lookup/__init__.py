@@ -100,13 +100,12 @@ class FST:
             symbols: List[Symbol],
             transduction: List[Symbol]
             ) -> Iterable[Tuple[Symbol, ...]]:
+        # TODO: Handle a maximum transduction depth, for cyclic FSTs.
 
         if state in self.accepting_states:
-            # TODO: Handle cyclic accepting state.
             if len(symbols) > 0:
                 return
             yield tuple(transduction)
-            return
 
         for arc in self.arcs_from[state]:
             next_symbol = symbols[0] if len(symbols) else INVALID
