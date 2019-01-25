@@ -21,10 +21,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, NewType, Set, Tuple, Union
 
+from .data import Symbol, Arc
 
 PathLike = Union[str, Path]
 StateID = NewType('StateID', int)
-Symbol = NewType('Symbol', int)
 
 INVALID = Symbol(-1)
 EPSILON = Symbol(0)
@@ -143,30 +143,6 @@ class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
     @property
     def states(self):
         return self.intermediate_states | self.accepting_states
-
-
-class Arc(namedtuple('ArcBase', 'state in_label out_label destination')):
-    """
-    An arc (transition) in the FST.
-    """
-    def __str__(self) -> str:
-        return self.debug_string(labels=str)
-
-    def debug_string(self, labels: Callable[[Symbol], str]) -> str:
-        return '{:d} – {:s}:{:s} → {:d}'.format(
-                self.state,
-                labels(self.in_label),
-                labels(self.out_label),
-                self.destination
-        )
-
-    @property
-    def lower(self) -> Symbol:
-        return self.out_label  # type: ignore
-
-    @property
-    def upper(self) -> Symbol:
-        return self.in_label  # type: ignore
 
 
 def parse_text(fst_text: str) -> FSTParse:
