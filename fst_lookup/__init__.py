@@ -16,10 +16,9 @@
 
 import re
 import gzip
-from collections import namedtuple, defaultdict
-from enum import Enum
+from collections import defaultdict
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, NewType, Set, Tuple, Union
+from typing import Dict, Iterable, List, Set, Tuple, Union
 
 from .data import Arc, StateID, Symbol
 from .parse import FSTParse, parse_text
@@ -31,7 +30,12 @@ EPSILON = Symbol(0)
 
 
 class FST:
-    def __init__(self, parse: 'FSTParse') -> None:
+    """
+    A finite-state transducer that can convert between one string and a set of
+    output strings.
+    """
+
+    def __init__(self, parse: FSTParse) -> None:
         self.initial_state = min(parse.states)
         self.accepting_states = frozenset(parse.accepting_states)
         self.sigma = dict(parse.sigma)
@@ -44,13 +48,18 @@ class FST:
             self.arcs_from[arc.state].add(arc)
 
     def lookup(self, surface_form: str) -> Iterable[Tuple[str, ...]]:
+        """
+        Given a surface form, this yields all possible analyses in the FST.
+        """
         state = self.initial_state
         symbols = list(self.to_symbols(surface_form))
 
         for transduction in self._lookup_state(self.initial_state, symbols, []):
-            yield tuple(self.format_transduction(transduction))
+            yield tuple(self._format_transduction(transduction))
 
-    def format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
+    def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
+        """
+        """
         # TODO: REFACTOR THIS GROSS FUNCTION
         current_lemma = ''
         for symbol in transduction:
@@ -127,5 +136,3 @@ class FST:
         """
         parse = parse_text(att_text)
         return FST(parse)
-
-

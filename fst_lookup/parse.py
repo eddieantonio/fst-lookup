@@ -16,6 +16,7 @@
 # limitations under the License.
 
 from collections import namedtuple
+from enum import Enum
 from typing import List, Dict, Tuple, Set
 
 from .data import Arc, StateID, Symbol
@@ -37,13 +38,15 @@ class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
         return self.intermediate_states | self.accepting_states
 
 
+class ParserState(Enum):
+    INITIAL = 0
+    PROPS = 1
+    SIGMA = 2
+    ARC = 3
+    END = 4
+
+
 def parse_text(fst_text: str) -> FSTParse:
-    class ParserState:
-        INITIAL = 0
-        PROPS = 1
-        SIGMA = 2
-        ARC = 3
-        END = 4
 
     def parse_arc(arc_def: Tuple[int, ...]) -> None:
         """
