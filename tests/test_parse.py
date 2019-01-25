@@ -5,7 +5,7 @@
 Tests for parsing the AT&T text format.
 """
 
-from fst_lookup import parse_text
+from fst_lookup.parse import parse_text
 
 
 def test_parse_simple(eat_fst_txt: str):

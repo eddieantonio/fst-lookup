@@ -18,6 +18,7 @@ from collections import namedtuple
 from typing import Callable, NewType
 
 Symbol = NewType('Symbol', int)
+StateID = NewType('StateID', int)
 
 
 class Arc(namedtuple('ArcBase', 'state in_label out_label destination')):
