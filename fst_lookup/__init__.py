@@ -65,26 +65,24 @@ class FST:
         Given a surface form, this yields all possible analyses in the FST.
         """
         symbols = list(self.to_symbols(surface_form))
-        return self._apply(symbols,
-                           in_=lambda arc: arc.lower,
-                           out=lambda arc: arc.upper)
+        analyses = self._apply(symbols, in_=lambda arc: arc.lower,
+                               out=lambda arc: arc.upper)
+        for analysis in analyses:
+            yield tuple(self._format_transduction(analysis))
 
     def generate(self, analysis: str) -> Iterable[str]:
         """
         Given an analysis, this yields all possible surface forms in the FST.
         """
         symbols = list(self.to_symbols(analysis))
-        forms = self._apply(symbols,
-                            in_=lambda arc: arc.upper,
+        forms = self._apply(symbols, in_=lambda arc: arc.upper,
                             out=lambda arc: arc.lower)
-        # Untupalize the forms :/
-        for form, in forms:
-            yield form
+        for transduction in forms:
+            yield ''.join(self.sigma[symbol] for symbol in transduction
+                          if symbol != EPSILON)
 
-    def _apply(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc) -> Analyses:
-        state = self.initial_state
-        for transduction in self._lookup_state(self.initial_state, symbols, [], in_, out):
-            yield tuple(self._format_transduction(transduction))
+    def _apply(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc):
+        yield from self._lookup_state(self.initial_state, symbols, [], in_, out)
 
     def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
         """
