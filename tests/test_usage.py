@@ -10,7 +10,7 @@ def test_load_from_file(shared_datadir):
     """
     fst = FST.from_file(shared_datadir / 'eat.att.gz')
     # Do a transduction that outputs multiple results.
-    assert set(fst.lookup('eats')) == {
+    assert set(fst.analyze('eats')) == {
             ('eat', '+N', '+Mass'),
             ('eat', '+V', '+3P', '+Sg'),
     }

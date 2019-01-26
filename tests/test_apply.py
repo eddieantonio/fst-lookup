@@ -2,10 +2,10 @@
 # -*- coding: UTF-8 -*-
 
 """
-Tests for applying (evaluating) the FST.
+Tests for looking up in the FST.
 """
 
-import pytest
+import pytest  # type: ignore
 
 from fst_lookup import FST
 
@@ -18,12 +18,12 @@ from fst_lookup import FST
     ('eats', {('eat', '+V', '+3P', '+Sg'),
               ('eat', '+N', '+Mass')}),
 ])
-def test_apply_up_eat_fst(surface_form: str, analyses: set, eat_fst_txt: str):
+def test_analyze_eat_fst(surface_form: str, analyses: set, eat_fst_txt: str):
     """
     Apply up (lookup) on an FST **WITHOUT** flag diacritics.
     """
     fst = FST.from_text(eat_fst_txt)
-    assert set(fst.lookup(surface_form)) == analyses
+    assert set(fst.analyze(surface_form)) == analyses
 
 
 @pytest.mark.parametrize('analysis,surface_form', [
@@ -34,10 +34,10 @@ def test_apply_up_eat_fst(surface_form: str, analyses: set, eat_fst_txt: str):
     (('eat' '+V' '+3P' '+Sg'), 'eats'),
     (('eat' '+N' '+Mass'), 'eats'),
 ])
-def test_lookdown_eat_fst(analysis: str, surface_form: set, eat_fst_txt: str):
+def test_generate_eat_fst(analysis: str, surface_form: set, eat_fst_txt: str):
     """
-    Apply up (lookup) on an FST **WITHOUT** flag diacritics.
+    Apply down (generate) on an FST **WITHOUT** flag diacritics.
     """
     fst = FST.from_text(eat_fst_txt)
-    actual, = fst.lookdown(analysis)
+    actual, = fst.generate(analysis)
     assert actual == surface_form

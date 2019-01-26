@@ -52,7 +52,7 @@ class FST:
     # Gets a Symobl from an arc. func(arc: Arc) -> Symbol
     SymbolFromArc = Callable[[Arc], Symbol]
 
-    def lookup(self, surface_form: str) -> Analyses:
+    def analyze(self, surface_form: str) -> Analyses:
         """
         Given a surface form, this yields all possible analyses in the FST.
         """
@@ -61,7 +61,7 @@ class FST:
                            in_=lambda arc: arc.lower,
                            out=lambda arc: arc.upper)
 
-    def lookdown(self, analysis: str) -> Iterable[str]:
+    def generate(self, analysis: str) -> Iterable[str]:
         """
         Given a analysis, this yields all possible surface forms in the FST.
         """
