@@ -18,7 +18,7 @@ import re
 import gzip
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Iterable, List, Set, Tuple, Union
+from typing import Callable, Dict, Iterable, List, Set, Tuple, Union
 
 from .data import Arc, StateID, Symbol
 from .parse import FSTParse, parse_text
@@ -47,13 +47,22 @@ class FST:
         for arc in parse.arcs:
             self.arcs_from[arc.state].add(arc)
 
-    def lookup(self, surface_form: str) -> Iterable[Tuple[str, ...]]:
+    # An analysis is a tuple of strings.
+    Analyses = Iterable[Tuple[str, ...]]
+    # Gets a Symobl from an arc. func(arc: Arc) -> Symbol
+    SymbolFromArc = Callable[[Arc], Symbol]
+
+    def lookup(self, surface_form: str) -> Analyses:
         """
         Given a surface form, this yields all possible analyses in the FST.
         """
-        state = self.initial_state
         symbols = list(self.to_symbols(surface_form))
+        return self._apply(symbols,
+                           in_=Arc.lower,
+                           out=Arc.upper)
 
+    def _apply(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc) -> Analyses:
+        state = self.initial_state
         for transduction in self._lookup_state(self.initial_state, symbols, []):
             yield tuple(self._format_transduction(transduction))
 
