@@ -5,7 +5,9 @@
 Tests for parsing the AT&T text format.
 """
 
-from fst_lookup.parse import parse_text
+import pytest
+
+from fst_lookup.parse import parse_text, FSTParseError
 
 
 def test_parse_simple(eat_fst_txt: str):
@@ -23,3 +25,13 @@ def test_parse_simple(eat_fst_txt: str):
     assert len(result.states) == 15
     assert len(result.arcs) == 19
     assert result.accepting_states == {14}
+
+
+def test_parse_multiple(eat_fst_txt: str):
+    """
+    Test that the parser will disallow further parses.
+    """
+    invalid_fst = eat_fst_txt * 2
+
+    with pytest.raises(FSTParseError):
+        parse_text(invalid_fst)
