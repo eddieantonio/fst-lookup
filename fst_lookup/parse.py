@@ -22,6 +22,12 @@ from typing import List, Dict, Tuple, Set, Optional, Callable
 from .data import Arc, StateID, Symbol
 
 
+class FSTParseError(Exception):
+    """
+    Raise when something goes wrong parsing the FSTs.
+    """
+
+
 # TODO: add difference between input alphabet and output alphabet
 #       the union of the two is the output alphabet
 
@@ -55,12 +61,19 @@ class FomaParser:
         self.accepting_states = set()  # type: Set[int]
         self.implied_state = None  # type: Optional[int]
         self.handle_line = self.handle_header
+        self.has_seen_header = False
 
     def handle_header(self, line: str):
         # Nothing to do here... yet.
         ...
 
     def handle_props(self, line: str):
+        """
+        """
+        if self.has_seen_header:
+            raise FSTParseError('Cannot handle multiple FSTs')
+        self.has_seen_header = True
+
         # TODO: parse:
         #  - arity
         #  - arc_count
@@ -75,9 +88,9 @@ class FomaParser:
         #  - is_loop_free
         #  - is_completed
         #  - name
-        ...
+
         # Foma will technically accept anything until it sees '##sigma##'
-        # but we won't (how do we handle that?)
+        # but we won't, as that is gross.
 
     def handle_sigma(self, line: str):
         """
@@ -174,7 +187,6 @@ class FomaParser:
     def parse_text(self, fst_text: str) -> FSTParse:
         for line in fst_text.splitlines():
             self.parse_line(line)
-            # TODO: error when there appears to be more than one model
 
         return self.finalize()
 
