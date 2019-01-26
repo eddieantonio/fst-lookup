@@ -43,6 +43,14 @@ class FST:
         self.multichar_symbols = parse.multichar_symbols
         self.graphemes = parse.graphemes
 
+        # Prepare a regular expression to symbolify all input.
+        # Ensure the longest symbols are first, so that they are match first
+        # by the regular expresion.
+        symbols = sorted(self.sigma.values(), key=len, reverse=True)
+        self.symbol_pattern = re.compile(
+                '|'.join(re.escape(entry) for entry in symbols)
+        )
+
         self.arcs_from = defaultdict(set)  # type: Dict[StateID, Set[Arc]]
         for arc in parse.arcs:
             self.arcs_from[arc.state].add(arc)
@@ -107,11 +115,8 @@ class FST:
         Tokenizes a form into symbols.
         """
         text = surface_form
-        # Ensure the longest symbols are first, so that they match first.
-        symbols = sorted(self.sigma.values(), key=len, reverse=True)
-        pattern = re.compile('|'.join(re.escape(entry) for entry in symbols))
         while text:
-            match = pattern.match(text)
+            match = self.symbol_pattern.match(text)
             if not match:
                 raise ValueError("Cannot symbolify form: " + repr(surface_form))
             # Convert to a symbol
