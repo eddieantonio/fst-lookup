@@ -61,6 +61,18 @@ class FST:
                            in_=lambda arc: arc.lower,
                            out=lambda arc: arc.upper)
 
+    def lookdown(self, analysis: str) -> Iterable[str]:
+        """
+        Given a analysis, this yields all possible surface forms in the FST.
+        """
+        symbols = list(self.to_symbols(analysis))
+        forms = self._apply(symbols,
+                            in_=lambda arc: arc.upper,
+                            out=lambda arc: arc.lower)
+        # Untupalize the forms :/
+        for form, in forms:
+            yield form
+
     def _apply(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc) -> Analyses:
         state = self.initial_state
         for transduction in self._lookup_state(self.initial_state, symbols, [], in_, out):
@@ -95,7 +107,9 @@ class FST:
         Tokenizes a form into symbols.
         """
         text = surface_form
-        pattern = re.compile('|'.join(re.escape(entry) for entry in self.sigma.values()))
+        # Ensure the longest symbols are first, so that they match first.
+        symbols = sorted(self.sigma.values(), key=len, reverse=True)
+        pattern = re.compile('|'.join(re.escape(entry) for entry in symbols))
         while text:
             match = pattern.match(text)
             if not match:
