@@ -58,12 +58,12 @@ class FST:
         """
         symbols = list(self.to_symbols(surface_form))
         return self._apply(symbols,
-                           in_=Arc.lower,
-                           out=Arc.upper)
+                           in_=lambda arc: arc.lower,
+                           out=lambda arc: arc.upper)
 
     def _apply(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc) -> Analyses:
         state = self.initial_state
-        for transduction in self._lookup_state(self.initial_state, symbols, []):
+        for transduction in self._lookup_state(self.initial_state, symbols, [], in_, out):
             yield tuple(self._format_transduction(transduction))
 
     def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
@@ -107,7 +107,9 @@ class FST:
     def _lookup_state(
             self, state: StateID,
             symbols: List[Symbol],
-            transduction: List[Symbol]
+            transduction: List[Symbol],
+            in_: SymbolFromArc,
+            out: SymbolFromArc,
             ) -> Iterable[Tuple[Symbol, ...]]:
         # TODO: Handle a maximum transduction depth, for cyclic FSTs.
 
@@ -118,15 +120,15 @@ class FST:
 
         for arc in self.arcs_from[state]:
             next_symbol = symbols[0] if len(symbols) else INVALID
-            if arc.lower == EPSILON:
+            if in_(arc) == EPSILON:
                 # Transduce WITHOUT consuming input
-                transduction.append(arc.upper)
-                yield from self._lookup_state(arc.destination, symbols, transduction)
+                transduction.append(out(arc))
+                yield from self._lookup_state(arc.destination, symbols, transduction, in_, out)
                 transduction.pop()
-            elif arc.lower == next_symbol:
+            elif in_(arc) == next_symbol:
                 # Transduce, consuming the symbol as a label
-                transduction.append(arc.upper)
-                yield from self._lookup_state(arc.destination, symbols[1:], transduction)
+                transduction.append(out(arc))
+                yield from self._lookup_state(arc.destination, symbols[1:], transduction, in_, out)
                 transduction.pop()
 
     @classmethod
