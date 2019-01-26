@@ -21,6 +21,8 @@ from typing import List, Dict, Tuple, Set
 
 from .data import Arc, StateID, Symbol
 
+# TODO: add difference between input alphabet and output alphabet
+#       the union of the two is the output alphabet
 
 class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
                                       'arcs '
@@ -28,6 +30,7 @@ class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
     """
     The parsed data from an FST, in a nice neat pile.
     """
+
 
     @property
     def sigma(self) -> Dict[Symbol, str]:
@@ -46,7 +49,10 @@ class ParserState(Enum):
     END = 4
 
 
+
 def parse_text(fst_text: str) -> FSTParse:
+    # Find all the details here:
+    # https://github.com/mhulden/foma/blob/master/foma/io.c#L623-L821
 
     def parse_arc(arc_def: Tuple[int, ...]) -> None:
         """
@@ -65,21 +71,27 @@ def parse_text(fst_text: str) -> FSTParse:
             if implied_state is None:
                 raise ValueError('No implied state')
             src = implied_state
+            # in/out, target (state num implied)
             in_label, dest = arc_def
             out_label = in_label
         elif len(arc_def) == 3:
             if implied_state is None:
                 raise ValueError('No implied state')
             src = implied_state
+            # in, out, target  (state num implied)
             in_label, out_label, dest = arc_def
         elif len(arc_def) == 4:
+            # FIXME: there's a bug here in my interpretation of the final parameter.
+            # state num, in/out, target, final state
             src, in_label, dest, _weight = arc_def
             out_label = in_label
+            # FIXME: this is a STATE WITHOUT TRANSITIONS
             if in_label == -1 or dest == -1:
                 # This is an accepting state
                 accepting_states.add(src)
                 return
         elif len(arc_def) == 5:
+            # FIXME: last is final_state, not weight
             src, in_label, out_label, dest, _weight = arc_def
 
         implied_state = src
@@ -88,7 +100,8 @@ def parse_text(fst_text: str) -> FSTParse:
     state = ParserState.INITIAL
 
     # Start with an empty FST
-    sigma = {}
+    sigma = {}  # TODO: rename to symbols
+    # TODO: keep track of input and output alphabet
     arcs = []  # type: List[Arc]
     accepting_states = set()  # type: Set[StateID]
     implied_state = None
@@ -113,10 +126,29 @@ def parse_text(fst_text: str) -> FSTParse:
             # Add an arc
             arc_def = tuple(int(x) for x in line.split())
             parse_arc(arc_def)
-        elif state in (ParserState.INITIAL, ParserState.PROPS, ParserState.END):
+        elif state == ParserState.PROPS:
+            # TODO: parse:
+            #  - arity
+            #  - arc_count
+            #  - state_count
+            #  - line_count
+            #  - final_count
+            #  - path_count
+            #  - is_deterministic
+            #  - is_pruned
+            #  - is_minimized
+            #  - is_epsilon_free
+            #  - is_loop_free
+            #  - is_completed
+            #  - name
+            ...
+            # Foma will technically accept anything until it sees '##sigma##'
+            # but we won't (how do we handle that?)
+        elif state in (ParserState.INITIAL, ParserState.END):
             pass  # Nothing to do for these states
         else:
             raise ValueError('Invalid state: ' + repr(state))
+        # TODO: error when there appears to be more than one model
 
     # After parsing, we should be in the ##end## state.
     assert state == ParserState.END
