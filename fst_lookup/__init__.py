@@ -63,7 +63,7 @@ class FST:
 
     def generate(self, analysis: str) -> Iterable[str]:
         """
-        Given a analysis, this yields all possible surface forms in the FST.
+        Given an analysis, this yields all possible surface forms in the FST.
         """
         symbols = list(self.to_symbols(analysis))
         forms = self._apply(symbols,
