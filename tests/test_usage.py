@@ -14,3 +14,5 @@ def test_load_from_file(shared_datadir):
             ('eat', '+N', '+Mass'),
             ('eat', '+V', '+3P', '+Sg'),
     }
+    # Transduce the other way!
+    assert set(fst.generate('eat' '+V' '+Past')) == {'ate'}
