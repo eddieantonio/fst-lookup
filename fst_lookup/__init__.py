@@ -18,13 +18,17 @@ import re
 import gzip
 from collections import defaultdict
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Set, Tuple, Union
+from typing import Callable, Dict, FrozenSet, Iterable, Iterator, List, Set, Tuple, Union
 
 from .data import Arc, StateID, Symbol
 from .parse import FSTParse, parse_text
 
+# Type aliases
 PathLike = Union[str, Path]
+RawTransduction = Tuple[Symbol, ...]
+SymbolFromArc = Callable[[Arc], Symbol]
 
+# Symbol aliases
 INVALID = Symbol(-1)
 EPSILON = Symbol(0)
 
@@ -58,15 +62,14 @@ class FST:
     # An analysis is a tuple of strings.
     Analyses = Iterable[Tuple[str, ...]]
     # Gets a Symobl from an arc. func(arc: Arc) -> Symbol
-    SymbolFromArc = Callable[[Arc], Symbol]
 
     def analyze(self, surface_form: str) -> Analyses:
         """
         Given a surface form, this yields all possible analyses in the FST.
         """
         symbols = list(self.to_symbols(surface_form))
-        analyses = self._apply(symbols, in_=lambda arc: arc.lower,
-                               out=lambda arc: arc.upper)
+        analyses = self._transduce(symbols, in_=lambda arc: arc.lower,
+                                   out=lambda arc: arc.upper)
         for analysis in analyses:
             yield tuple(self._format_transduction(analysis))
 
@@ -75,14 +78,18 @@ class FST:
         Given an analysis, this yields all possible surface forms in the FST.
         """
         symbols = list(self.to_symbols(analysis))
-        forms = self._apply(symbols, in_=lambda arc: arc.upper,
-                            out=lambda arc: arc.lower)
+        forms = self._transduce(symbols, in_=lambda arc: arc.upper,
+                                out=lambda arc: arc.lower)
         for transduction in forms:
             yield ''.join(self.sigma[symbol] for symbol in transduction
                           if symbol != EPSILON)
 
-    def _apply(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc):
-        yield from self._lookup_state(self.initial_state, symbols, [], in_, out)
+    def _transduce(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc):
+        yield from Transducer(initial_state=self.initial_state,
+                              symbols=symbols,
+                              arcs_from=self.arcs_from,
+                              accepting_states=self.accepting_states,
+                              in_=in_, out=out)
 
     def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
         """
@@ -121,33 +128,6 @@ class FST:
             yield self.inverse_sigma[match.group(0)]
             text = text[match.end():]
 
-    def _lookup_state(
-            self, state: StateID,
-            symbols: List[Symbol],
-            transduction: List[Symbol],
-            in_: SymbolFromArc,
-            out: SymbolFromArc,
-            ) -> Iterable[Tuple[Symbol, ...]]:
-        # TODO: Handle a maximum transduction depth, for cyclic FSTs.
-
-        if state in self.accepting_states:
-            if len(symbols) > 0:
-                return
-            yield tuple(transduction)
-
-        for arc in self.arcs_from[state]:
-            next_symbol = symbols[0] if len(symbols) else INVALID
-            if in_(arc) == EPSILON:
-                # Transduce WITHOUT consuming input
-                transduction.append(out(arc))
-                yield from self._lookup_state(arc.destination, symbols, transduction, in_, out)
-                transduction.pop()
-            elif in_(arc) == next_symbol:
-                # Transduce, consuming the symbol as a label
-                transduction.append(out(arc))
-                yield from self._lookup_state(arc.destination, symbols[1:], transduction, in_, out)
-                transduction.pop()
-
     @classmethod
     def from_file(cls, path: PathLike) -> 'FST':
         """
@@ -163,3 +143,52 @@ class FST:
         """
         parse = parse_text(att_text)
         return FST(parse)
+
+
+class Transducer(Iterable[RawTransduction]):
+    """
+    Does a single transduction
+    """
+    def __init__(
+        self,
+        initial_state: StateID,
+        symbols: Iterable[Symbol],
+        in_: SymbolFromArc,
+        out: SymbolFromArc,
+        accepting_states: FrozenSet[StateID],
+        arcs_from: Dict[StateID, Set[Arc]]
+    ) -> None:
+        self.initial_state = initial_state
+        self.symbols = list(symbols)
+        self.in_ = in_
+        self.out = out
+        self.accepting_states = accepting_states
+        self.arcs_from = arcs_from
+        # TODO: FLAG DIACRITICS!
+
+    def __iter__(self) -> Iterator[RawTransduction]:
+        yield from self._lookup_state(self.initial_state, [])
+
+    def _lookup_state(
+            self, state: StateID, transduction: List[Symbol]
+    ) -> Iterable[RawTransduction]:
+        # TODO: Handle a maximum transduction depth, for cyclic FSTs.
+        if state in self.accepting_states:
+            if len(self.symbols) > 0:
+                return
+            yield tuple(transduction)
+
+        for arc in self.arcs_from[state]:
+            next_symbol = self.symbols[0] if len(self.symbols) else INVALID
+            if self.in_(arc) == EPSILON:
+                # Transduce WITHOUT consuming input
+                transduction.append(self.out(arc))
+                yield from self._lookup_state(arc.destination, transduction)
+                transduction.pop()
+            elif self.in_(arc) == next_symbol:
+                # Transduce, consuming the symbol as a label
+                transduction.append(self.out(arc))
+                consumed = self.symbols.pop(0)
+                yield from self._lookup_state(arc.destination, transduction)
+                self.symbols.insert(0, consumed)
+                transduction.pop()
