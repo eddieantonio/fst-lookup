@@ -135,24 +135,23 @@ class FomaParser:
         # Nothing to do here. Yet.
         ...
 
-    def parse_text(self, fst_text: str) -> FSTParse:
+    def parse_line(self, line: str):
         # Find all the details here:
         # https://github.com/mhulden/foma/blob/master/foma/io.c#L623-L821
-        for line in fst_text.splitlines():
-            # Check header
-            if line.startswith('##'):
-                header = line[2:-2]
-                self.handle_line = {
-                    'foma-net 1.0': self.handle_header,
-                    'props': self.handle_props,
-                    'sigma': self.handle_sigma,
-                    'states': self.handle_states,
-                    'end': self.handle_end,
-                }[header]
-            else:
-                self.handle_line(line.strip())
-            # TODO: error when there appears to be more than one model
+        # Check header
+        if line.startswith('##'):
+            header = line[2:-2]
+            self.handle_line = {
+                'foma-net 1.0': self.handle_header,
+                'props': self.handle_props,
+                'sigma': self.handle_sigma,
+                'states': self.handle_states,
+                'end': self.handle_end,
+            }[header]
+        else:
+            self.handle_line(line.strip())
 
+    def finalize(self) -> FSTParse:
         # After parsing, we should be in the ##end## state.
         assert self.handle_line == self.handle_end
 
@@ -171,6 +170,13 @@ class FomaParser:
                         arcs=set(self.arcs),
                         intermediate_states=states,
                         accepting_states=self.accepting_states)
+
+    def parse_text(self, fst_text: str) -> FSTParse:
+        for line in fst_text.splitlines():
+            self.parse_line(line)
+            # TODO: error when there appears to be more than one model
+
+        return self.finalize()
 
 
 def parse_text(att_text: str) -> FSTParse:
