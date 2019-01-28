@@ -107,7 +107,7 @@ class FomaParser:
         """
         Adds a new entry to the symbol table.
         """
-        idx_str, symbol = line.split()
+        idx_str, _space, symbol = line.partition('\N{SPACE}')
         idx = int(idx_str)
         self.symbols[Symbol(idx)] = symbol
 
@@ -173,14 +173,19 @@ class FomaParser:
                 'end': self.handle_end,
             }[header]
         else:
-            self.handle_line(line.strip())
+            self.handle_line(line.rstrip('\n'))
 
     def finalize(self) -> FSTParse:
         # After parsing, we should be in the ##end## state.
         assert self.handle_line == self.handle_end
 
-        # Get rid of epsilon (it is always assumed!)
-        del self.symbols[Symbol(0)]
+        # Get rid of special symbols:
+        # 0 @_EPSILON_SYMBOL_@
+        # 1 @_UNKNOWN_SYMBOL_@
+        # 2 @_IDENTITY_SYMBOL_@
+        for idx in Symbol(0), Symbol(1), Symbol(2):
+            if idx in self.symbols:
+                del self.symbols[idx]
 
         flag_diacritics = {idx: symbol for idx, symbol in self.symbols.items()
                            if FLAG_PATTERN.match(symbol)}
