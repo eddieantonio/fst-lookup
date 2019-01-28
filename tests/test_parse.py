@@ -5,7 +5,7 @@
 Tests for parsing the text format.
 """
 
-import pytest
+import pytest  # type: ignore
 
 from fst_lookup.parse import parse_text, FSTParseError
 
@@ -35,3 +35,18 @@ def test_parse_multiple(eat_fst_txt: str):
 
     with pytest.raises(FSTParseError):
         parse_text(invalid_fst)
+
+
+def test_parse_flag_diacritics(english_flags_fst_txt: str) -> None:
+    result = parse_text(english_flags_fst_txt)
+    assert len(result.sigma) == 22
+    flag_diacritics = set('@C.UN@ @D.UN@ @P.UN.ON@'.split())
+    multichar_symbols = set('+Adj +Inf +Pl +V UN+ '.split())
+    graphemes = set('a b d e i k l n o p r s u y'.split())
+    assert len(multichar_symbols) + len(graphemes) + len(flag_diacritics) == len(result.sigma)
+    assert set(result.multichar_symbols.values()) == set(multichar_symbols)
+    assert set(result.flag_diacritics.values()) == flag_diacritics
+    assert set(result.graphemes.values()) == graphemes
+    assert len(result.states) == 21
+    assert len(result.arcs) == 27
+    assert result.accepting_states == {20}
