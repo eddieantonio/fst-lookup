@@ -15,11 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 from collections import namedtuple
 from enum import Enum
 from typing import List, Dict, Tuple, Set, Optional, Callable
 
 from .data import Arc, StateID, Symbol
+
+
+FLAG_PATTERN = re.compile(r'''
+    ^@(?:
+        [UPNRDE][.]\w+[.]\w+ |
+        [RDC][.]\w+
+    )@$
+''', re.VERBOSE)
 
 
 class FSTParseError(Exception):
@@ -31,7 +40,7 @@ class FSTParseError(Exception):
 # TODO: add difference between input alphabet and output alphabet
 #       the union of the two is the output alphabet
 
-class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
+class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes flag_diacritics '
                                       'arcs '
                                       'intermediate_states accepting_states')):
     """
@@ -40,7 +49,9 @@ class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
 
     @property
     def sigma(self) -> Dict[Symbol, str]:
-        return {**self.multichar_symbols, **self.graphemes}
+        return {**self.multichar_symbols,
+                **self.flag_diacritics,
+                **self.graphemes}
 
     @property
     def states(self):
@@ -171,14 +182,17 @@ class FomaParser:
         # Get rid of epsilon (it is always assumed!)
         del self.symbols[Symbol(0)]
 
+        flag_diacritics = {idx: symbol for idx, symbol in self.symbols.items()
+                           if FLAG_PATTERN.match(symbol)}
         multichar_symbols = {idx: symbol for idx, symbol in self.symbols.items()
-                             if len(symbol) > 1}
+                             if len(symbol) > 1 and idx not in flag_diacritics}
         graphemes = {idx: symbol for idx, symbol in self.symbols.items()
                      if len(symbol) == 1}
 
         states = {arc.state for arc in self.arcs}
 
         return FSTParse(multichar_symbols=multichar_symbols,
+                        flag_diacritics=flag_diacritics,
                         graphemes=graphemes,
                         arcs=set(self.arcs),
                         intermediate_states=states,
