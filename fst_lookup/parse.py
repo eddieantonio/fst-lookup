@@ -154,7 +154,9 @@ class FomaParser:
             src, in_label, out_label, dest, _weight = arc_def
 
         self.implied_state = src
-        self.arcs.append(Arc(state=src, destination=dest, in_label=in_label, out_label=out_label))
+        # Super important! make sure the order of these arguments is
+        # consistent with the definition of Arc
+        self.arcs.append(Arc(src, in_label, out_label, dest))
 
     def handle_end(self, line: str):
         # Nothing to do here. Yet.
