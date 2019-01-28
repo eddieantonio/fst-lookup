@@ -14,19 +14,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 import gzip
+import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Callable, Dict, FrozenSet, Iterable, Iterator, List, Set, Tuple, Union
+from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
+                    Tuple, Union)
 
 from .data import Arc, StateID, Symbol
 from .parse import FSTParse, parse_text
 
 # Type aliases
-PathLike = Union[str, Path]
+PathLike = Union[str, Path]  # similar to Python 3.6's os.PathLike
 RawTransduction = Tuple[Symbol, ...]
+# Gets a Symobl from an arc. func(arc: Arc) -> Symbol
 SymbolFromArc = Callable[[Arc], Symbol]
+# An analysis is a tuple of strings.
+Analyses = Iterable[Tuple[str, ...]]
 
 # Symbol aliases
 INVALID = Symbol(-1)
@@ -52,16 +56,12 @@ class FST:
         # by the regular expresion.
         symbols = sorted(self.sigma.values(), key=len, reverse=True)
         self.symbol_pattern = re.compile(
-                '|'.join(re.escape(entry) for entry in symbols)
+            '|'.join(re.escape(entry) for entry in symbols)
         )
 
         self.arcs_from = defaultdict(set)  # type: Dict[StateID, Set[Arc]]
         for arc in parse.arcs:
             self.arcs_from[arc.state].add(arc)
-
-    # An analysis is a tuple of strings.
-    Analyses = Iterable[Tuple[str, ...]]
-    # Gets a Symobl from an arc. func(arc: Arc) -> Symbol
 
     def analyze(self, surface_form: str) -> Analyses:
         """
@@ -83,37 +83,6 @@ class FST:
         for transduction in forms:
             yield ''.join(self.sigma[symbol] for symbol in transduction
                           if symbol != EPSILON)
-
-    def _transduce(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc):
-        yield from Transducer(initial_state=self.initial_state,
-                              symbols=symbols,
-                              arcs_from=self.arcs_from,
-                              accepting_states=self.accepting_states,
-                              in_=in_, out=out)
-
-    def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
-        """
-        """
-        # TODO: REFACTOR THIS GROSS FUNCTION
-        current_lemma = ''
-        for symbol in transduction:
-            if symbol == EPSILON:
-                if current_lemma:
-                    yield current_lemma
-                    current_lemma = ''
-                # ignore epsilons
-                continue
-            elif symbol in self.multichar_symbols:
-                if current_lemma:
-                    yield current_lemma
-                    current_lemma = ''
-                yield self.sigma[symbol]
-            else:
-                assert symbol in self.graphemes
-                current_lemma += self.sigma[symbol]
-
-        if current_lemma:
-            yield current_lemma
 
     def to_symbols(self, surface_form: str) -> Iterable[Symbol]:
         """
@@ -144,6 +113,37 @@ class FST:
         parse = parse_text(att_text)
         return FST(parse)
 
+    # TODO: def from_lines() for reading large FSTs?
+
+    def _transduce(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc):
+        yield from Transducer(initial_state=self.initial_state,
+                              symbols=symbols,
+                              arcs_from=self.arcs_from,
+                              accepting_states=self.accepting_states,
+                              in_=in_, out=out)
+
+    def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
+        # TODO: REFACTOR THIS GROSS FUNCTION
+        current_lemma = ''
+        for symbol in transduction:
+            if symbol == EPSILON:
+                if current_lemma:
+                    yield current_lemma
+                    current_lemma = ''
+                # ignore epsilons
+                continue
+            elif symbol in self.multichar_symbols:
+                if current_lemma:
+                    yield current_lemma
+                    current_lemma = ''
+                yield self.sigma[symbol]
+            else:
+                assert symbol in self.graphemes
+                current_lemma += self.sigma[symbol]
+
+        if current_lemma:
+            yield current_lemma
+
 
 class Transducer(Iterable[RawTransduction]):
     """
@@ -167,10 +167,10 @@ class Transducer(Iterable[RawTransduction]):
         # TODO: FLAG DIACRITICS!
 
     def __iter__(self) -> Iterator[RawTransduction]:
-        yield from self._lookup_state(self.initial_state, [])
+        yield from self._accept(self.initial_state, [])
 
-    def _lookup_state(
-            self, state: StateID, transduction: List[Symbol]
+    def _accept(
+        self, state: StateID, transduction: List[Symbol]
     ) -> Iterable[RawTransduction]:
         # TODO: Handle a maximum transduction depth, for cyclic FSTs.
         if state in self.accepting_states:
@@ -183,12 +183,12 @@ class Transducer(Iterable[RawTransduction]):
             if self.in_(arc) == EPSILON:
                 # Transduce WITHOUT consuming input
                 transduction.append(self.out(arc))
-                yield from self._lookup_state(arc.destination, transduction)
+                yield from self._accept(arc.destination, transduction)
                 transduction.pop()
             elif self.in_(arc) == next_symbol:
                 # Transduce, consuming the symbol as a label
                 transduction.append(self.out(arc))
                 consumed = self.symbols.pop(0)
-                yield from self._lookup_state(arc.destination, transduction)
+                yield from self._accept(arc.destination, transduction)
                 self.symbols.insert(0, consumed)
                 transduction.pop()

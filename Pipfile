@@ -12,6 +12,7 @@ fst-lookup = {editable = true,path = "."}
 setuptools = "*"
 wheel = "*"
 twine = "*"
+isort = "*"
 
 [packages]
 
