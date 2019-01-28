@@ -120,25 +120,26 @@ class FomaParser:
         """
 
         arc_def = tuple(int(num) for num in line.split())
+        num_items = len(arc_def)
 
         if arc_def == (-1, -1, -1, -1, -1):
             # Sentinel value: there are no more arcs to define.
             return
 
-        if len(arc_def) == 2:
+        if num_items == 2:
             if self.implied_state is None:
                 raise ValueError('No implied state')
             src = self.implied_state
             # in/out, target (state num implied)
             in_label, dest = arc_def
             out_label = in_label
-        elif len(arc_def) == 3:
+        elif num_items == 3:
             if self.implied_state is None:
                 raise ValueError('No implied state')
             src = self.implied_state
             # in, out, target  (state num implied)
             in_label, out_label, dest = arc_def
-        elif len(arc_def) == 4:
+        elif num_items == 4:
             # FIXME: there's a bug here in my interpretation of the final parameter.
             # state num, in/out, target, final state
             src, in_label, dest, _weight = arc_def
@@ -148,7 +149,7 @@ class FomaParser:
                 # This is an accepting state
                 self.accepting_states.add(src)
                 return
-        elif len(arc_def) == 5:
+        elif num_items == 5:
             # FIXME: last is final_state, not weight
             src, in_label, out_label, dest, _weight = arc_def
 
