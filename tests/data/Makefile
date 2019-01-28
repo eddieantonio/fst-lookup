@@ -1,3 +1,4 @@
+english-flags.att.gz: eat.lexc
 eat.att.gz: eat.lexc
 
 %.att.gz: %.lexc
