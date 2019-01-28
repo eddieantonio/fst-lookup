@@ -1,8 +1,7 @@
-english-flags.att.gz: eat.lexc
-eat.att.gz: eat.lexc
+all: eat.fomabin english-flags.fomabin
 
-%.att.gz: %.lexc
+%.fomabin: %.lexc
 	printf 'read lexc %s\nsave stack %s' $< $@ | foma -p
 
-%: %.gz
-	gunzip --force --keep $<
+%.txt: %.fomabin
+	cat $< | gunzip > $@
