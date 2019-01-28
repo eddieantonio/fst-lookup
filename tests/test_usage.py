@@ -8,7 +8,7 @@ def test_load_from_file(shared_datadir):
     """
     Integration test for loading the FST from a file.
     """
-    fst = FST.from_file(shared_datadir / 'eat.att.gz')
+    fst = FST.from_file(shared_datadir / 'eat.fomabin')
     # Do a transduction that outputs multiple results.
     assert set(fst.analyze('eats')) == {
             ('eat', '+N', '+Mass'),

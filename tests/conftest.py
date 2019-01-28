@@ -19,5 +19,5 @@ def eat_fst_txt(shared_datadir: Path) -> str:
         Size: 15.
 
     """
-    with gzip.open(str(shared_datadir / 'eat.att.gz'), 'rt') as text_file:
+    with gzip.open(str(shared_datadir / 'eat.fomabin'), 'rt') as text_file:
         return text_file.read()  # type: ignore
