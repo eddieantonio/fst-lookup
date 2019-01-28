@@ -50,3 +50,27 @@ def test_parse_flag_diacritics(english_flags_fst_txt: str) -> None:
     assert len(result.states) == 21
     assert len(result.arcs) == 27
     assert result.accepting_states == {20}
+
+
+def test_parse_whitespace_in_sigma() -> None:
+    """
+    Ensures that whitespace within sigma is parsed correctly.
+    """
+    result = parse_text("""##foma-net 1.0##
+##props##
+2 390211 90019 390213 5 -1 1 2 2 1 0 2
+##sigma##
+0 @_EPSILON_SYMBOL_@
+1 @_UNKNOWN_SYMBOL_@
+2 @_IDENTITY_SYMBOL_@
+3 \u0020
+4 \u00A0
+5 \u00AD
+##states##
+-1 -1 -1 -1 -1
+##end##
+""")
+    assert len(result.sigma) == 3
+    assert set(result.graphemes.values()) == {
+        ' ', '\N{NO-BREAK SPACE}', '\N{SOFT HYPHEN}'
+    }
