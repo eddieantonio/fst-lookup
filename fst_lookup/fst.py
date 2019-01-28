@@ -100,7 +100,7 @@ class FST:
     @classmethod
     def from_file(cls, path: PathLike) -> 'FST':
         """
-        Read the FST as output by FOMA (gzip'd AT&T format).
+        Read the FST as output by FOMA.
         """
         with gzip.open(str(path), 'rt', encoding='UTF-8') as text_file:
             return cls.from_text(text_file.read())
@@ -108,7 +108,7 @@ class FST:
     @classmethod
     def from_text(self, att_text: str) -> 'FST':
         """
-        Parse the FST in AT&T's transducer text format.
+        Parse the FST in the text format (un-gzip'd).
         """
         parse = parse_text(att_text)
         return FST(parse)

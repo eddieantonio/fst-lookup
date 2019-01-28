@@ -49,7 +49,7 @@ class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes '
 
 class FomaParser:
     """
-    Parses a FOMA AT&T file.
+    Parses a FOMA file, in plain-text.
     """
 
     LineParser = Callable[[str], None]
@@ -195,6 +195,7 @@ def parse_text(att_text: str) -> FSTParse:
     """
     Parse the text of a FOMA binary FST. The text is retrieved by gunzip'ing
     the file.
+
     FOMA text is very similar to an AT&T format FST.
     """
     return FomaParser().parse_text(att_text)

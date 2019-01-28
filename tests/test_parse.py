@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 """
-Tests for parsing the AT&T text format.
+Tests for parsing the text format.
 """
 
 import pytest
