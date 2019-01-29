@@ -42,44 +42,38 @@ class FlagDiacritic:
     Base class for all flag diacritics
     """
 
+    opcode = '!!INVALID!!'
+
+    def __init__(self, feature: str, value: str = None) -> None:
+        self.feature = feature
+        if value is not None:
+            self.value = value
+
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
             return False
         if hasattr(self, 'value'):
-            return self.feature == other.feature and self.value == other.value  # type: ignore
+            return self.feature == other.feature and self.value == other.value
         else:
-            return self.feature == other.feature  # type: ignore
+            return self.feature == other.feature
 
     def __str__(self) -> str:
         if hasattr(self, 'value'):
-            return '@{}.{}.{}@'.format(self.opcode, self.feature, self.value)  # type: ignore
+            return '@{}.{}.{}@'.format(self.opcode, self.feature, self.value)
         else:
-            return '@{}.{}@'.format(self.opcode, self.feature)  # type: ignore
+            return '@{}.{}@'.format(self.opcode, self.feature)
 
 
 class Clear(FlagDiacritic):
     opcode = 'C'
 
-    def __init__(self, feature: str) -> None:
-        self.feature = feature
-
 
 class Disallow(FlagDiacritic):
     opcode = 'D'
 
-    def __init__(self, feature: str, value: str = None) -> None:
-        self.feature = feature
-        if value is not None:
-            self.value = value
-
 
 class Positive(FlagDiacritic):
     opcode = 'P'
-
-    def __init__(self, feature: str, value: str = None) -> None:
-        self.feature = feature
-        if value is not None:
-            self.value = value
 
 
 # TODO: add difference between input alphabet and output alphabet
