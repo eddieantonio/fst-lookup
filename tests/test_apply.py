@@ -61,9 +61,10 @@ def test_generate_eat_fst(analysis: str, surface_form: set, eat_fst_txt: str):
     ('undoable', ('UN+', 'doable', '+Adj')),
     ('undo', ('UN+', 'do', '+V', '+Inf')),
 ])
-def test_analyze_flag_fst(surface_form: str, analysis, english_flags_fst_txt: str):
+def test_flag_fst(surface_form: str, analysis, english_flags_fst_txt: str):
     """
-    Apply up (lookup) on an FST **WITH** simple flag diacritics.
+    Analyze and generate on an FST **WITH** simple flag diacritics.
     """
     fst = FST.from_text(english_flags_fst_txt)
     assert set(fst.analyze(surface_form)) == {analysis}
+    assert set(fst.generate(''.join(analysis))) == {surface_form}
