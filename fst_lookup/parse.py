@@ -43,7 +43,8 @@ class FSTParseError(Exception):
 
 class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes flag_diacritics '
                                       'arcs '
-                                      'intermediate_states accepting_states')):
+                                      'intermediate_states accepting_states '
+                                      'has_epsilon')):
     """
     The parsed data from an FST, in a nice neat pile.
     """
@@ -183,6 +184,8 @@ class FomaParser:
         # After parsing, we should be in the ##end## state.
         assert self.handle_line == self.handle_end
 
+        has_epsilon = Symbol(0) in self.symbols
+
         # Get rid of special symbols:
         # 0 @_EPSILON_SYMBOL_@
         # 1 @_UNKNOWN_SYMBOL_@
@@ -205,7 +208,8 @@ class FomaParser:
                         graphemes=graphemes,
                         arcs=set(self.arcs),
                         intermediate_states=states,
-                        accepting_states=self.accepting_states)
+                        accepting_states=self.accepting_states,
+                        has_epsilon=has_epsilon)
 
     def parse_text(self, fst_text: str) -> FSTParse:
         for line in fst_text.splitlines():
