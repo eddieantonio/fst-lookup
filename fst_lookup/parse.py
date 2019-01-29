@@ -46,9 +46,15 @@ class FlagDiacritic:
         if not isinstance(other, type(self)):
             return False
         if hasattr(self, 'value'):
-            return self.feature == other.feature and self.value == other.value # type: ignore
+            return self.feature == other.feature and self.value == other.value  # type: ignore
         else:
             return self.feature == other.feature  # type: ignore
+
+    def __str__(self) -> str:
+        if hasattr(self, 'value'):
+            return '@{}.{}.{}@'.format(self.opcode, self.feature, self.value)  # type: ignore
+        else:
+            return '@{}.{}@'.format(self.opcode, self.feature)  # type: ignore
 
 
 class Clear(FlagDiacritic):
@@ -57,6 +63,23 @@ class Clear(FlagDiacritic):
     def __init__(self, feature: str) -> None:
         self.feature = feature
 
+
+class Disallow(FlagDiacritic):
+    opcode = 'D'
+
+    def __init__(self, feature: str, value: str = None) -> None:
+        self.feature = feature
+        if value is not None:
+            self.value = value
+
+
+class Positive(FlagDiacritic):
+    opcode = 'P'
+
+    def __init__(self, feature: str, value: str = None) -> None:
+        self.feature = feature
+        if value is not None:
+            self.value = value
 
 
 # TODO: add difference between input alphabet and output alphabet
@@ -250,4 +273,8 @@ def parse_flag(flag_diacritic: str) -> FlagDiacritic:
     opcode, *arguments = flag_diacritic.strip('@').split('.')
     if opcode == 'C':
         return Clear(arguments[0])
+    elif opcode == 'D':
+        return Disallow(*arguments)
+    elif opcode == 'P':
+        return Positive(*arguments)
     raise ValueError('Cannot parse ' + flag_diacritic)
