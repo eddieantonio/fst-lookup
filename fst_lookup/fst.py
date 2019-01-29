@@ -22,7 +22,8 @@ from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
                     Tuple, Union)
 
 from .data import Arc, StateID, Symbol
-from .parse import FSTParse, parse_text, FlagDiacritic
+from .parse import FSTParse, parse_text
+from .flags import FlagDiacritic
 
 # Type aliases
 PathLike = Union[str, Path]  # similar to Python 3.6's os.PathLike

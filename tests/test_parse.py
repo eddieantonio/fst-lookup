@@ -7,8 +7,8 @@ Tests for parsing the text format.
 
 import pytest  # type: ignore
 
-from fst_lookup.parse import (Clear, Disallow, FSTParseError, Positive,
-                              parse_flag, parse_text)
+from fst_lookup.flags import Clear, Disallow, Positive
+from fst_lookup.parse import FSTParseError, parse_flag, parse_text
 
 
 def test_parse_simple(eat_fst_txt: str):
