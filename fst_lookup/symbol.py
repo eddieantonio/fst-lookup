@@ -25,3 +25,41 @@ class Symbol(ABC):
     @abstractmethod
     def accepts(self, other: 'Symbol') -> bool:
         raise NotImplementedError
+
+
+class Grapheme(Symbol):
+    """
+    Represents a single graphical character.
+    """
+    __slots__ = '_char',
+
+    def __init__(self, char: str) -> None:
+        assert len(char) == 1
+        self._char = char
+
+    def accepts(self, other: Symbol) -> bool:
+        if isinstance(other, type(self)):
+            return other._char == self._char
+        return False
+
+    def __str__(self) -> str:
+        return self._char
+
+
+class MultiCharacterSymbol(Symbol):
+    """
+    Usually represents a tag or a feature.
+    """
+    __slots__ = '_tag',
+
+    def __init__(self, tag: str) -> None:
+        assert len(tag) > 1
+        self._tag = tag
+
+    def accepts(self, other: Symbol) -> bool:
+        if isinstance(other, type(self)):
+            return other._tag == self._tag
+        return False
+
+    def __str__(self) -> str:
+        return self._tag

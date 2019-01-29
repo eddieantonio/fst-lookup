@@ -53,7 +53,7 @@ def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
         len(flag_diacritics) == len(result.sigma)
     assert stringified_set(result.multichar_symbols) == set(multichar_symbols)
     assert stringified_set(result.flag_diacritics) == flag_diacritics
-    assert set(result.graphemes.values()) == graphemes
+    assert stringified_set(result.graphemes) == graphemes
     assert len(result.states) == 21
     assert len(result.arcs) == 27
     assert result.accepting_states == {20}
@@ -115,6 +115,9 @@ def test_parse_symbols() -> None:
 
     assert parse.has_epsilon
     assert all(isinstance(sym, Symbol) for sym in parse.sigma.values())
+    # assert stringified_set(parse.sigma) == {
+    #     '@P.UN.ON@', '+Err/Orth', 'î'
+    # }
 
 
 def stringified_set(symbols):

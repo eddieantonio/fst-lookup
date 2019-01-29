@@ -21,11 +21,12 @@ Defines the flag diacritics base class, as well as all subclasses.
 
 from typing import Dict
 
+from .symbol import Symbol
 
 __all__ = ['FlagDiacritic', 'Clear', 'Disallow', 'Positive']
 
 
-class FlagDiacritic:
+class FlagDiacritic(Symbol):
     """
     Base class for all flag diacritics
     """
@@ -62,6 +63,9 @@ class FlagDiacritic:
         """
         Destructivley modifies the flags in some way.
         """
+
+    def accepts(self, other):
+        raise NotImplementedError('Use .test() instead')
 
 
 class FlagDiacriticWithValue(FlagDiacritic):

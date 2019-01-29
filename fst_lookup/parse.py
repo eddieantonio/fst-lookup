@@ -22,6 +22,7 @@ from typing import List, Dict, Tuple, Set, Optional, Callable
 
 from .data import Arc, StateID, Symbol
 from .flags import FlagDiacritic, Clear, Disallow, Positive
+from .symbol import Grapheme, MultiCharacterSymbol
 
 
 FLAG_PATTERN = re.compile(r'''
@@ -196,9 +197,10 @@ class FomaParser:
 
         flag_diacritics = {idx: parse_flag(symbol) for idx, symbol in self.symbols.items()
                            if FLAG_PATTERN.match(symbol)}
-        multichar_symbols = {idx: symbol for idx, symbol in self.symbols.items()
+        multichar_symbols = {idx: MultiCharacterSymbol(symbol)
+                             for idx, symbol in self.symbols.items()
                              if len(symbol) > 1 and idx not in flag_diacritics}
-        graphemes = {idx: symbol for idx, symbol in self.symbols.items()
+        graphemes = {idx: Grapheme(symbol) for idx, symbol in self.symbols.items()
                      if len(symbol) == 1}
 
         states = {arc.state for arc in self.arcs}

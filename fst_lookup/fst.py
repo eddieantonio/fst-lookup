@@ -24,6 +24,7 @@ from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
 from .data import Arc, StateID, Symbol
 from .parse import FSTParse, parse_text
 from .flags import FlagDiacritic
+from .symbol import Grapheme, MultiCharacterSymbol
 
 # Type aliases
 PathLike = Union[str, Path]  # similar to Python 3.6's os.PathLike
@@ -48,14 +49,15 @@ class FST:
         self.initial_state = min(parse.states)
         self.accepting_states = frozenset(parse.accepting_states)
         self.sigma = dict(parse.sigma)
-        self.inverse_sigma = {text: idx for idx, text in self.sigma.items()}
+        self.inverse_sigma = {str(sym): idx for idx, sym in self.sigma.items()}
         self.multichar_symbols = parse.multichar_symbols
         self.graphemes = parse.graphemes
 
         # Prepare a regular expression to symbolify all input.
         # Ensure the longest symbols are first, so that they are match first
         # by the regular expresion.
-        symbols = sorted((s for s in self.sigma.values() if isinstance(s, str)),
+        symbols = sorted((str(s) for s in self.sigma.values()
+                         if isinstance(s, (Grapheme, MultiCharacterSymbol))),
                          key=len, reverse=True)
         self.symbol_pattern = re.compile(
             '|'.join(re.escape(entry) for entry in symbols)
@@ -86,7 +88,7 @@ class FST:
         forms = self._transduce(symbols, in_=lambda arc: arc.upper,
                                 out=lambda arc: arc.lower)
         for transduction in forms:
-            yield ''.join(self.sigma[symbol] for symbol in transduction
+            yield ''.join(str(self.sigma[symbol]) for symbol in transduction
                           if symbol != EPSILON)
 
     def to_symbols(self, surface_form: str) -> Iterable[Symbol]:
@@ -140,10 +142,10 @@ class FST:
                 if current_lemma:
                     yield current_lemma
                     current_lemma = ''
-                yield self.sigma[symbol]
+                yield str(self.sigma[symbol])
             else:
                 assert symbol in self.graphemes
-                current_lemma += self.sigma[symbol]
+                current_lemma += str(self.graphemes[symbol])
 
         if current_lemma:
             yield current_lemma
