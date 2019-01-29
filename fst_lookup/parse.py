@@ -64,6 +64,17 @@ class FlagDiacritic:
     def __str__(self) -> str:
         return '@{}.{}@'.format(self.opcode, self.feature)
 
+    def test(self, flags: Dict[str, str]) -> bool:
+        """
+        Test the flag against the current values.
+        """
+        raise NotImplementedError
+
+    def apply(self, flags: Dict[str, str]) -> None:
+        """
+        Destructivley modifies the flags in some way.
+        """
+
 
 class FlagDiacriticWithValue(FlagDiacritic):
     __slots__ = 'value',
@@ -90,13 +101,25 @@ class FlagDiacriticWithValue(FlagDiacritic):
 class Clear(FlagDiacritic):
     opcode = 'C'
 
+    def test(self, flags: Dict[str, str]) -> bool:
+        """
+        Unconditionally accept!
+        """
+        return True
+
 
 class Disallow(FlagDiacritic):
     opcode = 'D'
 
+    def test(self, flags: Dict[str, str]):
+        return self.feature not in flags
+
 
 class Positive(FlagDiacriticWithValue):
     opcode = 'P'
+
+    def test(self, flags: Dict[str, str]):
+        return flags.get(self.feature) == self.value
 
 
 # TODO: add difference between input alphabet and output alphabet

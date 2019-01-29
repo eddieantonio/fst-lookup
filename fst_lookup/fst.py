@@ -22,7 +22,7 @@ from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
                     Tuple, Union)
 
 from .data import Arc, StateID, Symbol
-from .parse import FSTParse, parse_text
+from .parse import FSTParse, parse_text, FlagDiacritic
 
 # Type aliases
 PathLike = Union[str, Path]  # similar to Python 3.6's os.PathLike
@@ -54,7 +54,8 @@ class FST:
         # Prepare a regular expression to symbolify all input.
         # Ensure the longest symbols are first, so that they are match first
         # by the regular expresion.
-        symbols = sorted(self.sigma.values(), key=len, reverse=True)
+        symbols = sorted((s for s in self.sigma.values() if isinstance(s, str)),
+                         key=len, reverse=True)
         self.symbol_pattern = re.compile(
             '|'.join(re.escape(entry) for entry in symbols)
         )
@@ -62,6 +63,9 @@ class FST:
         self.arcs_from = defaultdict(set)  # type: Dict[StateID, Set[Arc]]
         for arc in parse.arcs:
             self.arcs_from[arc.state].add(arc)
+
+        # XXX: create a subset of sigma of JUST flag diacritics
+        self.flag_diacritics = parse.flag_diacritics
 
     def analyze(self, surface_form: str) -> Analyses:
         """
@@ -113,14 +117,13 @@ class FST:
         parse = parse_text(att_text)
         return FST(parse)
 
-    # TODO: def from_lines() for reading large FSTs?
-
     def _transduce(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc):
         yield from Transducer(initial_state=self.initial_state,
                               symbols=symbols,
                               arcs_from=self.arcs_from,
                               accepting_states=self.accepting_states,
-                              in_=in_, out=out)
+                              in_=in_, out=out,
+                              flag_diacritics=self.flag_diacritics)
 
     def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
         # TODO: REFACTOR THIS GROSS FUNCTION
@@ -156,7 +159,8 @@ class Transducer(Iterable[RawTransduction]):
         in_: SymbolFromArc,
         out: SymbolFromArc,
         accepting_states: FrozenSet[StateID],
-        arcs_from: Dict[StateID, Set[Arc]]
+        arcs_from: Dict[StateID, Set[Arc]],
+        flag_diacritics: Dict[Symbol, FlagDiacritic]
     ) -> None:
         self.initial_state = initial_state
         self.symbols = list(symbols)
@@ -164,13 +168,16 @@ class Transducer(Iterable[RawTransduction]):
         self.out = out
         self.accepting_states = accepting_states
         self.arcs_from = arcs_from
-        # TODO: FLAG DIACRITICS!
+        self.flag_diacritics = flag_diacritics
 
     def __iter__(self) -> Iterator[RawTransduction]:
-        yield from self._accept(self.initial_state, [])
+        yield from self._accept(self.initial_state, [], [{}])
 
     def _accept(
-        self, state: StateID, transduction: List[Symbol]
+        self,
+        state: StateID,
+        transduction: List[Symbol],
+        flag_stack: List[Dict[str, str]]
     ) -> Iterable[RawTransduction]:
         # TODO: Handle a maximum transduction depth, for cyclic FSTs.
         if state in self.accepting_states:
@@ -179,16 +186,31 @@ class Transducer(Iterable[RawTransduction]):
             yield tuple(transduction)
 
         for arc in self.arcs_from[state]:
-            next_symbol = self.symbols[0] if len(self.symbols) else INVALID
-            if self.in_(arc) == EPSILON:
+            arc_label = self.in_(arc)
+
+            if arc_label == EPSILON:
                 # Transduce WITHOUT consuming input
                 transduction.append(self.out(arc))
-                yield from self._accept(arc.destination, transduction)
+                yield from self._accept(arc.destination, transduction, flag_stack)
                 transduction.pop()
-            elif self.in_(arc) == next_symbol:
+            elif len(self.symbols) > 0 and arc_label == self.symbols[0]:
                 # Transduce, consuming the symbol as a label
                 transduction.append(self.out(arc))
                 consumed = self.symbols.pop(0)
-                yield from self._accept(arc.destination, transduction)
+                yield from self._accept(arc.destination, transduction, flag_stack)
                 self.symbols.insert(0, consumed)
                 transduction.pop()
+            elif arc_label in self.flag_diacritics:
+                # Evaluate flag diacritic
+                flag = self.flag_diacritics[arc_label]
+                flags = flag_stack[-1]
+                if flag.test(flags):
+                    next_flags = flags.copy()
+                    flag.apply(next_flags)
+                    # Transduce WITHOUT consuming input OR emitting output
+                    # label (output should be the flag again).
+                    assert arc_label == self.out(arc), (
+                        'Arc does not have flags on both labels ' + repr(arc)
+                    )
+                    yield from self._accept(arc.destination, transduction,
+                                            flag_stack + [next_flags])
