@@ -21,8 +21,8 @@ def test_parse_simple(eat_fst_txt: str):
                             '+PresPart +Sg +V'.split())
     graphemes = set('eats eaten eating ate'.replace(' ', ''))
     assert len(multichar_symbols) + len(graphemes) == len(result.sigma)
-    assert set(result.multichar_symbols.values()) == set(multichar_symbols)
-    assert set(result.graphemes.values()) == graphemes
+    assert stringified_set(result.multichar_symbols) == set(multichar_symbols)
+    assert stringified_set(result.graphemes) == graphemes
     assert len(result.states) == 15
     assert len(result.arcs) == 19
     assert result.accepting_states == {14}
@@ -46,10 +46,8 @@ def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
     graphemes = set('a b d e i k l n o p r s u y'.split())
     assert len(multichar_symbols) + len(graphemes) + \
         len(flag_diacritics) == len(result.sigma)
-    assert set(result.multichar_symbols.values()) == set(multichar_symbols)
-    assert set(result.flag_diacritics.values()) == {
-        Clear('UN'), Disallow('UN'), Positive('UN', 'ON')
-    }
+    assert stringified_set(result.multichar_symbols) == set(multichar_symbols)
+    assert stringified_set(result.flag_diacritics) == flag_diacritics
     assert set(result.graphemes.values()) == graphemes
     assert len(result.states) == 21
     assert len(result.arcs) == 27
@@ -85,6 +83,13 @@ def test_parse_whitespace_in_sigma() -> None:
 ##end##
 """)
     assert len(result.sigma) == 3
-    assert set(result.graphemes.values()) == {
+    assert stringified_set(result.graphemes) == {
         ' ', '\N{NO-BREAK SPACE}', '\N{SOFT HYPHEN}'
     }
+
+
+def stringified_set(symbols):
+    """
+    Helper that stringifies all of the values in a symbols dictionary.
+    """
+    return set(str(sym) for sym in symbols.values())
