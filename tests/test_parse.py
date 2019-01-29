@@ -7,7 +7,8 @@ Tests for parsing the text format.
 
 import pytest  # type: ignore
 
-from fst_lookup.parse import parse_text, FSTParseError
+from fst_lookup.parse import parse_text, FSTParseError, parse_flag, Clear
+
 
 
 def test_parse_simple(eat_fst_txt: str):
@@ -37,7 +38,7 @@ def test_parse_multiple(eat_fst_txt: str):
         parse_text(invalid_fst)
 
 
-def test_parse_flag_diacritics(english_flags_fst_txt: str) -> None:
+def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
     result = parse_text(english_flags_fst_txt)
     assert len(result.sigma) == 22
     flag_diacritics = set('@C.UN@ @D.UN@ @P.UN.ON@'.split())
@@ -45,11 +46,18 @@ def test_parse_flag_diacritics(english_flags_fst_txt: str) -> None:
     graphemes = set('a b d e i k l n o p r s u y'.split())
     assert len(multichar_symbols) + len(graphemes) + len(flag_diacritics) == len(result.sigma)
     assert set(result.multichar_symbols.values()) == set(multichar_symbols)
-    assert set(result.flag_diacritics.values()) == flag_diacritics
+    assert len(result.flag_diacritics.values()) == len(flag_diacritics)
     assert set(result.graphemes.values()) == graphemes
     assert len(result.states) == 21
     assert len(result.arcs) == 27
     assert result.accepting_states == {20}
+
+
+@pytest.mark.parametrize('raw,parsed', [
+    ('@C.UN@', Clear('UN')),
+])
+def test_parse_flag_diacritics(raw: str, parsed) -> None:
+    assert parse_flag(raw) == parsed
 
 
 def test_parse_whitespace_in_sigma() -> None:
