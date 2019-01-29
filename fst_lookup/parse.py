@@ -42,6 +42,8 @@ class FlagDiacritic:
     Base class for all flag diacritics
     """
 
+    __slots__ = 'feature', 'value'
+
     opcode = '!!INVALID!!'
 
     def __init__(self, feature: str, value: str = None) -> None:
@@ -56,6 +58,19 @@ class FlagDiacritic:
             return self.feature == other.feature and self.value == other.value
         else:
             return self.feature == other.feature
+
+    def __hash__(self) -> int:
+        if hasattr(self, 'value'):
+            return hash((self.opcode, self.feature, self.value))
+        else:
+            return hash((self.opcode, self.feature))
+
+    def __repr__(self) -> str:
+        if hasattr(self, 'value'):
+            return '{:s}({!r}, {!r})'.format(type(self).__name__,
+                                             self.feature, self.value)
+        else:
+            return '{:s}({!r})'.format(type(self).__name__, self.feature)
 
     def __str__(self) -> str:
         if hasattr(self, 'value'):
@@ -229,7 +244,7 @@ class FomaParser:
             if idx in self.symbols:
                 del self.symbols[idx]
 
-        flag_diacritics = {idx: symbol for idx, symbol in self.symbols.items()
+        flag_diacritics = {idx: parse_flag(symbol) for idx, symbol in self.symbols.items()
                            if FLAG_PATTERN.match(symbol)}
         multichar_symbols = {idx: symbol for idx, symbol in self.symbols.items()
                              if len(symbol) > 1 and idx not in flag_diacritics}
