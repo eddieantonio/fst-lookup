@@ -57,7 +57,7 @@ def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
 @pytest.mark.parametrize('raw,parsed', [
     ('@C.UN@', Clear('UN')),
     ('@D.UN@', Disallow('UN')),
-    ('@P.UN@', Positive('UN', 'ON')),
+    ('@P.UN.ON@', Positive('UN', 'ON')),
 ])
 def test_parse_flag_diacritics(raw: str, parsed) -> None:
     assert parse_flag(raw) == parsed
