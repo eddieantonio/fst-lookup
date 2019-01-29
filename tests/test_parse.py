@@ -9,6 +9,7 @@ import pytest  # type: ignore
 
 from fst_lookup.flags import Clear, Disallow, Positive
 from fst_lookup.parse import FSTParseError, parse_flag, parse_text
+from fst_lookup.symbol import Symbol
 
 
 def test_parse_simple(eat_fst_txt: str):
@@ -93,6 +94,27 @@ def test_parse_whitespace_in_sigma() -> None:
     assert stringified_set(result.graphemes) == {
         ' ', '\N{NO-BREAK SPACE}', '\N{SOFT HYPHEN}'
     }
+
+
+def test_parse_symbols() -> None:
+    """
+    Ensures we parse symbols properly
+    """
+    parse = parse_text("""##foma-net 1.0##
+##props##
+2 390211 90019 390213 5 -1 1 2 2 1 0 2
+##sigma##
+0 @_EPSILON_SYMBOL_@
+3 @P.UN.ON@
+4 +Err/Orth
+5 î
+##states##
+-1 -1 -1 -1 -1
+##end##
+""")
+
+    assert parse.has_epsilon
+    assert all(isinstance(sym, Symbol) for sym in parse.sigma.values())
 
 
 def stringified_set(symbols):
