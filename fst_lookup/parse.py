@@ -42,41 +42,49 @@ class FlagDiacritic:
     Base class for all flag diacritics
     """
 
-    __slots__ = 'feature', 'value'
+    __slots__ = 'feature',
 
     opcode = '!!INVALID!!'
 
-    def __init__(self, feature: str, value: str = None) -> None:
+    def __init__(self, feature: str) -> None:
         self.feature = feature
-        if value is not None:
-            self.value = value
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, type(self)):
             return False
-        if hasattr(self, 'value'):
-            return self.feature == other.feature and self.value == other.value
         else:
             return self.feature == other.feature
 
     def __hash__(self) -> int:
-        if hasattr(self, 'value'):
-            return hash((self.opcode, self.feature, self.value))
-        else:
-            return hash((self.opcode, self.feature))
+        return hash((self.opcode, self.feature))
 
     def __repr__(self) -> str:
-        if hasattr(self, 'value'):
-            return '{:s}({!r}, {!r})'.format(type(self).__name__,
-                                             self.feature, self.value)
-        else:
-            return '{:s}({!r})'.format(type(self).__name__, self.feature)
+        return '{:s}({!r})'.format(type(self).__name__, self.feature)
 
     def __str__(self) -> str:
-        if hasattr(self, 'value'):
-            return '@{}.{}.{}@'.format(self.opcode, self.feature, self.value)
-        else:
-            return '@{}.{}@'.format(self.opcode, self.feature)
+        return '@{}.{}@'.format(self.opcode, self.feature)
+
+
+class FlagDiacriticWithValue(FlagDiacritic):
+    __slots__ = 'value',
+
+    def __init__(self, feature: str, value: str = None) -> None:
+        super().__init__(feature)
+        if value is not None:
+            self.value = value
+
+    def __eq__(self, other) -> bool:
+        return super().__eq__(other) and self.value == other.value
+
+    def __hash__(self) -> int:
+        return hash((self.opcode, self.feature, self.value))
+
+    def __repr__(self) -> str:
+        return '{:s}({!r}, {!r})'.format(type(self).__name__,
+                                         self.feature, self.value)
+
+    def __str__(self) -> str:
+        return '@{}.{}.{}@'.format(self.opcode, self.feature, self.value)
 
 
 class Clear(FlagDiacritic):
@@ -87,7 +95,7 @@ class Disallow(FlagDiacritic):
     opcode = 'D'
 
 
-class Positive(FlagDiacritic):
+class Positive(FlagDiacriticWithValue):
     opcode = 'P'
 
 
