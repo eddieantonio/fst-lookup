@@ -30,7 +30,8 @@ def test_parse_simple(eat_fst_txt: str):
 
 def test_parse_multiple(eat_fst_txt: str):
     """
-    Test that the parser will disallow further parses.
+    Test that the parser will disallow more than one Foma FST in one file.
+    Foma will allow multiple, but we'll explicitly reject that.
     """
     invalid_fst = eat_fst_txt * 2
 
@@ -39,6 +40,9 @@ def test_parse_multiple(eat_fst_txt: str):
 
 
 def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
+    """
+    Parse a Foma FST with flag diacritics.
+    """
     result = parse_text(english_flags_fst_txt)
     assert len(result.sigma) == 22
     flag_diacritics = set('@C.UN@ @D.UN@ @P.UN.ON@'.split())
@@ -60,6 +64,9 @@ def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
     ('@P.UN.ON@', Positive('UN', 'ON')),
 ])
 def test_parse_flag_diacritics(raw: str, parsed) -> None:
+    """
+    Test parsing each flag diacritic individually.
+    """
     assert parse_flag(raw) == parsed
     assert str(parsed) == raw
 
