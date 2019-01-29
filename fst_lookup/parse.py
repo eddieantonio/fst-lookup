@@ -107,6 +107,9 @@ class Clear(FlagDiacritic):
         """
         return True
 
+    def apply(self, flags: Dict[str, str]):
+        flags.pop(self.feature, None)
+
 
 class Disallow(FlagDiacritic):
     opcode = 'D'
@@ -118,8 +121,11 @@ class Disallow(FlagDiacritic):
 class Positive(FlagDiacriticWithValue):
     opcode = 'P'
 
-    def test(self, flags: Dict[str, str]):
-        return flags.get(self.feature) == self.value
+    def test(self, flags: Dict[str, str]) -> bool:
+        return True
+
+    def apply(self, flags: Dict[str, str]) -> None:
+        flags[self.feature] = self.value
 
 
 # TODO: add difference between input alphabet and output alphabet
