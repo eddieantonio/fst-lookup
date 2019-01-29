@@ -68,3 +68,14 @@ def test_flag_fst(surface_form: str, analysis, english_flags_fst_txt: str):
     fst = FST.from_text(english_flags_fst_txt)
     assert set(fst.analyze(surface_form)) == {analysis}
     assert set(fst.generate(''.join(analysis))) == {surface_form}
+
+
+@pytest.mark.parametrize('unacceptable_form', [
+    'unpay', 'undrink',
+])
+def test_unacceptable_forms_in_flag_fst(unacceptable_form: str, english_flags_fst_txt: str):
+    """
+    Analyze forms that should not transduce on an FST **WITH** simple flag diacritics.
+    """
+    fst = FST.from_text(english_flags_fst_txt)
+    assert set(fst.analyze(unacceptable_form)) == set()
