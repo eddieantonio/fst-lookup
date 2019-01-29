@@ -7,8 +7,8 @@ Tests for parsing the text format.
 
 import pytest  # type: ignore
 
-from fst_lookup.parse import parse_text, FSTParseError, parse_flag, Clear
-
+from fst_lookup.parse import (Clear, Disallow, FSTParseError, Positive,
+                              parse_flag, parse_text)
 
 
 def test_parse_simple(eat_fst_txt: str):
@@ -44,7 +44,8 @@ def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
     flag_diacritics = set('@C.UN@ @D.UN@ @P.UN.ON@'.split())
     multichar_symbols = set('+Adj +Inf +Pl +V UN+ '.split())
     graphemes = set('a b d e i k l n o p r s u y'.split())
-    assert len(multichar_symbols) + len(graphemes) + len(flag_diacritics) == len(result.sigma)
+    assert len(multichar_symbols) + len(graphemes) + \
+        len(flag_diacritics) == len(result.sigma)
     assert set(result.multichar_symbols.values()) == set(multichar_symbols)
     assert len(result.flag_diacritics.values()) == len(flag_diacritics)
     assert set(result.graphemes.values()) == graphemes
@@ -55,9 +56,12 @@ def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
 
 @pytest.mark.parametrize('raw,parsed', [
     ('@C.UN@', Clear('UN')),
+    ('@D.UN@', Disallow('UN')),
+    ('@P.UN@', Positive('UN', 'ON')),
 ])
 def test_parse_flag_diacritics(raw: str, parsed) -> None:
     assert parse_flag(raw) == parsed
+    assert str(parsed) == raw
 
 
 def test_parse_whitespace_in_sigma() -> None:
