@@ -47,7 +47,9 @@ def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
     assert len(multichar_symbols) + len(graphemes) + \
         len(flag_diacritics) == len(result.sigma)
     assert set(result.multichar_symbols.values()) == set(multichar_symbols)
-    assert len(result.flag_diacritics.values()) == len(flag_diacritics)
+    assert set(result.flag_diacritics.values()) == {
+        Clear('UN'), Disallow('UN'), Positive('UN', 'ON')
+    }
     assert set(result.graphemes.values()) == graphemes
     assert len(result.states) == 21
     assert len(result.arcs) == 27
