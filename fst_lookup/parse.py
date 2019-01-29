@@ -37,6 +37,28 @@ class FSTParseError(Exception):
     """
 
 
+class FlagDiacritic:
+    """
+    Base class for all flag diacritics
+    """
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, type(self)):
+            return False
+        if hasattr(self, 'value'):
+            return self.feature == other.feature and self.value == other.value # type: ignore
+        else:
+            return self.feature == other.feature  # type: ignore
+
+
+class Clear(FlagDiacritic):
+    opcode = 'C'
+
+    def __init__(self, feature: str) -> None:
+        self.feature = feature
+
+
+
 # TODO: add difference between input alphabet and output alphabet
 #       the union of the two is the output alphabet
 
@@ -221,3 +243,11 @@ def parse_text(att_text: str) -> FSTParse:
     FOMA text is very similar to an AT&T format FST.
     """
     return FomaParser().parse_text(att_text)
+
+
+def parse_flag(flag_diacritic: str) -> FlagDiacritic:
+    assert FLAG_PATTERN.match(flag_diacritic)
+    opcode, *arguments = flag_diacritic.strip('@').split('.')
+    if opcode == 'C':
+        return Clear(arguments[0])
+    raise ValueError('Cannot parse ' + flag_diacritic)
