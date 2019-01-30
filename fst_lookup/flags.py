@@ -115,7 +115,14 @@ class Disallow(FlagDiacritic):
 
 
 class DisallowValue(FlagDiacriticWithValue):
+    """
+    Accepts ONLY if the feature is not set to the given value.
+    That is, rejects if the feature is set to the given value.
+    """
     opcode = 'D'
+
+    def test(self, flags: Dict[str, str]) -> bool:
+        return flags.get(self.feature) != self.value
 
 
 class Positive(FlagDiacriticWithValue):
