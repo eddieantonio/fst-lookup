@@ -60,10 +60,10 @@ POSITIVE_SET_ARCS = (
 UNIFY_ARCS = (
     # if a, set x <- a; goto 1
     "0 97 0 3 0",
-    "3 111 1 0",
+    "3 101 1 0",
     # if 'b', set x <- b; goto 1
     "0 98 0 4 0",
-    "4 112 1 0"
+    "4 102 1 0"
 )
 
 FOOTER = """
@@ -100,6 +100,54 @@ def test_require_value() -> None:
     assert set(fst.generate('a')) == {'a'}
     assert set(fst.generate('b')) == {'b'}
     assert set(fst.generate('c')) == set()
+
+
+def test_disallow_value_with_unify() -> None:
+    # Given 'a', this FST will print 'b'
+    # Given 'c', this FST will print both 'a', and 'b'
+    fst = make_fst(
+        # 1 -@D.x.a@-> 5; 5 -0:a-> (2)
+        "1 151 5 0", "5 0 97 2 0",
+        # 1 -@D.x.b@-> 6; 6 -0:b-> (2)
+        "1 152 6 0", "6 0 98 2 0",
+        a_and_b='unify'
+    )
+
+    assert set(fst.generate('a')) == {'b'}
+    assert set(fst.generate('b')) == {'a'}
+    assert set(fst.generate('c')) == {'a', 'b'}
+
+
+def test_require_value_with_unify() -> None:
+    # Given 'a', this FST will print 'b'
+    # Given 'c', this FST will print both 'a', and 'b'
+    fst = make_fst(
+        # 1 -@R.x.a@-> 5; 5 -0:a-> (2)
+        "1 161 5 0", "5 0 97 2 0",
+        # 1 -@R.x.b@-> 6; 6 -0:b-> (2)
+        "1 162 6 0", "6 0 98 2 0",
+        a_and_b='unify'
+    )
+
+    assert set(fst.generate('a')) == {'a'}
+    assert set(fst.generate('b')) == {'b'}
+    assert set(fst.generate('c')) == set()
+
+
+def test_unify_twice() -> None:
+    # Given 'a', this FST will print 'b'
+    # Given 'c', this FST will print both 'a', and 'b'
+    fst = make_fst(
+        # 1 -@U.x.a@-> 5; 5 -0:a-> (2)
+        "1 101 5 0", "5 0 97 2 0",
+        # 1 -@U.x.b@-> 6; 6 -0:b-> (2)
+        "1 102 6 0", "6 0 98 2 0",
+        a_and_b='unify'
+    )
+
+    assert set(fst.generate('a')) == {'a'}
+    assert set(fst.generate('b')) == {'b'}
+    assert set(fst.generate('c')) == {}
 
 
 def make_fst(*custom_arcs: str, a_and_b='positive') -> FST:
