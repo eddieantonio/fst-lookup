@@ -41,21 +41,30 @@ HEADER = ("""
 201 ✅
 202 ❌
 ##states##
-"""
-          # if a, set x <- a; goto 1
-          """0 97 0 3 0
-3 111 1 0
-"""
-          # if 'b', set x <- b; goto 1
-          """0 98 0 4 0
-4 112 1 0
-"""
-          # if 'c', x is unset; goto 1
-          """0 99 0 1 0
-"""
-          # 2 is accepting state
-          """2 -1 -1 1
 """)
+
+# if 'c', x is unset; goto 1
+ACCEPT_C = "0 99 0 1 0"
+# Let 2 be the accepting state:
+ACCEPTING_STATE = "2 -1 -1 1"
+
+POSITIVE_SET_ARCS = (
+    # if a, set x <- a; goto 1
+    "0 97 0 3 0",
+    "3 111 1 0",
+    # if 'b', set x <- b; goto 1
+    "0 98 0 4 0",
+    "4 112 1 0"
+)
+
+UNIFY_ARCS = (
+    # if a, set x <- a; goto 1
+    "0 97 0 3 0",
+    "3 111 1 0",
+    # if 'b', set x <- b; goto 1
+    "0 98 0 4 0",
+    "4 112 1 0"
+)
 
 FOOTER = """
 -1 -1 -1 -1 -1
@@ -93,10 +102,14 @@ def test_require_value() -> None:
     assert set(fst.generate('c')) == set()
 
 
-def make_fst(*arcs: str) -> FST:
+def make_fst(*custom_arcs: str, a_and_b='positive') -> FST:
     """
     To make a complete FST, add one or more arcs that go from state 1 to state 2.
     There are existing arcs to state 1 that set x <- a, set x <- b, and do not define x.
     """
+
+    a_and_b_arcs = UNIFY_ARCS if a_and_b == 'unify' else POSITIVE_SET_ARCS
+
+    arcs = (ACCEPT_C, ACCEPTING_STATE, *a_and_b_arcs, *custom_arcs)
     source = HEADER + '\n'.join(arcs) + FOOTER
     return FST.from_text(source)
