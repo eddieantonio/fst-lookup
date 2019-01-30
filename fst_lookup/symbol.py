@@ -32,7 +32,7 @@ class EpsilonType(Symbol):
         return True
 
     def __repr__(self) -> str:
-        'Epsilon'
+        return 'Epsilon'
 
     def __str__(self) -> str:
         return '\033[7m' 'ε' '\033[m'
@@ -53,39 +53,39 @@ Identity = IdentityType()
 Epsilon = EpsilonType()
 
 
-class Grapheme(Symbol):
+class GraphicalSymbol(Symbol):
+    __slots__ = '_value',
+
+    def __init__(self, value: str) -> None:
+        self._value = value
+
+    def accepts(self, other: Symbol) -> bool:
+        if isinstance(other, type(self)):
+            return other._value == self._value
+        return False
+
+    def __str__(self) -> str:
+        return self._value
+
+    def __repr__(self) -> str:
+        return '{:}({!r})'.format(type(self).__name__, self._value)
+
+
+class Grapheme(GraphicalSymbol):
     """
     Represents a single graphical character.
     """
-    __slots__ = '_char',
 
     def __init__(self, char: str) -> None:
         assert len(char) == 1
-        self._char = char
-
-    def accepts(self, other: Symbol) -> bool:
-        if isinstance(other, type(self)):
-            return other._char == self._char
-        return False
-
-    def __str__(self) -> str:
-        return self._char
+        super().__init__(char)
 
 
-class MultiCharacterSymbol(Symbol):
+class MultiCharacterSymbol(GraphicalSymbol):
     """
     Usually represents a tag or a feature.
     """
-    __slots__ = '_tag',
 
     def __init__(self, tag: str) -> None:
         assert len(tag) > 1
-        self._tag = tag
-
-    def accepts(self, other: Symbol) -> bool:
-        if isinstance(other, type(self)):
-            return other._tag == self._tag
-        return False
-
-    def __str__(self) -> str:
-        return self._tag
+        super().__init__(tag)
