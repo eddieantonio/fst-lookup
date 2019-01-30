@@ -29,7 +29,7 @@ from .symbol import Epsilon, Grapheme, MultiCharacterSymbol, Symbol
 # Type aliases
 PathLike = Union[str, Path]  # similar to Python 3.6's os.PathLike
 RawTransduction = Tuple[Symbol, ...]
-# Gets a Symobl from an arc. func(arc: Arc) -> Symbol
+# Gets a Symbol from an arc. func(arc: Arc) -> Symbol
 SymbolFromArc = Callable[[Arc], Symbol]
 # An analysis is a tuple of strings.
 Analyses = Iterable[Tuple[str, ...]]
@@ -67,8 +67,8 @@ class FST:
         Given a surface form, this yields all possible analyses in the FST.
         """
         symbols = list(self.to_symbols(surface_form))
-        analyses = self._transduce(symbols, in_=lambda arc: arc.lower,
-                                   out=lambda arc: arc.upper)
+        analyses = self._transduce(symbols, get_input_label=lambda arc: arc.lower,
+                                   get_output_label=lambda arc: arc.upper)
         for analysis in analyses:
             yield tuple(self._format_transduction(analysis))
 
@@ -77,8 +77,8 @@ class FST:
         Given an analysis, this yields all possible surface forms in the FST.
         """
         symbols = list(self.to_symbols(analysis))
-        forms = self._transduce(symbols, in_=lambda arc: arc.upper,
-                                out=lambda arc: arc.lower)
+        forms = self._transduce(symbols, get_input_label=lambda arc: arc.upper,
+                                get_output_label=lambda arc: arc.lower)
         for transduction in forms:
             yield ''.join(str(symbol) for symbol in transduction
                           if symbol is not Epsilon)
@@ -112,12 +112,13 @@ class FST:
         parse = parse_text(att_text)
         return FST(parse)
 
-    def _transduce(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc):
+    def _transduce(self, symbols: List[Symbol],
+                   get_input_label: SymbolFromArc, get_output_label: SymbolFromArc):
         yield from Transducer(initial_state=self.initial_state,
                               symbols=symbols,
                               arcs_from=self.arcs_from,
                               accepting_states=self.accepting_states,
-                              in_=in_, out=out)
+                              get_input_label=get_input_label, get_output_label=get_output_label)
 
     def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
         # TODO: REFACTOR THIS GROSS FUNCTION
@@ -150,15 +151,15 @@ class Transducer(Iterable[RawTransduction]):
         self,
         initial_state: StateID,
         symbols: Iterable[Symbol],
-        in_: SymbolFromArc,
-        out: SymbolFromArc,
+        get_input_label: SymbolFromArc,
+        get_output_label: SymbolFromArc,
         accepting_states: FrozenSet[StateID],
         arcs_from: Dict[StateID, Set[Arc]],
     ) -> None:
         self.initial_state = initial_state
         self.symbols = list(symbols)
-        self.in_ = in_
-        self.out = out
+        self.get_input_label = get_input_label
+        self.get_output_label = get_output_label
         self.accepting_states = accepting_states
         self.arcs_from = arcs_from
 
@@ -178,16 +179,16 @@ class Transducer(Iterable[RawTransduction]):
             yield tuple(transduction)
 
         for arc in self.arcs_from[state]:
-            input_label = self.in_(arc)
+            input_label = self.get_input_label(arc)
 
             if input_label is Epsilon:
                 # Transduce WITHOUT consuming input
-                transduction.append(self.out(arc))
+                transduction.append(self.get_output_label(arc))
                 yield from self._accept(arc.destination, transduction, flag_stack)
                 transduction.pop()
             elif len(self.symbols) > 0 and input_label == self.symbols[0]:
                 # Transduce, consuming the symbol as a label
-                transduction.append(self.out(arc))
+                transduction.append(self.get_output_label(arc))
                 consumed = self.symbols.pop(0)
                 yield from self._accept(arc.destination, transduction, flag_stack)
                 self.symbols.insert(0, consumed)
@@ -201,7 +202,7 @@ class Transducer(Iterable[RawTransduction]):
                     flag.apply(next_flags)
                     # Transduce WITHOUT consuming input OR emitting output
                     # label (output should be the flag again).
-                    assert input_label == self.out(arc), (
+                    assert input_label == self.get_output_label(arc), (
                         'Arc does not have flags on both labels ' + repr(arc)
                     )
                     yield from self._accept(arc.destination, transduction,
