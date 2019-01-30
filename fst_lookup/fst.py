@@ -62,10 +62,6 @@ class FST:
         for arc in parse.arcs:
             self.arcs_from[arc.state].add(arc)
 
-        # TODO: is this needed?
-        # XXX: create a subset of sigma of JUST flag diacritics
-        self.flag_diacritics = parse.flag_diacritics
-
     def analyze(self, surface_form: str) -> Analyses:
         """
         Given a surface form, this yields all possible analyses in the FST.
@@ -121,8 +117,7 @@ class FST:
                               symbols=symbols,
                               arcs_from=self.arcs_from,
                               accepting_states=self.accepting_states,
-                              in_=in_, out=out,
-                              flag_diacritics=self.flag_diacritics)
+                              in_=in_, out=out)
 
     def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
         # TODO: REFACTOR THIS GROSS FUNCTION
@@ -159,7 +154,6 @@ class Transducer(Iterable[RawTransduction]):
         out: SymbolFromArc,
         accepting_states: FrozenSet[StateID],
         arcs_from: Dict[StateID, Set[Arc]],
-        flag_diacritics: Dict[int, FlagDiacritic]
     ) -> None:
         self.initial_state = initial_state
         self.symbols = list(symbols)
@@ -167,7 +161,6 @@ class Transducer(Iterable[RawTransduction]):
         self.out = out
         self.accepting_states = accepting_states
         self.arcs_from = arcs_from
-        self.flag_diacritics = flag_diacritics
 
     def __iter__(self) -> Iterator[RawTransduction]:
         yield from self._accept(self.initial_state, [], [{}])
