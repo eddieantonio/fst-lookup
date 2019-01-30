@@ -19,24 +19,25 @@ import re
 from collections import defaultdict
 from pathlib import Path
 from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
-                    Tuple, Union)
+                    Tuple, Union, NewType)
 
-from .data import Arc, StateID, Symbol
+from .data import Arc, StateID
 from .parse import FSTParse, parse_text
 from .flags import FlagDiacritic
 from .symbol import Grapheme, MultiCharacterSymbol
 
 # Type aliases
+_LegacySymbol = NewType('_LegacySymbol', int)
 PathLike = Union[str, Path]  # similar to Python 3.6's os.PathLike
-RawTransduction = Tuple[Symbol, ...]
+RawTransduction = Tuple[_LegacySymbol, ...]
 # Gets a Symobl from an arc. func(arc: Arc) -> Symbol
-SymbolFromArc = Callable[[Arc], Symbol]
+SymbolFromArc = Callable[[Arc], _LegacySymbol]
 # An analysis is a tuple of strings.
 Analyses = Iterable[Tuple[str, ...]]
 
 # Symbol aliases
-INVALID = Symbol(-1)
-EPSILON = Symbol(0)
+INVALID = _LegacySymbol(-1)
+EPSILON = _LegacySymbol(0)
 
 
 class FST:
@@ -48,7 +49,7 @@ class FST:
     def __init__(self, parse: FSTParse) -> None:
         self.initial_state = min(parse.states)
         self.accepting_states = frozenset(parse.accepting_states)
-        self.sigma = {Symbol(k): str(v) for k, v in parse.sigma.items()}
+        self.sigma = {_LegacySymbol(k): str(v) for k, v in parse.sigma.items()}
         self.inverse_sigma = {str(sym): idx for idx, sym in self.sigma.items()}
         self.multichar_symbols = parse.multichar_symbols
         self.graphemes = parse.graphemes
@@ -91,7 +92,7 @@ class FST:
             yield ''.join(str(self.sigma[symbol]) for symbol in transduction
                           if symbol != EPSILON)
 
-    def to_symbols(self, surface_form: str) -> Iterable[Symbol]:
+    def to_symbols(self, surface_form: str) -> Iterable[_LegacySymbol]:
         """
         Tokenizes a form into symbols.
         """
@@ -120,7 +121,7 @@ class FST:
         parse = parse_text(att_text)
         return FST(parse)
 
-    def _transduce(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc):
+    def _transduce(self, symbols: List[_LegacySymbol], in_: SymbolFromArc, out: SymbolFromArc):
         yield from Transducer(initial_state=self.initial_state,
                               symbols=symbols,
                               arcs_from=self.arcs_from,
@@ -128,7 +129,7 @@ class FST:
                               in_=in_, out=out,
                               flag_diacritics=self.flag_diacritics)
 
-    def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
+    def _format_transduction(self, transduction: Iterable[_LegacySymbol]) -> Iterable[str]:
         # TODO: REFACTOR THIS GROSS FUNCTION
         current_lemma = ''
         for symbol in transduction:
@@ -158,7 +159,7 @@ class Transducer(Iterable[RawTransduction]):
     def __init__(
         self,
         initial_state: StateID,
-        symbols: Iterable[Symbol],
+        symbols: Iterable[_LegacySymbol],
         in_: SymbolFromArc,
         out: SymbolFromArc,
         accepting_states: FrozenSet[StateID],
@@ -179,7 +180,7 @@ class Transducer(Iterable[RawTransduction]):
     def _accept(
         self,
         state: StateID,
-        transduction: List[Symbol],
+        transduction: List[_LegacySymbol],
         flag_stack: List[Dict[str, str]]
     ) -> Iterable[RawTransduction]:
         # TODO: Handle a maximum transduction depth, for cyclic FSTs.

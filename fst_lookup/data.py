@@ -14,14 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import namedtuple
-from typing import Callable, NewType
+from typing import Callable, NewType, NamedTuple
 
-Symbol = NewType('Symbol', int)
+from .symbol import Symbol
+
 StateID = NewType('StateID', int)
 
 
-class Arc(namedtuple('ArcBase', 'state in_label out_label destination')):
+class Arc(NamedTuple('ArcBase', [('state', StateID),
+                                 ('upper', Symbol),
+                                 ('lower', Symbol),
+                                 ('destination', StateID)])):
     """
     An arc (transition) in the FST.
     """
@@ -37,9 +40,9 @@ class Arc(namedtuple('ArcBase', 'state in_label out_label destination')):
         )
 
     @property
-    def lower(self) -> Symbol:
-        return self.out_label  # type: ignore
+    def out_label(self) -> Symbol:
+        return self.lower
 
     @property
-    def upper(self) -> Symbol:
-        return self.in_label  # type: ignore
+    def in_label(self) -> Symbol:
+        return self.upper

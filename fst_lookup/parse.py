@@ -16,9 +16,8 @@
 # limitations under the License.
 
 import re
-from collections import namedtuple
 from enum import Enum
-from typing import List, Dict, Tuple, Set, Optional, Callable, Mapping
+from typing import List, Dict, Tuple, Set, Optional, Callable, Mapping, NamedTuple
 
 from .data import Arc, StateID, Symbol as _Symbol
 from .flags import FlagDiacritic, Clear, Disallow, Positive
@@ -57,6 +56,7 @@ class SymbolTable:
         # TODO: differentiate between input alphabet and output alphabet
         #       the union of the two is sigma
 
+    @property
     def sigma(self) -> Mapping[int, Symbol]:
         return {**self.multichar_symbols,
                 **self.graphemes,
@@ -76,9 +76,10 @@ class SymbolTable:
             self.specials[symbol_id] = symbol
 
 
-class FSTParse(namedtuple('FSTParse', 'symbols '
-                                      'arcs '
-                                      'intermediate_states accepting_states ')):
+class FSTParse(NamedTuple('FSTParse', [('symbols', SymbolTable),
+                                       ('arcs', List[Arc]),
+                                       ('intermediate_states', Set[StateID]),
+                                       ('accepting_states', Set[StateID])])):
     """
     The parsed data from an FST, in a nice neat pile.
     """
@@ -207,7 +208,11 @@ class FomaParser:
         self.implied_state = src
         # Super important! make sure the order of these arguments is
         # consistent with the definition of Arc
-        self.arcs.append(Arc(src, in_label, out_label, dest))
+        arc = Arc(StateID(src),
+                  self.symbols.sigma[in_label],
+                  self.symbols.sigma[out_label],
+                  StateID(dest))
+        self.arcs.append(arc)
 
     def handle_end(self, line: str):
         # Nothing to do here. Yet.
