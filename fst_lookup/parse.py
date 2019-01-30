@@ -18,6 +18,7 @@
 import re
 from enum import Enum
 from typing import List, Dict, Tuple, Set, Optional, Callable, Mapping, NamedTuple
+from collections import ChainMap
 
 from .data import Arc, StateID, Symbol as _Symbol
 from .flags import FlagDiacritic, Clear, Disallow, Positive
@@ -61,6 +62,10 @@ class SymbolTable:
         return {**self.multichar_symbols,
                 **self.graphemes,
                 **self.flag_diacritics}
+
+    def __getitem__(self, idx: int):
+        return ChainMap(self.multichar_symbols, self.graphemes,
+                        self.flag_diacritics, self.specials)[idx]
 
     def add(self, symbol_id: int, symbol: Symbol) -> None:
         """
@@ -208,10 +213,7 @@ class FomaParser:
         self.implied_state = src
         # Super important! make sure the order of these arguments is
         # consistent with the definition of Arc
-        arc = Arc(StateID(src),
-                  self.symbols.sigma[in_label],
-                  self.symbols.sigma[out_label],
-                  StateID(dest))
+        arc = Arc(StateID(src), self.symbols[in_label], self.symbols[out_label], StateID(dest))
         self.arcs.append(arc)
 
     def handle_end(self, line: str):
