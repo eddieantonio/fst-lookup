@@ -29,15 +29,12 @@ class Arc(NamedTuple('ArcBase', [('state', StateID),
     An arc (transition) in the FST.
     """
     def __str__(self) -> str:
-        return self.debug_string(labels=str)
-
-    def debug_string(self, labels: Callable[[Symbol], str]) -> str:
-        # TODO: compact notation when upper == lower
-        return '{:d} – {:s}:{:s} → {:d}'.format(
-                self.state,
-                labels(self.in_label),
-                labels(self.out_label),
-                self.destination
+        if self.upper == self.lower:
+            label = str(self.upper)
+        else:
+            label = str(self.upper) + ':' + str(self.lower)
+        return '{:d} ─{:s}→ {:d}'.format(
+            self.state, label, self.destination
         )
 
     @property

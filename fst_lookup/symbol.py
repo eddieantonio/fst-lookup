@@ -35,7 +35,8 @@ class EpsilonType(Symbol):
         return 'Epsilon'
 
     def __str__(self) -> str:
-        return '\033[7m' 'ε' '\033[m'
+        # Print an epsilon in reverse video, to distinguish it from a literal epsilon.
+        return '\033[7m' 'ε' '\033[27m'
 
 
 class UnknownType(Symbol):
