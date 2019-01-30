@@ -77,7 +77,7 @@ class SymbolTable:
 
 
 class FSTParse(NamedTuple('FSTParse', [('symbols', SymbolTable),
-                                       ('arcs', List[Arc]),
+                                       ('arcs', Set[Arc]),
                                        ('intermediate_states', Set[StateID]),
                                        ('accepting_states', Set[StateID])])):
     """
@@ -85,16 +85,16 @@ class FSTParse(NamedTuple('FSTParse', [('symbols', SymbolTable),
     """
 
     @property
-    def multichar_symbols(self) -> Dict[int, Symbol]:
-        return self.symbols.multichar_symbols  # type: ignore
+    def multichar_symbols(self) -> Dict[int, MultiCharacterSymbol]:
+        return self.symbols.multichar_symbols
 
     @property
     def flag_diacritics(self) -> Dict[int, FlagDiacritic]:
-        return self.symbols.flag_diacritics  # type: ignore
+        return self.symbols.flag_diacritics
 
     @property
     def graphemes(self) -> Dict[int, Grapheme]:
-        return self.symbols.graphemes  # type: ignore
+        return self.symbols.graphemes
 
     @property
     def sigma(self) -> Dict[int, Symbol]:
@@ -108,7 +108,7 @@ class FSTParse(NamedTuple('FSTParse', [('symbols', SymbolTable),
 
     @property
     def has_epsilon(self) -> bool:
-        return 0 in self.symbols.specials  # type: ignore
+        return 0 in self.symbols.specials
 
 
 class FomaParser:
@@ -120,7 +120,7 @@ class FomaParser:
 
     def __init__(self) -> None:
         self.arcs = []  # type: List[Arc]
-        self.accepting_states = set()  # type: Set[int]
+        self.accepting_states = set()  # type: Set[StateID]
         self.implied_state = None  # type: Optional[int]
         self.handle_line = self.handle_header
         self.has_seen_header = False
@@ -199,7 +199,7 @@ class FomaParser:
             # FIXME: this is a STATE WITHOUT TRANSITIONS
             if in_label == -1 or dest == -1:
                 # This is an accepting state
-                self.accepting_states.add(src)
+                self.accepting_states.add(StateID(src))
                 return
         elif num_items == 5:
             # FIXME: last is final_state, not weight
@@ -238,7 +238,7 @@ class FomaParser:
         # After parsing, we should be in the ##end## state.
         assert self.handle_line == self.handle_end
 
-        states = {arc.state for arc in self.arcs}
+        states = {StateID(arc.state) for arc in self.arcs}
         return FSTParse(symbols=self.symbols,
                         arcs=set(self.arcs),
                         intermediate_states=states,
