@@ -44,10 +44,18 @@ class SymbolTable:
     Keeps track of ALL of the symbols in an FST.
     """
     def __init__(self) -> None:
+        # TODO: keep track of upper and lower alphabet
         self.multichar_symbols = {}  # type: Dict[int, MultiCharacterSymbol]
         self.graphemes = {}  # type: Dict[int, Grapheme]
         self.flag_diacritics = {}  # type: Dict[int, FlagDiacritic]
+        # Will contain:
+        # 0 @_EPSILON_SYMBOL_@
+        # 1 @_UNKNOWN_SYMBOL_@
+        # 2 @_IDENTITY_SYMBOL_@
         self.specials = {}  # type: Dict[int, Symbol]
+
+        # TODO: differentiate between input alphabet and output alphabet
+        #       the union of the two is sigma
 
     def sigma(self) -> Mapping[int, Symbol]:
         return {**self.multichar_symbols,
@@ -67,9 +75,6 @@ class SymbolTable:
         else:
             self.specials[symbol_id] = symbol
 
-
-# TODO: add difference between input alphabet and output alphabet
-#       the union of the two is the output alphabet
 
 class FSTParse(namedtuple('FSTParse', 'symbols '
                                       'arcs '
@@ -113,7 +118,6 @@ class FomaParser:
     LineParser = Callable[[str], None]
 
     def __init__(self) -> None:
-        # TODO: keep track of input and output alphabet
         self.arcs = []  # type: List[Arc]
         self.accepting_states = set()  # type: Set[int]
         self.implied_state = None  # type: Optional[int]
@@ -229,28 +233,7 @@ class FomaParser:
         # After parsing, we should be in the ##end## state.
         assert self.handle_line == self.handle_end
 
-        """
-        has_epsilon = _Symbol(0) in self.symbols
-
-        # Get rid of special symbols:
-        # 0 @_EPSILON_SYMBOL_@
-        # 1 @_UNKNOWN_SYMBOL_@
-        # 2 @_IDENTITY_SYMBOL_@
-        for idx in _Symbol(0), _Symbol(1), _Symbol(2):
-            if idx in self.symbols:
-                del self.symbols[idx]
-
-        flag_diacritics = {idx: parse_flag(symbol) for idx, symbol in self.symbols.items()
-                           if FLAG_PATTERN.match(symbol)}
-        multichar_symbols = {idx: MultiCharacterSymbol(symbol)
-                             for idx, symbol in self.symbols.items()
-                             if len(symbol) > 1 and idx not in flag_diacritics}
-        graphemes = {idx: Grapheme(symbol) for idx, symbol in self.symbols.items()
-                     if len(symbol) == 1}
-        """
-
         states = {arc.state for arc in self.arcs}
-
         return FSTParse(symbols=self.symbols,
                         arcs=set(self.arcs),
                         intermediate_states=states,
