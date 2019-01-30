@@ -18,11 +18,11 @@
 import re
 from collections import namedtuple
 from enum import Enum
-from typing import List, Dict, Tuple, Set, Optional, Callable
+from typing import List, Dict, Tuple, Set, Optional, Callable, Mapping
 
-from .data import Arc, StateID, Symbol
+from .data import Arc, StateID, Symbol as _Symbol
 from .flags import FlagDiacritic, Clear, Disallow, Positive
-from .symbol import Grapheme, MultiCharacterSymbol
+from .symbol import Symbol, Epsilon, Grapheme, MultiCharacterSymbol, Unknown, Identity
 
 
 FLAG_PATTERN = re.compile(r'''
@@ -39,19 +39,59 @@ class FSTParseError(Exception):
     """
 
 
+class SymbolTable:
+    """
+    Keeps track of ALL of the symbols in an FST.
+    """
+    def __init__(self) -> None:
+        self.multichar_symbols = {}  # type: Dict[int, MultiCharacterSymbol]
+        self.graphemes = {}  # type: Dict[int, Grapheme]
+        self.flag_diacritics = {}  # type: Dict[int, FlagDiacritic]
+        self.specials = {}  # type: Dict[int, Symbol]
+
+    def sigma(self) -> Mapping[int, Symbol]:
+        return {**self.multichar_symbols,
+                **self.graphemes,
+                **self.flag_diacritics}
+
+    def add(self, symbol_id: int, symbol: Symbol) -> None:
+        """
+        Add a symbol to the symbol table.
+        """
+        if isinstance(symbol, Grapheme):
+            self.graphemes[symbol_id] = symbol
+        elif isinstance(symbol, MultiCharacterSymbol):
+            self.multichar_symbols[symbol_id] = symbol
+        elif isinstance(symbol, FlagDiacritic):
+            self.flag_diacritics[symbol_id] = symbol
+        else:
+            self.specials[symbol_id] = symbol
+
+
 # TODO: add difference between input alphabet and output alphabet
 #       the union of the two is the output alphabet
 
-class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes flag_diacritics '
+class FSTParse(namedtuple('FSTParse', 'symbols '
                                       'arcs '
-                                      'intermediate_states accepting_states '
-                                      'has_epsilon')):
+                                      'intermediate_states accepting_states ')):
     """
     The parsed data from an FST, in a nice neat pile.
     """
 
     @property
-    def sigma(self) -> Dict[Symbol, str]:
+    def multichar_symbols(self) -> Dict[int, Symbol]:
+        return self.symbols.multichar_symbols  # type: ignore
+
+    @property
+    def flag_diacritics(self) -> Dict[int, FlagDiacritic]:
+        return self.symbols.flag_diacritics  # type: ignore
+
+    @property
+    def graphemes(self) -> Dict[int, Grapheme]:
+        return self.symbols.graphemes  # type: ignore
+
+    @property
+    def sigma(self) -> Dict[int, Symbol]:
         return {**self.multichar_symbols,
                 **self.flag_diacritics,
                 **self.graphemes}
@@ -59,6 +99,10 @@ class FSTParse(namedtuple('FSTParse', 'multichar_symbols graphemes flag_diacriti
     @property
     def states(self):
         return self.intermediate_states | self.accepting_states
+
+    @property
+    def has_epsilon(self) -> bool:
+        return 0 in self.symbols.specials  # type: ignore
 
 
 class FomaParser:
@@ -69,13 +113,13 @@ class FomaParser:
     LineParser = Callable[[str], None]
 
     def __init__(self) -> None:
-        self.symbols = {}  # type: Dict[Symbol, str]
         # TODO: keep track of input and output alphabet
         self.arcs = []  # type: List[Arc]
         self.accepting_states = set()  # type: Set[int]
         self.implied_state = None  # type: Optional[int]
         self.handle_line = self.handle_header
         self.has_seen_header = False
+        self.symbols = SymbolTable()
 
     def handle_header(self, line: str):
         # Nothing to do here... yet.
@@ -110,9 +154,9 @@ class FomaParser:
         """
         Adds a new entry to the symbol table.
         """
-        idx_str, _space, symbol = line.partition('\N{SPACE}')
+        idx_str, _space, symbol_text = line.partition('\N{SPACE}')
         idx = int(idx_str)
-        self.symbols[Symbol(idx)] = symbol
+        self.symbols.add(idx, parse_symbol(symbol_text))
 
     def handle_states(self, line: str):
         """
@@ -185,13 +229,14 @@ class FomaParser:
         # After parsing, we should be in the ##end## state.
         assert self.handle_line == self.handle_end
 
-        has_epsilon = Symbol(0) in self.symbols
+        """
+        has_epsilon = _Symbol(0) in self.symbols
 
         # Get rid of special symbols:
         # 0 @_EPSILON_SYMBOL_@
         # 1 @_UNKNOWN_SYMBOL_@
         # 2 @_IDENTITY_SYMBOL_@
-        for idx in Symbol(0), Symbol(1), Symbol(2):
+        for idx in _Symbol(0), _Symbol(1), _Symbol(2):
             if idx in self.symbols:
                 del self.symbols[idx]
 
@@ -202,16 +247,14 @@ class FomaParser:
                              if len(symbol) > 1 and idx not in flag_diacritics}
         graphemes = {idx: Grapheme(symbol) for idx, symbol in self.symbols.items()
                      if len(symbol) == 1}
+        """
 
         states = {arc.state for arc in self.arcs}
 
-        return FSTParse(multichar_symbols=multichar_symbols,
-                        flag_diacritics=flag_diacritics,
-                        graphemes=graphemes,
+        return FSTParse(symbols=self.symbols,
                         arcs=set(self.arcs),
                         intermediate_states=states,
-                        accepting_states=self.accepting_states,
-                        has_epsilon=has_epsilon)
+                        accepting_states=self.accepting_states)
 
     def parse_text(self, fst_text: str) -> FSTParse:
         for line in fst_text.splitlines():
@@ -228,6 +271,24 @@ def parse_text(att_text: str) -> FSTParse:
     FOMA text is very similar to an AT&T format FST.
     """
     return FomaParser().parse_text(att_text)
+
+
+def parse_symbol(symbol: str) -> Symbol:
+    if FLAG_PATTERN.match(symbol):
+        return parse_flag(symbol)
+    elif symbol == '@_EPSILON_SYMBOL_@':
+        return Epsilon
+    elif symbol == '@_UNKNOWN_SYMBOL_@':
+        return Unknown
+    elif symbol == '@_IDENTITY_SYMBOL_@':
+        return Identity
+    elif symbol.startswith('@') and symbol.endswith('@'):
+        raise NotImplementedError
+    elif len(symbol) > 1:
+        return MultiCharacterSymbol(symbol)
+    elif len(symbol) == 1:
+        return Grapheme(symbol)
+    raise NotImplementedError
 
 
 def parse_flag(flag_diacritic: str) -> FlagDiacritic:

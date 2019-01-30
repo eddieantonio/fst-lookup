@@ -48,7 +48,7 @@ class FST:
     def __init__(self, parse: FSTParse) -> None:
         self.initial_state = min(parse.states)
         self.accepting_states = frozenset(parse.accepting_states)
-        self.sigma = dict(parse.sigma)
+        self.sigma = {Symbol(k): str(v) for k, v in parse.sigma.items()}
         self.inverse_sigma = {str(sym): idx for idx, sym in self.sigma.items()}
         self.multichar_symbols = parse.multichar_symbols
         self.graphemes = parse.graphemes
@@ -56,7 +56,7 @@ class FST:
         # Prepare a regular expression to symbolify all input.
         # Ensure the longest symbols are first, so that they are match first
         # by the regular expresion.
-        symbols = sorted((str(s) for s in self.sigma.values()
+        symbols = sorted((str(s) for s in parse.sigma.values()
                          if isinstance(s, (Grapheme, MultiCharacterSymbol))),
                          key=len, reverse=True)
         self.symbol_pattern = re.compile(
@@ -163,7 +163,7 @@ class Transducer(Iterable[RawTransduction]):
         out: SymbolFromArc,
         accepting_states: FrozenSet[StateID],
         arcs_from: Dict[StateID, Set[Arc]],
-        flag_diacritics: Dict[Symbol, FlagDiacritic]
+        flag_diacritics: Dict[int, FlagDiacritic]
     ) -> None:
         self.initial_state = initial_state
         self.symbols = list(symbols)

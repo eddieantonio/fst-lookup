@@ -27,6 +27,32 @@ class Symbol(ABC):
         raise NotImplementedError
 
 
+class EpsilonType(Symbol):
+    def accepts(self, other: 'Symbol') -> bool:
+        return True
+
+    def __repr__(self) -> str:
+        'Epsilon'
+
+    def __str__(self) -> str:
+        return '\033[7m' 'ε' '\033[m'
+
+
+class UnknownType(Symbol):
+    def accepts(self, other: 'Symbol') -> bool:
+        raise NotImplementedError
+
+
+class IdentityType(Symbol):
+    def accepts(self, other: 'Symbol') -> bool:
+        raise NotImplementedError
+
+
+Unknown = UnknownType()
+Identity = IdentityType()
+Epsilon = EpsilonType()
+
+
 class Grapheme(Symbol):
     """
     Represents a single graphical character.
