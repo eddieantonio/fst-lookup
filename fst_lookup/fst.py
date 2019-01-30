@@ -24,14 +24,14 @@ from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
 from .data import Arc, StateID
 from .parse import FSTParse, parse_text
 from .flags import FlagDiacritic
-from .symbol import Grapheme, MultiCharacterSymbol
+from .symbol import Grapheme, MultiCharacterSymbol, Symbol, Epsilon
 
 # Type aliases
 _LegacySymbol = NewType('_LegacySymbol', int)
 PathLike = Union[str, Path]  # similar to Python 3.6's os.PathLike
-RawTransduction = Tuple[_LegacySymbol, ...]
+RawTransduction = Tuple[Symbol, ...]
 # Gets a Symobl from an arc. func(arc: Arc) -> Symbol
-SymbolFromArc = Callable[[Arc], _LegacySymbol]
+SymbolFromArc = Callable[[Arc], Symbol]
 # An analysis is a tuple of strings.
 Analyses = Iterable[Tuple[str, ...]]
 
@@ -49,17 +49,16 @@ class FST:
     def __init__(self, parse: FSTParse) -> None:
         self.initial_state = min(parse.states)
         self.accepting_states = frozenset(parse.accepting_states)
-        self.sigma = {_LegacySymbol(k): str(v) for k, v in parse.sigma.items()}
-        self.inverse_sigma = {str(sym): idx for idx, sym in self.sigma.items()}
-        self.multichar_symbols = parse.multichar_symbols
-        self.graphemes = parse.graphemes
+
+        self.str2symbol = {
+            str(sym): sym for sym in parse.sigma.values()
+            if isinstance(sym, (Grapheme, MultiCharacterSymbol))
+        }
 
         # Prepare a regular expression to symbolify all input.
         # Ensure the longest symbols are first, so that they are match first
         # by the regular expresion.
-        symbols = sorted((str(s) for s in parse.sigma.values()
-                         if isinstance(s, (Grapheme, MultiCharacterSymbol))),
-                         key=len, reverse=True)
+        symbols = sorted(self.str2symbol.keys(), key=len, reverse=True)
         self.symbol_pattern = re.compile(
             '|'.join(re.escape(entry) for entry in symbols)
         )
@@ -89,10 +88,10 @@ class FST:
         forms = self._transduce(symbols, in_=lambda arc: arc.upper,
                                 out=lambda arc: arc.lower)
         for transduction in forms:
-            yield ''.join(str(self.sigma[symbol]) for symbol in transduction
-                          if symbol != EPSILON)
+            yield ''.join(str(symbol) for symbol in transduction
+                          if symbol is not Epsilon)
 
-    def to_symbols(self, surface_form: str) -> Iterable[_LegacySymbol]:
+    def to_symbols(self, surface_form: str) -> Iterable[Symbol]:
         """
         Tokenizes a form into symbols.
         """
@@ -102,7 +101,7 @@ class FST:
             if not match:
                 raise ValueError("Cannot symbolify form: " + repr(surface_form))
             # Convert to a symbol
-            yield self.inverse_sigma[match.group(0)]
+            yield self.str2symbol[match.group(0)]
             text = text[match.end():]
 
     @classmethod
@@ -121,7 +120,7 @@ class FST:
         parse = parse_text(att_text)
         return FST(parse)
 
-    def _transduce(self, symbols: List[_LegacySymbol], in_: SymbolFromArc, out: SymbolFromArc):
+    def _transduce(self, symbols: List[Symbol], in_: SymbolFromArc, out: SymbolFromArc):
         yield from Transducer(initial_state=self.initial_state,
                               symbols=symbols,
                               arcs_from=self.arcs_from,
@@ -129,24 +128,24 @@ class FST:
                               in_=in_, out=out,
                               flag_diacritics=self.flag_diacritics)
 
-    def _format_transduction(self, transduction: Iterable[_LegacySymbol]) -> Iterable[str]:
+    def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
         # TODO: REFACTOR THIS GROSS FUNCTION
         current_lemma = ''
         for symbol in transduction:
-            if symbol == EPSILON:
+            if symbol is Epsilon:
                 if current_lemma:
                     yield current_lemma
                     current_lemma = ''
                 # ignore epsilons
                 continue
-            elif symbol in self.multichar_symbols:
+            elif isinstance(symbol, MultiCharacterSymbol):
                 if current_lemma:
                     yield current_lemma
                     current_lemma = ''
-                yield str(self.sigma[symbol])
+                yield str(symbol)
             else:
-                assert symbol in self.graphemes
-                current_lemma += str(self.graphemes[symbol])
+                assert isinstance(symbol, Grapheme)
+                current_lemma += str(symbol)
 
         if current_lemma:
             yield current_lemma
@@ -159,7 +158,7 @@ class Transducer(Iterable[RawTransduction]):
     def __init__(
         self,
         initial_state: StateID,
-        symbols: Iterable[_LegacySymbol],
+        symbols: Iterable[Symbol],
         in_: SymbolFromArc,
         out: SymbolFromArc,
         accepting_states: FrozenSet[StateID],
@@ -180,7 +179,7 @@ class Transducer(Iterable[RawTransduction]):
     def _accept(
         self,
         state: StateID,
-        transduction: List[_LegacySymbol],
+        transduction: List[Symbol],
         flag_stack: List[Dict[str, str]]
     ) -> Iterable[RawTransduction]:
         # TODO: Handle a maximum transduction depth, for cyclic FSTs.
@@ -190,30 +189,30 @@ class Transducer(Iterable[RawTransduction]):
             yield tuple(transduction)
 
         for arc in self.arcs_from[state]:
-            arc_label = self.in_(arc)
+            input_label = self.in_(arc)
 
-            if arc_label == EPSILON:
+            if input_label is Epsilon:
                 # Transduce WITHOUT consuming input
                 transduction.append(self.out(arc))
                 yield from self._accept(arc.destination, transduction, flag_stack)
                 transduction.pop()
-            elif len(self.symbols) > 0 and arc_label == self.symbols[0]:
+            elif len(self.symbols) > 0 and input_label == self.symbols[0]:
                 # Transduce, consuming the symbol as a label
                 transduction.append(self.out(arc))
                 consumed = self.symbols.pop(0)
                 yield from self._accept(arc.destination, transduction, flag_stack)
                 self.symbols.insert(0, consumed)
                 transduction.pop()
-            elif arc_label in self.flag_diacritics:
+            elif isinstance(input_label, FlagDiacritic):
                 # Evaluate flag diacritic
-                flag = self.flag_diacritics[arc_label]
+                flag = input_label
                 flags = flag_stack[-1]
                 if flag.test(flags):
                     next_flags = flags.copy()
                     flag.apply(next_flags)
                     # Transduce WITHOUT consuming input OR emitting output
                     # label (output should be the flag again).
-                    assert arc_label == self.out(arc), (
+                    assert input_label == self.out(arc), (
                         'Arc does not have flags on both labels ' + repr(arc)
                     )
                     yield from self._accept(arc.destination, transduction,
