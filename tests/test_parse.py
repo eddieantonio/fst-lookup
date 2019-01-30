@@ -115,9 +115,9 @@ def test_parse_symbols() -> None:
 
     assert parse.has_epsilon
     assert all(isinstance(sym, Symbol) for sym in parse.sigma.values())
-    # assert stringified_set(parse.sigma) == {
-    #     '@P.UN.ON@', '+Err/Orth', 'î'
-    # }
+    assert stringified_set(parse.sigma) == {
+        '@P.UN.ON@', '+Err/Orth', 'î'
+    }
 
 
 def stringified_set(symbols):
