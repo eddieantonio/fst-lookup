@@ -90,7 +90,7 @@ def test_require_value() -> None:
 
     assert set(fst.generate('a')) == {'a'}
     assert set(fst.generate('b')) == {'b'}
-    assert set(fst.generate('c')) == {}
+    assert set(fst.generate('c')) == set()
 
 
 def make_fst(*arcs: str) -> FST:

@@ -136,4 +136,10 @@ class Positive(FlagDiacriticWithValue):
 
 
 class RequireValue(FlagDiacriticWithValue):
+    """
+    Accepts ONLY if the feature is set to the given value.
+    """
     opcode = 'R'
+
+    def test(self, flags: Dict[str, str]) -> bool:
+        return flags.get(self.feature) == self.value
