@@ -91,7 +91,23 @@ class FlagDiacriticWithValue(FlagDiacritic):
 
 
 class Unify(FlagDiacriticWithValue):
+    """
+    Unification flag.
+
+    If a feature is unset, set it to the given value.
+    If a feature IS set, allow only when it is equal to the given value.
+    """
     opcode = 'U'
+
+    def test(self, flags: Dict[str, str]) -> bool:
+        if self.feature not in flags:
+            return True
+        else:
+            return flags[self.feature] == self.value
+
+    def apply(self, flags: Dict[str, str]) -> None:
+        assert self.feature not in flags or flags[self.feature] == self.value
+        flags[self.feature] = self.value
 
 
 class Clear(FlagDiacritic):

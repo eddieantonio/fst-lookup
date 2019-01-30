@@ -135,8 +135,11 @@ def test_require_value_with_unify() -> None:
 
 
 def test_unify_twice() -> None:
-    # Given 'a', this FST will print 'b'
+    # Given 'a', this FST will print 'a' (like require)
+    # Given 'b', this FST will print 'b' (like require)
     # Given 'c', this FST will print both 'a', and 'b'
+    #  -> it will accept the second unify without the first,
+    #     unifying unconditionally.
     fst = make_fst(
         # 1 -@U.x.a@-> 5; 5 -0:a-> (2)
         "1 101 5 0", "5 0 97 2 0",
@@ -147,7 +150,7 @@ def test_unify_twice() -> None:
 
     assert set(fst.generate('a')) == {'a'}
     assert set(fst.generate('b')) == {'b'}
-    assert set(fst.generate('c')) == {}
+    assert set(fst.generate('c')) == {'a', 'b'}
 
 
 def make_fst(*custom_arcs: str, a_and_b='positive') -> FST:
