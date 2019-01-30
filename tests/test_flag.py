@@ -74,7 +74,23 @@ def test_disallow_value() -> None:
     )
 
     assert set(fst.generate('a')) == {'b'}
+    assert set(fst.generate('b')) == {'a'}
     assert set(fst.generate('c')) == {'a', 'b'}
+
+
+def test_require_value() -> None:
+    # Given 'a', this FST will print 'b'
+    # Given 'c', this FST will print both 'a', and 'b'
+    fst = make_fst(
+        # 1 -@R.x.a@-> 5; 5 -0:a-> (2)
+        "1 161 5 0", "5 0 97 2 0",
+        # 1 -@R.x.b@-> 6; 6 -0:b-> (2)
+        "1 162 6 0", "6 0 98 2 0"
+    )
+
+    assert set(fst.generate('a')) == {'a'}
+    assert set(fst.generate('b')) == {'b'}
+    assert set(fst.generate('c')) == {}
 
 
 def make_fst(*arcs: str) -> FST:
