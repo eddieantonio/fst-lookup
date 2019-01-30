@@ -90,6 +90,10 @@ class FlagDiacriticWithValue(FlagDiacritic):
         return '@{}.{}.{}@'.format(self.opcode, self.feature, self.value)
 
 
+class Unify(FlagDiacriticWithValue):
+    opcode = 'U'
+
+
 class Clear(FlagDiacritic):
     opcode = 'C'
 
@@ -110,6 +114,10 @@ class Disallow(FlagDiacritic):
         return self.feature not in flags
 
 
+class DisallowValue(FlagDiacriticWithValue):
+    opcode = 'D'
+
+
 class Positive(FlagDiacriticWithValue):
     opcode = 'P'
 
@@ -118,3 +126,7 @@ class Positive(FlagDiacriticWithValue):
 
     def apply(self, flags: Dict[str, str]) -> None:
         flags[self.feature] = self.value
+
+
+class RequireValue(FlagDiacriticWithValue):
+    opcode = 'R'

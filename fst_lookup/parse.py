@@ -23,7 +23,7 @@ from typing import (Callable, Dict, List, Mapping, NamedTuple, Optional, Set,
 
 from .data import Arc, StateID
 from .data import Symbol as _Symbol
-from .flags import Clear, Disallow, FlagDiacritic, Positive
+from .flags import Clear, Disallow, DisallowValue, FlagDiacritic, Positive, Unify, RequireValue
 from .symbol import (Epsilon, Grapheme, Identity, MultiCharacterSymbol, Symbol,
                      Unknown)
 
@@ -286,10 +286,16 @@ def parse_symbol(symbol: str) -> Symbol:
 def parse_flag(flag_diacritic: str) -> FlagDiacritic:
     assert FLAG_PATTERN.match(flag_diacritic)
     opcode, *arguments = flag_diacritic.strip('@').split('.')
-    if opcode == 'C':
-        return Clear(arguments[0])
-    elif opcode == 'D':
-        return Disallow(*arguments)
-    elif opcode == 'P':
+    if opcode == 'U' and len(arguments) == 2:
+        return Unify(*arguments)
+    elif opcode == 'P' and len(arguments) == 2:
         return Positive(*arguments)
+    elif opcode == 'R' and len(arguments) == 2:
+        return RequireValue(*arguments)
+    elif opcode == 'D' and len(arguments) == 1:
+        return Disallow(*arguments)
+    elif opcode == 'D' and len(arguments) == 2:
+        return DisallowValue(*arguments)
+    elif opcode == 'C' and len(arguments) == 1:
+        return Clear(arguments[0])
     raise ValueError('Cannot parse ' + flag_diacritic)
