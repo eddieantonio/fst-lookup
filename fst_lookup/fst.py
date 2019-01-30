@@ -19,25 +19,20 @@ import re
 from collections import defaultdict
 from pathlib import Path
 from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
-                    Tuple, Union, NewType)
+                    Tuple, Union)
 
 from .data import Arc, StateID
-from .parse import FSTParse, parse_text
 from .flags import FlagDiacritic
-from .symbol import Grapheme, MultiCharacterSymbol, Symbol, Epsilon
+from .parse import FSTParse, parse_text
+from .symbol import Epsilon, Grapheme, MultiCharacterSymbol, Symbol
 
 # Type aliases
-_LegacySymbol = NewType('_LegacySymbol', int)
 PathLike = Union[str, Path]  # similar to Python 3.6's os.PathLike
 RawTransduction = Tuple[Symbol, ...]
 # Gets a Symobl from an arc. func(arc: Arc) -> Symbol
 SymbolFromArc = Callable[[Arc], Symbol]
 # An analysis is a tuple of strings.
 Analyses = Iterable[Tuple[str, ...]]
-
-# Symbol aliases
-INVALID = _LegacySymbol(-1)
-EPSILON = _LegacySymbol(0)
 
 
 class FST:
@@ -67,6 +62,7 @@ class FST:
         for arc in parse.arcs:
             self.arcs_from[arc.state].add(arc)
 
+        # TODO: is this needed?
         # XXX: create a subset of sigma of JUST flag diacritics
         self.flag_diacritics = parse.flag_diacritics
 

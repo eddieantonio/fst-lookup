@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable, NewType, NamedTuple
+from typing import Callable, NamedTuple, NewType
 
 from .symbol import Symbol
 
@@ -32,6 +32,7 @@ class Arc(NamedTuple('ArcBase', [('state', StateID),
         return self.debug_string(labels=str)
 
     def debug_string(self, labels: Callable[[Symbol], str]) -> str:
+        # TODO: compact notation when upper == lower
         return '{:d} – {:s}:{:s} → {:d}'.format(
                 self.state,
                 labels(self.in_label),

@@ -16,14 +16,16 @@
 # limitations under the License.
 
 import re
-from enum import Enum
-from typing import List, Dict, Tuple, Set, Optional, Callable, Mapping, NamedTuple
 from collections import ChainMap
+from enum import Enum
+from typing import (Callable, Dict, List, Mapping, NamedTuple, Optional, Set,
+                    Tuple)
 
-from .data import Arc, StateID, Symbol as _Symbol
-from .flags import FlagDiacritic, Clear, Disallow, Positive
-from .symbol import Symbol, Epsilon, Grapheme, MultiCharacterSymbol, Unknown, Identity
-
+from .data import Arc, StateID
+from .data import Symbol as _Symbol
+from .flags import Clear, Disallow, FlagDiacritic, Positive
+from .symbol import (Epsilon, Grapheme, Identity, MultiCharacterSymbol, Symbol,
+                     Unknown)
 
 FLAG_PATTERN = re.compile(r'''
     ^@(?:
