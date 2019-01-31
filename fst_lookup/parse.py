@@ -46,7 +46,6 @@ class SymbolTable:
     Keeps track of ALL of the symbols in an FST.
     """
     def __init__(self) -> None:
-        # TODO: keep track of upper and lower alphabet
         self.multichar_symbols = {}  # type: Dict[int, MultiCharacterSymbol]
         self.graphemes = {}  # type: Dict[int, Grapheme]
         self.flag_diacritics = {}  # type: Dict[int, FlagDiacritic]
@@ -56,12 +55,15 @@ class SymbolTable:
         # 2 @_IDENTITY_SYMBOL_@
         self.specials = {}  # type: Dict[int, Symbol]
 
+        # Lookup ALL of them simultaneously:
+        self._combined = ChainMap(self.multichar_symbols, self.graphemes,
+                                  self.flag_diacritics, self.specials)
+
         # TODO: differentiate between input alphabet and output alphabet
         #       the union of the two is sigma
 
     def __getitem__(self, idx: int):
-        return ChainMap(self.multichar_symbols, self.graphemes,
-                        self.flag_diacritics, self.specials)[idx]
+        return self._combined[idx]
 
     def add(self, symbol_id: int, symbol: Symbol) -> None:
         """
