@@ -36,11 +36,3 @@ class Arc(NamedTuple('ArcBase', [('state', StateID),
         return '{:d} ─{:s}→ {:d}'.format(
             self.state, label, self.destination
         )
-
-    @property
-    def out_label(self) -> Symbol:
-        return self.lower
-
-    @property
-    def in_label(self) -> Symbol:
-        return self.upper
