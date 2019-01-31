@@ -64,9 +64,6 @@ class FlagDiacritic(Symbol):
         Destructivley modifies the flags in some way.
         """
 
-    def accepts(self, other):
-        raise NotImplementedError('Use .test() instead')
-
 
 class FlagDiacriticWithValue(FlagDiacritic):
     __slots__ = 'value',
