@@ -59,12 +59,6 @@ class SymbolTable:
         # TODO: differentiate between input alphabet and output alphabet
         #       the union of the two is sigma
 
-    @property
-    def sigma(self) -> Mapping[int, Symbol]:
-        return {**self.multichar_symbols,
-                **self.graphemes,
-                **self.flag_diacritics}
-
     def __getitem__(self, idx: int):
         return ChainMap(self.multichar_symbols, self.graphemes,
                         self.flag_diacritics, self.specials)[idx]
