@@ -5,6 +5,3 @@ all: eat.fomabin english-flags.fomabin
 
 %.txt: %.fomabin
 	cat $< | gunzip > $@
-
-%.fomabin: %.fomatxt
-	cat $< | gzip > $@
