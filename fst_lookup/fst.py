@@ -47,7 +47,7 @@ class FST:
 
         self.str2symbol = {
             str(sym): sym for sym in parse.sigma.values()
-            if isinstance(sym, (Grapheme, MultiCharacterSymbol))
+            if sym.is_graphical_symbol
         }
 
         # Prepare a regular expression to symbolify all input.

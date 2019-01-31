@@ -23,6 +23,10 @@ class Symbol(ABC):
     A symbol in the FST.
     """
 
+    # Subclasses should override this to indicate if their str() is usable a
+    # graphical symbol.
+    is_graphical_symbol = False
+
 
 class EpsilonType(Symbol):
     def __repr__(self) -> str:  # pragma: no cover
@@ -47,7 +51,12 @@ Epsilon = EpsilonType()
 
 
 class GraphicalSymbol(Symbol):
+    """
+    Base class for graphical symbols: Grapheme and MultiCharacterSymbol.
+    """
     __slots__ = '_value',
+
+    is_graphical_symbol = True
 
     def __init__(self, value: str) -> None:
         self._value = value
