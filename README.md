@@ -2,16 +2,25 @@ FST Lookup
 ==========
 
 [![Build Status](https://travis-ci.org/eddieantonio/fst-lookup.svg?branch=master)](https://travis-ci.org/eddieantonio/fst-lookup)
+[![codecov](https://codecov.io/gh/eddieantonio/fst-lookup/branch/master/graph/badge.svg)](https://codecov.io/gh/eddieantonio/fst-lookup)
 [![PyPI version](https://img.shields.io/pypi/v/fst-lookup.svg)](https://pypi.org/project/fst-lookup/)
+[![calver YYYY.MM.DD](https://img.shields.io/badge/calver-YYYY.MM.DD-22bfda.svg)](http://calver.org/)
 
 Implements lookup for FOMA format finite state transducers.
 
 Supports Python 3.5 and up.
 
+Install
+-------
+
+    pip install fst-lookup
+
 Usage
 -----
 
 Import the library, and load an FST from a file:
+
+> Hint: Test this module by [downloading the `eat` FST](https://github.com/eddieantonio/fst-lookup/raw/master/tests/data/eat.fomabin)!
 
 ```python
 >>> from fst_lookup import FST
