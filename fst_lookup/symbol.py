@@ -24,11 +24,11 @@ class Symbol(ABC):
     """
     @abstractmethod
     def accepts(self, other: 'Symbol') -> bool:
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
 
 class EpsilonType(Symbol):
-    def accepts(self, other: 'Symbol') -> bool:
+    def accepts(self, other: Symbol) -> bool:
         return True
 
     def __repr__(self) -> str:
@@ -40,12 +40,12 @@ class EpsilonType(Symbol):
 
 
 class UnknownType(Symbol):
-    def accepts(self, other: 'Symbol') -> bool:
+    def accepts(self, other: Symbol) -> bool:
         raise NotImplementedError
 
 
 class IdentityType(Symbol):
-    def accepts(self, other: 'Symbol') -> bool:
+    def accepts(self, other: Symbol) -> bool:
         raise NotImplementedError
 
 
@@ -60,10 +60,16 @@ class GraphicalSymbol(Symbol):
     def __init__(self, value: str) -> None:
         self._value = value
 
-    def accepts(self, other: Symbol) -> bool:
+    def __eq__(self, other) -> bool:
         if isinstance(other, type(self)):
             return other._value == self._value
         return False
+
+    def __hash__(self) -> int:
+        return hash((type(self).__qualname__, self._value))
+
+    def accepts(self, other: Symbol) -> bool:
+        return self == other
 
     def __str__(self) -> str:
         return self._value
