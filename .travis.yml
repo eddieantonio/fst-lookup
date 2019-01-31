@@ -4,8 +4,10 @@ python:
 - '3.6'
 - '3.7-dev'
 install:
- - pip install pipenv 
+ - pip install pipenv
  - pipenv install --dev
 script:
   - pipenv run -- mypy -p fst_lookup
   - pipenv run -- py.test
+after_success:
+  - codecov
