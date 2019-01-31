@@ -38,9 +38,9 @@ this---note what is on each side of the colon (`:`):
 Multichar_Symbols +N +Sg +Pl
 Lexicon Root
     cow+N+Sg:cow #;
-    cow+N+PL:cows #;
+    cow+N+Pl:cows #;
     goose+N+Sg:goose #;
-    goose+N+PL:geese #;
+    goose+N+Pl:geese #;
     sheep+N+Sg:sheep #;
     sheep+N+Pl:sheep #;
 ```
