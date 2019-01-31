@@ -27,7 +27,29 @@ Import the library, and load an FST from a file:
 >>> fst = FST.from_file('eat.fomabin')
 ```
 
-### Analysis
+### Assumed format of the FSTs
+
+`fst_lookup` assumes that the **lower** label corresponds to the surface
+form, while the **upper** label corresponds to the lemma, and linguistic
+tags and features: e.g., your `LEXC` will look something like
+this---note what is on each side of the colon (`:`):
+
+```lexc
+Multichar_Symbols +N +Sg +Pl
+Lexicon Root
+    cow+N+Sg:cow #;
+    cow+N+PL:cows #;
+    goose+N+Sg:goose #;
+    goose+N+PL:geese #;
+    sheep+N+Sg:sheep #;
+    sheep+N+Pl:sheep #;
+```
+
+If your FST has labels on the opposite sides, you must invert the net
+before loading it into `fst_lookup`.
+
+
+### Analyze a word form
 
 To _analyze_ a form (take a word form, and get its linguistic analyzes)
 call the `analyze()` function:
@@ -50,7 +72,7 @@ tags, or the _lemma_ (base form of the word).
 ```
 
 
-### Generate
+### Generate a word form
 
 To _generate_ a form (take a linguistic analysis, and get its concrete
 word forms), call the `generate()` function:
