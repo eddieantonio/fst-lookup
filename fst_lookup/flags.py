@@ -35,6 +35,9 @@ class FlagDiacritic(Symbol):
 
     opcode = '!!INVALID!!'
 
+    # By setting this, we avoid an isinstance() check:
+    is_flag_diacritic = True
+
     def __init__(self, feature: str) -> None:
         self.feature = feature
 

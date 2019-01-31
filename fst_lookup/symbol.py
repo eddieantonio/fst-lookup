@@ -23,9 +23,15 @@ class Symbol(ABC):
     A symbol in the FST.
     """
 
+    # Note: these class variables are not strictly-necessary, but checking
+    # them are a bit quicker than isinstance() check:
+
     # Subclasses should override this to indicate if their str() is usable a
     # graphical symbol.
     is_graphical_symbol = False
+    # Subclasses should override them if this symbol should be treated like a
+    # flag diacritic.
+    is_flag_diacritic = False
 
 
 class EpsilonType(Symbol):

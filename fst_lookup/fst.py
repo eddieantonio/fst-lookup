@@ -193,13 +193,13 @@ class Transducer(Iterable[RawTransduction]):
                 yield from self._accept(arc.destination, transduction, flag_stack)
                 self.symbols.insert(0, consumed)
                 transduction.pop()
-            elif isinstance(input_label, FlagDiacritic):
+            elif input_label.is_flag_diacritic:
                 # Evaluate flag diacritic
                 flag = input_label
                 flags = flag_stack[-1]
-                if flag.test(flags):
+                if flag.test(flags):  # type: ignore
                     next_flags = flags.copy()
-                    flag.apply(next_flags)
+                    flag.apply(next_flags)  # type: ignore
                     # Transduce WITHOUT consuming input OR emitting output
                     # label (output should be the flag again).
                     assert input_label == self.get_output_label(arc), (
