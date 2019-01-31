@@ -68,9 +68,15 @@ class GraphicalSymbol(Symbol):
         self._value = value
 
     def __eq__(self, other) -> bool:
-        if isinstance(other, type(self)):
-            return other._value == self._value
-        return False
+        # Originally there were isinstance() checks here, but they are
+        # SLOOOW!  Instead, we're doing this technically unsafe lookup, hoping
+        # that IF the other object has a ._value attribute, it's a graphical
+        # symbol, and this comparison is valid. It may not be in all cases :/
+        try:
+            # not (a != b) coerces the answer to bool, without costly call to bool()
+            return not (other._value != self._value)
+        except AttributeError:
+            return False
 
     def __hash__(self) -> int:
         return hash((type(self).__qualname__, self._value))
