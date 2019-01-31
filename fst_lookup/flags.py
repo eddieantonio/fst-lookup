@@ -47,13 +47,13 @@ class FlagDiacritic(Symbol):
     def __hash__(self) -> int:
         return hash((self.opcode, self.feature))
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return '{:s}({!r})'.format(type(self).__name__, self.feature)
 
     def __str__(self) -> str:
         return '@{}.{}@'.format(self.opcode, self.feature)
 
-    def test(self, flags: Dict[str, str]) -> bool:
+    def test(self, flags: Dict[str, str]) -> bool:  # pragma: no cover
         """
         Test the flag against the current values.
         """
@@ -79,7 +79,7 @@ class FlagDiacriticWithValue(FlagDiacritic):
     def __hash__(self) -> int:
         return hash((self.opcode, self.feature, self.value))
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return '{:s}({!r}, {!r})'.format(type(self).__name__,
                                          self.feature, self.value)
 

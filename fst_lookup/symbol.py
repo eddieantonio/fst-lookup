@@ -25,10 +25,10 @@ class Symbol(ABC):
 
 
 class EpsilonType(Symbol):
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return 'Epsilon'
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         # Print an epsilon in reverse video, to distinguish it from a literal epsilon.
         return '\033[7m' 'ε' '\033[27m'
 
@@ -63,7 +63,7 @@ class GraphicalSymbol(Symbol):
     def __str__(self) -> str:
         return self._value
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return '{:}({!r})'.format(type(self).__name__, self._value)
 
 
