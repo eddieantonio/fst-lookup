@@ -123,7 +123,7 @@ class Clear(FlagDiacritic):
         flags.pop(self.feature, None)
 
 
-class Disallow(FlagDiacritic):
+class DisallowFeature(FlagDiacritic):
     opcode = 'D'
 
     def test(self, flags: Dict[str, str]):

@@ -23,7 +23,7 @@ from typing import (Callable, Dict, List, Mapping, NamedTuple, Optional, Set,
 
 from .data import Arc, StateID
 from .data import Symbol as _Symbol
-from .flags import Clear, Disallow, DisallowValue, FlagDiacritic, Positive, Unify, RequireValue
+from .flags import Clear, DisallowFeature, DisallowValue, FlagDiacritic, Positive, Unify, RequireValue
 from .symbol import (Epsilon, Grapheme, Identity, MultiCharacterSymbol, Symbol,
                      Unknown)
 
@@ -289,7 +289,7 @@ def parse_flag(flag_diacritic: str) -> FlagDiacritic:
     elif opcode == 'R' and len(arguments) == 2:
         return RequireValue(*arguments)
     elif opcode == 'D' and len(arguments) == 1:
-        return Disallow(*arguments)
+        return DisallowFeature(*arguments)
     elif opcode == 'D' and len(arguments) == 2:
         return DisallowValue(*arguments)
     elif opcode == 'C' and len(arguments) == 1:
