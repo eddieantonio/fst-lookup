@@ -169,3 +169,7 @@ class RequireFeature(FlagDiacritic):
 
     def test(self, flags: Dict[str, str]) -> bool:
         return self.feature in flags
+
+# TODO: implement @N.feat.val@
+# TODO: implement @E.feat.val@ (makes sense when values have a negative)
+# See: https://github.com/mhulden/foma/blob/4e98d61ce67babe1555e1e1b04d5a65bc3b5a03a/foma/apply.c#L1380-L1489
