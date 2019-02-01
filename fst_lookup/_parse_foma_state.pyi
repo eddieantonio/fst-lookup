@@ -1,0 +1,6 @@
+from typing import Callable, Any
+from .data import StateID
+
+class HandleState:
+    def __init__(self, add_arc: Callable[[int, int, int, int], Any], add_accepting_state: Callable[[StateID], Any]) -> None: ...
+    def __call__(self, line: str) -> None: ...
