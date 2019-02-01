@@ -22,7 +22,7 @@
 #include <Python.h>
 #include <stdbool.h>
 
-#define MODULE_NAME "fastfoma"
+#define MODULE_NAME "_parse_foma_state"
 #define FQ_MODULE_NAME "fst_lookup." MODULE_NAME
 
 typedef int StateID;
@@ -153,7 +153,7 @@ static PyTypeObject HandleStateType = {
     .tp_call = (ternaryfunc) HandleState_call,
 };
 
-static struct PyModuleDef fastfomamodule = {
+static struct PyModuleDef parse_foma_module = {
     PyModuleDef_HEAD_INIT,
     .m_name = MODULE_NAME,
     .m_doc = NULL,
@@ -162,13 +162,13 @@ static struct PyModuleDef fastfomamodule = {
 
 
 PyMODINIT_FUNC
-PyInit_fastfoma(void)
+PyInit__parse_foma_state(void)
 {
     PyObject *m;
     if (PyType_Ready(&HandleStateType) < 0)
         return NULL;
 
-    m = PyModule_Create(&fastfomamodule);
+    m = PyModule_Create(&parse_foma_module);
     if (m == NULL)
         return NULL;
 

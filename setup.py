@@ -136,7 +136,7 @@ setup(
         'Source': 'https://github.com/eddieantonio/fst-lookup',
     },
     ext_modules=[
-        Extension('fst_lookup.fastfoma',
-                  sources=['fst_lookup/fastfomamodule.c'])
+        Extension('fst_lookup._parse_foma_state',
+                  sources=['fst_lookup/_parse_foma_state.c'])
     ]
 )
