@@ -2,6 +2,20 @@
 *.egg-info/
 build/
 dist/
+
+# FSTs I happen to have lying around.
 /*.foma
 /*.fomabin
+
+# Coverage report
 .coverage
+
+# Local environment variables
+.env
+
+# Shared objects
+*.so
+*.dylib
+
+# Profiling (speed)
+/profiling/
