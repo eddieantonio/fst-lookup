@@ -30,33 +30,33 @@ typedef int StateID;
 
 typedef struct {
     PyObject_HEAD
-    // TODO: consolidate init_arc and add_arc into one.
-    // TODO: callback for add_accepting_state
-    PyObject *init_arc; // callable that creates an arc
-    PyObject *add_arc; // callable that adds an arc
+    PyObject *add_arc; // callable that creates and adds an arc
+    PyObject *add_accepting_state; // callable that sets an accepting state
     StateID  last_state;
 } HandleStateObject;
 
 static void
 HandleState_dealloc(HandleStateObject *self)
 {
-    Py_XDECREF(self->init_arc);
     Py_XDECREF(self->add_arc);
+    Py_XDECREF(self->add_accepting_state);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 static int
 HandleState_init(HandleStateObject *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {"init_arc", "add_arc", NULL};
-    PyObject *init_arc = NULL, *add_arc = NULL;
+    static char *kwlist[] = {"add_arc", "add_accepting_state", NULL};
+    PyObject *add_arc = NULL, *add_accepting_state = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO", kwlist,
-                                     &init_arc, &add_arc))
+                                     &add_arc, &add_accepting_state))
         return -1;
 
-    self->init_arc = init_arc;
+    Py_INCREF(add_arc);
     self->add_arc = add_arc;
+    Py_INCREF(add_accepting_state);
+    self->add_accepting_state = add_accepting_state;
     self->last_state = LAST_STATE_UNDEFINED;
 
     return 0;
@@ -65,9 +65,9 @@ HandleState_init(HandleStateObject *self, PyObject *args, PyObject *kwds)
 static PyObject *
 HandleState_call(HandleStateObject *self, PyObject *args)
 {
-    PyObject *arc, *ret;
+    PyObject *arc;
     const char *line = NULL;
-    int v[5]; 
+    int v[5];
     int fields_present;
     int state, upper_label, lower_label, destination;
     bool accepting;
@@ -75,7 +75,6 @@ HandleState_call(HandleStateObject *self, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "line must be a str");
         return NULL;
     }
-
 
     /* The line may have two to five fields. Try parsing all of them! */
     fields_present = sscanf(line, "%d %d %d %d %d",
@@ -139,17 +138,12 @@ HandleState_call(HandleStateObject *self, PyObject *args)
         return NULL;
     }
 
-    // Create that arc!
-    arc = PyObject_CallFunction(self->init_arc, "Iiii",
+    // Add that arc!
+    arc = PyObject_CallFunction(self->add_arc, "iiii",
                                 state, upper_label, lower_label, destination);
 
     // something bad happend
     if (!arc)
-        return NULL;
-
-    // Add that Arc!
-    ret = PyObject_CallFunction(self->add_arc, "(N)", arc);
-    if (!ret)
         return NULL;
 
     Py_RETURN_NONE;

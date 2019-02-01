@@ -130,6 +130,24 @@ class FomaParser:
         self.has_seen_header = False
         self.symbols = SymbolTable()
 
+        try:
+            from ._parse_foma_state import HandleState
+        except ImportError:
+            self.handle_states = self.default_handle_states
+        else:
+            _symbols = self.symbols
+            _append_arc = self.arcs.append
+
+            def _track_arc(state, upper, lower, destination):
+                _append_arc(Arc(StateID(state),
+                                _symbols[upper],
+                                _symbols[lower],
+                                StateID(destination)))
+            self.handle_states = HandleState(
+                add_arc=_track_arc,
+                add_accepting_state=self.accepting_states.add
+            )
+
     def handle_header(self, line: str):
         # Nothing to do here... yet.
         ...
@@ -167,7 +185,7 @@ class FomaParser:
         idx = int(idx_str)
         self.symbols.add(idx, parse_symbol(symbol_text))
 
-    def handle_states(self, line: str):
+    def default_handle_states(self, line: str):
         """
         Either:
           - appends an arc to the list;
