@@ -63,6 +63,16 @@ class SymbolTable:
         # TODO: differentiate between input alphabet and output alphabet
         #       the union of the two is sigma
 
+    def finalize(self) -> None:
+        """
+        Create one table that contains ALL of the symbols.
+        """
+        self.lookup_all = {**self._combined}
+        assert len(self.lookup_all) == (
+                len(self.multichar_symbols) + len(self.graphemes) + len(self.flag_diacritics) +
+                len(self.specials)
+        )
+
     def __getitem__(self, idx: int):
         return self._combined[idx]
 
@@ -209,10 +219,11 @@ class FomaParser:
             # FIXME: last is final_state, not weight
             src, in_label, out_label, dest, _weight = arc_def
 
+        lookup = self.symbols.lookup_all
         self.implied_state = src
         # Super important! make sure the order of these arguments is
         # consistent with the definition of Arc
-        arc = Arc(StateID(src), self.symbols[in_label], self.symbols[out_label], StateID(dest))
+        arc = Arc(StateID(src), lookup[in_label], lookup[out_label], StateID(dest))
         self.arcs.append(arc)
 
     def handle_end(self, line: str):
@@ -225,6 +236,7 @@ class FomaParser:
         # Check header
         if line.startswith('##'):
             header = line[2:-2]
+            last = self.handle_line
             self.handle_line = {
                 'foma-net 1.0': self.handle_header,
                 'props': self.handle_props,
@@ -232,6 +244,8 @@ class FomaParser:
                 'states': self.handle_states,
                 'end': self.handle_end,
             }[header]
+            if last == self.handle_sigma and self.handle_line == self.handle_states:
+                self.symbols.finalize()
         else:
             self.handle_line(line.rstrip('\n'))
 
