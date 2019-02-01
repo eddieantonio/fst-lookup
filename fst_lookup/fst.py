@@ -35,6 +35,13 @@ SymbolFromArc = Callable[[Arc], Symbol]
 Analyses = Iterable[Tuple[str, ...]]
 
 
+class OutOfAlphabetError(Exception):
+    """
+    Raised when an input string contains a character outside of the input
+    alphabet.
+    """
+
+
 class FST:
     """
     A finite-state transducer that can convert between one string and a set of
@@ -66,7 +73,10 @@ class FST:
         """
         Given a surface form, this yields all possible analyses in the FST.
         """
-        symbols = list(self.to_symbols(surface_form))
+        try:
+            symbols = list(self.to_symbols(surface_form))
+        except OutOfAlphabetError:
+            return
         analyses = self._transduce(symbols, get_input_label=lambda arc: arc.lower,
                                    get_output_label=lambda arc: arc.upper)
         for analysis in analyses:
@@ -76,7 +86,10 @@ class FST:
         """
         Given an analysis, this yields all possible surface forms in the FST.
         """
-        symbols = list(self.to_symbols(analysis))
+        try:
+            symbols = list(self.to_symbols(analysis))
+        except OutOfAlphabetError:
+            return
         forms = self._transduce(symbols, get_input_label=lambda arc: arc.upper,
                                 get_output_label=lambda arc: arc.lower)
         for transduction in forms:
@@ -91,7 +104,7 @@ class FST:
         while text:
             match = self.symbol_pattern.match(text)
             if not match:
-                raise ValueError("Cannot symbolify form: " + repr(surface_form))
+                raise OutOfAlphabetError("Cannot symbolify form: " + repr(surface_form))
             # Convert to a symbol
             yield self.str2symbol[match.group(0)]
             text = text[match.end():]
