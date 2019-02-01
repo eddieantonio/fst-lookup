@@ -79,3 +79,21 @@ def test_unacceptable_forms_in_flag_fst(unacceptable_form: str, english_flags_fs
     """
     fst = FST.from_text(english_flags_fst_txt)
     assert set(fst.analyze(unacceptable_form)) == set()
+
+
+def test_analyze_form_outside_of_alphabet(eat_fst_txt: str):
+    """
+    Analyzing forms with characters outside of the lower alphabet should
+    reject instantly.
+    """
+    fst = FST.from_text(eat_fst_txt)
+    assert set(fst.analyze('mîcisow')) == set()
+
+
+def test_generate_form_outside_of_alphabet(eat_fst_txt: str):
+    """
+    Generating forms with characters outside of the upper alphabet should
+    reject instantly.
+    """
+    fst = FST.from_text(eat_fst_txt)
+    assert set(fst.generate('wug' '+N' '+Pl')) == set()
