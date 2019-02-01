@@ -149,9 +149,8 @@ class FomaParser:
             _append_arc = self.arcs.append
 
             def _track_arc(state, upper, lower, destination):
-                _append_arc(Arc(StateID(state),
-                                _symbols[upper],
-                                _symbols[lower],
+                _lookup = _symbols.lookup_all
+                _append_arc(Arc(StateID(state), _lookup[upper], _lookup[lower],
                                 StateID(destination)))
             self.handle_states = HandleState(
                 add_arc=_track_arc,
