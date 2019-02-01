@@ -34,6 +34,7 @@ HEADER = ("""
 102 @U.x.b@
 111 @P.x.a@
 112 @P.x.b@
+150 @D.x@
 151 @D.x.a@
 152 @D.x.b@
 161 @R.x.a@
@@ -150,6 +151,24 @@ def test_unify_twice() -> None:
 
     assert set(fst.generate('a')) == {'a'}
     assert set(fst.generate('b')) == {'b'}
+    assert set(fst.generate('c')) == {'a', 'b'}
+
+def test_disallow_feature() -> None:
+    """
+    Disallows a feature being set.
+    """
+    # Given 'a', this FST will reject
+    # Given 'b', this FST will reject
+    # Given 'c', this FST will print both 'a', and 'b'
+    fst = make_fst(
+        # 1 -@D.x@-> 5; 5 -0:a-> (2)
+        "1 150 5 0", "5 0 97 2 0",
+        # 1 -@D.x@-> 6; 6 -0:b-> (2)
+        "1 150 6 0", "6 0 98 2 0",
+    )
+
+    assert set(fst.generate('a')) == set()
+    assert set(fst.generate('b')) == set()
     assert set(fst.generate('c')) == {'a', 'b'}
 
 
