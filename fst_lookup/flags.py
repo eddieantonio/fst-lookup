@@ -159,3 +159,13 @@ class RequireValue(FlagDiacriticWithValue):
 
     def test(self, flags: Dict[str, str]) -> bool:
         return flags.get(self.feature) == self.value
+
+
+class RequireFeature(FlagDiacritic):
+    """
+    Accepts if the feature is set to any value.
+    """
+    opcode = 'R'
+
+    def test(self, flags: Dict[str, str]) -> bool:
+        return self.feature in flags
