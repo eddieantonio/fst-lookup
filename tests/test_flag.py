@@ -37,6 +37,7 @@ HEADER = ("""
 150 @D.x@
 151 @D.x.a@
 152 @D.x.b@
+160 @R.x@
 161 @R.x.a@
 162 @R.x.b@
 201 ✅
@@ -153,6 +154,7 @@ def test_unify_twice() -> None:
     assert set(fst.generate('b')) == {'b'}
     assert set(fst.generate('c')) == {'a', 'b'}
 
+
 def test_disallow_feature() -> None:
     """
     Disallows a feature being set.
@@ -170,6 +172,25 @@ def test_disallow_feature() -> None:
     assert set(fst.generate('a')) == set()
     assert set(fst.generate('b')) == set()
     assert set(fst.generate('c')) == {'a', 'b'}
+
+
+def test_require_feature() -> None:
+    """
+    Requires a feature being set to any value.
+    """
+    # Given 'a', this FST will transduce 'a' and 'b'
+    # Given 'b', this FST will transduce 'a' and 'b'
+    # Given 'c', this FST will reject
+    fst = make_fst(
+        # 1 -@D.x@-> 5; 5 -0:a-> (2)
+        "1 160 5 0", "5 0 97 2 0",
+        # 1 -@D.x@-> 6; 6 -0:b-> (2)
+        "1 160 6 0", "6 0 98 2 0",
+    )
+
+    assert set(fst.generate('a')) == {'a', 'b'}
+    assert set(fst.generate('b')) == {'a', 'b'}
+    assert set(fst.generate('c')) == set()
 
 
 def make_fst(*custom_arcs: str, a_and_b='positive') -> FST:
