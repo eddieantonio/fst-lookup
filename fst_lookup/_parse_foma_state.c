@@ -30,7 +30,8 @@ typedef int StateID;
 
 typedef struct {
     PyObject_HEAD
-    /* TODO: add fields for init_arc(), add_arc() */
+    // TODO: consolidate init_arc and add_arc into one.
+    // TODO: callback for add_accepting_state
     PyObject *init_arc; // callable that creates an arc
     PyObject *add_arc; // callable that adds an arc
     StateID  last_state;
@@ -71,18 +72,23 @@ HandleState_call(HandleStateObject *self, PyObject *args)
     int state, upper_label, lower_label, destination;
     bool accepting;
     if (!PyArg_ParseTuple(args, "s", &line)) {
-        // TODO: raise TypeError
+        PyErr_SetString(PyExc_TypeError, "line must be a str");
         return NULL;
     }
 
 
     /* The line may have two to five fields. Try parsing all of them! */
-    fields_present = sscanf(line, "%u %d %d %d %d",
+    fields_present = sscanf(line, "%d %d %d %d %d",
                             &v[0], &v[1], &v[2], &v[3], &v[4]);
 
     switch (fields_present) {
         case 2:
-            // TODO: Check if last state is defined.
+            if (self->last_state < 0) {
+                PyErr_SetString(PyExc_TypeError,
+                                "Used implied state, but no previous state defined");
+                return NULL;
+            }
+
             state = self->last_state;
             upper_label = lower_label = v[0];
             destination = v[1];
@@ -90,7 +96,12 @@ HandleState_call(HandleStateObject *self, PyObject *args)
             break;
 
         case 3:
-            // TODO: Check if last state is defined.
+            if (self->last_state < 0) {
+                PyErr_SetString(PyExc_TypeError,
+                                "Used implied state, but no previous state defined");
+                return NULL;
+            }
+
             state = self->last_state;
             upper_label = v[0];
             lower_label = v[1];
@@ -114,23 +125,29 @@ HandleState_call(HandleStateObject *self, PyObject *args)
             break;
 
         default:
-            fprintf(stderr, "Bad number of fields: %d\n", fields_present);
-            // TODO: return an error
+            PyErr_SetString(PyExc_ValueError, "Invalid amount of ints in line");
             return NULL;
     }
-    // TODO: check that the state is positive
 
-    self->last_state = state;
     // TODO: ensure all of the references are counted properly!
+    self->last_state = state;
 
     // TODO: add to accepting state.
+    if (accepting || upper_label < 0 || lower_label < 0) {
+        PyErr_SetString(PyExc_NotImplementedError,
+                        "No code to handle accepting states.");
+        return NULL;
+    }
+
     // Create that arc!
     arc = PyObject_CallFunction(self->init_arc, "Iiii",
                                 state, upper_label, lower_label, destination);
+
     // something bad happend
     if (!arc)
         return NULL;
 
+    // Add that Arc!
     ret = PyObject_CallFunction(self->add_arc, "(N)", arc);
     if (!ret)
         return NULL;
