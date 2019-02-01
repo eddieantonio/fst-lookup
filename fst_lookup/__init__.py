@@ -20,5 +20,6 @@ Parse and evaluate FOMA FSTs.
 """
 
 from .fst import FST
+from .__version__ import __version__
 
 __all__ = ['FST']

@@ -11,6 +11,13 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+# Get the version from the version file!
+with open(path.join(here, 'fst_lookup', '__version__.py'), encoding='UTF-8') as f:
+    # Execute the __version__ file, catching its variables here:
+    variables = {}  # type: ignore
+    exec(f.read(), variables)
+    version = variables['__version__']
+
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
 
@@ -34,7 +41,7 @@ setup(
     # For a discussion on single-sourcing the version across setup.py and the
     # project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='2019.01.30-alpha',  # Required
+    version=version,  # Required
 
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
