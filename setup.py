@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 # Always prefer setuptools over distutils
-from setuptools import setup, find_packages  # type: ignore
+from setuptools import setup, Extension, find_packages  # type: ignore
 from os import path
 
 here = path.abspath(path.dirname(__file__))
@@ -135,4 +135,8 @@ setup(
         'Bug Reports': 'https://github.com/eddieantonio/fst-lookup/issues',
         'Source': 'https://github.com/eddieantonio/fst-lookup',
     },
+    ext_modules=[
+        Extension('fst_lookup.fastfoma',
+                  sources=['fst_lookup/fastfomamodule.c'])
+    ]
 )

@@ -5,3 +5,5 @@ dist/
 /*.foma
 /*.fomabin
 .coverage
+*.so
+.env
