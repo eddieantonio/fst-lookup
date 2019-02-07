@@ -5,3 +5,4 @@ dist/
 /*.foma
 /*.fomabin
 .coverage
+.mypy_cache

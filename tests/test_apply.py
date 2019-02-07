@@ -97,3 +97,7 @@ def test_generate_form_outside_of_alphabet(eat_fst_txt: str):
     """
     fst = FST.from_text(eat_fst_txt)
     assert set(fst.generate('wug' '+N' '+Pl')) == set()
+
+
+def test_analyze_concatenation(english_ipa_fst: FST):
+    assert next(iter(english_ipa_fst.analyze('rough'))) == 'ɹʌf'
