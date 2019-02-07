@@ -15,13 +15,13 @@ Lexicon Root
 
 
 Lexicon Through
-    <θ:t h:0 ɹ:r uː:o> EpsilonUgh;
+    <θ:t 0:h ɹ:r uː:o> EpsilonUgh;
 
 Lexicon Though
-    <ð:t h:0 oʊ:o> EpsilonUgh;
+    <ð:t 0:h oʊ:o> EpsilonUgh;
 
 Lexicon Enough
-    <ə:e n ʌ:o 0:u g:f 0:h> #;
+    <ə:e n ʌ:o 0:u f:g 0:h> #;
 
 Lexicon Plough
     <p l aʊ:o> EpsilonUgh;
