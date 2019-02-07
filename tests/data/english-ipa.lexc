@@ -1,0 +1,14 @@
+!! A use case of FSTs: go between orthography and IPA transcription
+Multichar_Symbols uː oʊ aʊ
+
+Lexicon Root
+    θɹuː:through #;
+    ðoʊ:though #;
+    ənʌf:enough #;
+    plaʊ:plough #;
+    tɹɑf:trough #;
+    tʌf:tough #;
+    ɹʌf:rough #;
+    kɑf:cough #;
+    doʊ:dough #;
+

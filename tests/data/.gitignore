@@ -1,1 +1,4 @@
+# Ignore generated files, EXCEPT fomabins!
 *.txt
+*.dot
+*.pdf
