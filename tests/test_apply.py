@@ -100,4 +100,9 @@ def test_generate_form_outside_of_alphabet(eat_fst_txt: str):
 
 
 def test_analyze_concatenation(english_ipa_fst: FST):
-    assert next(iter(english_ipa_fst.analyze('rough'))) == 'ɹʌf'
+    """
+    Test that concatenation of the analysis works as expected when all
+    elements include epsilons.
+    """
+    result, = english_ipa_fst.analyze('rough')
+    assert result == ('ɹʌf',)

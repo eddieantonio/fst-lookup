@@ -138,10 +138,6 @@ class FST:
         current_lemma = ''
         for symbol in transduction:
             if symbol is Epsilon:
-                if current_lemma:
-                    yield current_lemma
-                    current_lemma = ''
-                # ignore epsilons
                 continue
             elif isinstance(symbol, MultiCharacterSymbol):
                 if current_lemma:
