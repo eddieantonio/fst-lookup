@@ -15,28 +15,32 @@ Lexicon Root
 
 
 Lexicon Through
-    <θ:th ɹ:r uː:ough> #;
+    <θ:t h:0 ɹ:r uː:o> EpsilonUgh;
 
 Lexicon Though
-    <ð:th oʊ:ough> #;
+    <ð:t h:0 oʊ:o> EpsilonUgh;
 
 Lexicon Enough
-    <ə:e n ʌ:ou f:gh> #;
+    <ə:e n ʌ:o 0:u g:f 0:h> #;
 
 Lexicon Plough
-    <p l aʊ:ough> #;
+    <p l aʊ:o> EpsilonUgh;
 
 Lexicon Trough
-    <t ɹ:r ɑ:ou f:gh> #;
+    <t ɹ:r ɑ:o 0:u f:g 0:h> #;
 
 Lexicon Tough
-    <t ʌ:ou f:gh> #;
+    <t ʌ:o 0:u f:g 0:h> #;
 
 Lexicon Rough
-    <ɹ:r ʌ:ou f:gh> #;
+    <ɹ:r ʌ:o 0:u f:g 0:h> #;
 
 Lexicon Cough
-    <k:c ɑ:ou f:gh> #;
+    <k:c ɑ:o 0:u f:g 0:h> #;
 
 Lexicon Dough
-    <d oʊ:ough> #;
+    <d oʊ:o> EpsilonUgh;
+
+!!! -ugh with no lower-side symbols.
+Lexicon EpsilonUgh
+    0:ugh #;
