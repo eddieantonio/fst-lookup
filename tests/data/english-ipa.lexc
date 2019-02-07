@@ -2,13 +2,41 @@
 Multichar_Symbols uː oʊ aʊ
 
 Lexicon Root
-    θɹuː:through #;
-    ðoʊ:though #;
-    ənʌf:enough #;
-    plaʊ:plough #;
-    tɹɑf:trough #;
-    tʌf:tough #;
-    ɹʌf:rough #;
-    kɑf:cough #;
-    doʊ:dough #;
+    Through ;
+    Though ;
+    Though ;
+    Enough ;
+    Plough ;
+    Trough ;
+    Tough ;
+    Rough ;
+    Cough ;
+    Dough ;
 
+
+Lexicon Through
+    <θ:th ɹ:r uː:ough> #;
+
+Lexicon Though
+    <ð:th oʊ:ough> #;
+
+Lexicon Enough
+    <ə:e n ʌ:ou f:gh> #;
+
+Lexicon Plough
+    <p l aʊ:ough> #;
+
+Lexicon Trough
+    <t ɹ:r ɑ:ou f:gh> #;
+
+Lexicon Tough
+    <t ʌ:ou f:gh> #;
+
+Lexicon Rough
+    <ɹ:r ʌ:ou f:gh> #;
+
+Lexicon Cough
+    <k:c ɑ:ou f:gh> #;
+
+Lexicon Dough
+    <d oʊ:ough> #;
