@@ -18,12 +18,11 @@ from fst_lookup import FST
     ('eats', {('eat', '+V', '+3P', '+Sg'),
               ('eat', '+N', '+Mass')}),
 ])
-def test_analyze_eat_fst(surface_form: str, analyses: set, eat_fst_txt: str):
+def test_analyze_eat_fst(surface_form: str, analyses: set, eat_fst: FST):
     """
     Apply up (analyze) on an FST **WITHOUT** flag diacritics.
     """
-    fst = FST.from_text(eat_fst_txt)
-    assert set(fst.analyze(surface_form)) == analyses
+    assert set(eat_fst.analyze(surface_form)) == analyses
 
 
 @pytest.mark.parametrize('analysis,surface_form', [
@@ -34,12 +33,11 @@ def test_analyze_eat_fst(surface_form: str, analyses: set, eat_fst_txt: str):
     (('eat' '+V' '+3P' '+Sg'), 'eats'),
     (('eat' '+N' '+Mass'), 'eats'),
 ])
-def test_generate_eat_fst(analysis: str, surface_form: set, eat_fst_txt: str):
+def test_generate_eat_fst(analysis: str, surface_form: set, eat_fst: FST):
     """
     Apply down (generate) on an FST **WITHOUT** flag diacritics.
     """
-    fst = FST.from_text(eat_fst_txt)
-    actual, = fst.generate(analysis)
+    actual, = eat_fst.generate(analysis)
     assert actual == surface_form
 
 
@@ -61,42 +59,38 @@ def test_generate_eat_fst(analysis: str, surface_form: set, eat_fst_txt: str):
     ('undoable', ('UN+', 'doable', '+Adj')),
     ('undo', ('UN+', 'do', '+V', '+Inf')),
 ])
-def test_flag_fst(surface_form: str, analysis, english_flags_fst_txt: str):
+def test_flag_fst(surface_form: str, analysis, english_flags_fst: FST):
     """
     Analyze and generate on an FST **WITH** simple flag diacritics.
     """
-    fst = FST.from_text(english_flags_fst_txt)
-    assert set(fst.analyze(surface_form)) == {analysis}
-    assert set(fst.generate(''.join(analysis))) == {surface_form}
+    assert set(english_flags_fst.analyze(surface_form)) == {analysis}
+    assert set(english_flags_fst.generate(''.join(analysis))) == {surface_form}
 
 
 @pytest.mark.parametrize('unacceptable_form', [
     'unpay', 'undrink',
 ])
-def test_unacceptable_forms_in_flag_fst(unacceptable_form: str, english_flags_fst_txt: str):
+def test_unacceptable_forms_in_flag_fst(unacceptable_form: str, english_flags_fst: FST):
     """
     Analyze forms that should not transduce on an FST **WITH** simple flag diacritics.
     """
-    fst = FST.from_text(english_flags_fst_txt)
-    assert set(fst.analyze(unacceptable_form)) == set()
+    assert set(english_flags_fst.analyze(unacceptable_form)) == set()
 
 
-def test_analyze_form_outside_of_alphabet(eat_fst_txt: str):
+def test_analyze_form_outside_of_alphabet(eat_fst: FST):
     """
     Analyzing forms with characters outside of the lower alphabet should
     reject instantly.
     """
-    fst = FST.from_text(eat_fst_txt)
-    assert set(fst.analyze('mîcisow')) == set()
+    assert set(eat_fst.analyze('mîcisow')) == set()
 
 
-def test_generate_form_outside_of_alphabet(eat_fst_txt: str):
+def test_generate_form_outside_of_alphabet(eat_fst: FST):
     """
     Generating forms with characters outside of the upper alphabet should
     reject instantly.
     """
-    fst = FST.from_text(eat_fst_txt)
-    assert set(fst.generate('wug' '+N' '+Pl')) == set()
+    assert set(eat_fst.generate('wug' '+N' '+Pl')) == set()
 
 
 def test_analyze_concatenation(english_ipa_fst: FST):
