@@ -1,0 +1,46 @@
+!! A use case of FSTs: go between orthography and IPA transcription
+Multichar_Symbols uː oʊ aʊ
+
+Lexicon Root
+    Through ;
+    Though ;
+    Though ;
+    Enough ;
+    Plough ;
+    Trough ;
+    Tough ;
+    Rough ;
+    Cough ;
+    Dough ;
+
+
+Lexicon Through
+    <θ:t 0:h ɹ:r uː:o> EpsilonUgh;
+
+Lexicon Though
+    <ð:t 0:h oʊ:o> EpsilonUgh;
+
+Lexicon Enough
+    <ə:e n ʌ:o 0:u f:g 0:h> #;
+
+Lexicon Plough
+    <p l aʊ:o> EpsilonUgh;
+
+Lexicon Trough
+    <t ɹ:r ɑ:o 0:u f:g 0:h> #;
+
+Lexicon Tough
+    <t ʌ:o 0:u f:g 0:h> #;
+
+Lexicon Rough
+    <ɹ:r ʌ:o 0:u f:g 0:h> #;
+
+Lexicon Cough
+    <k:c ɑ:o 0:u f:g 0:h> #;
+
+Lexicon Dough
+    <d oʊ:o> EpsilonUgh;
+
+!!! -ugh with no lower-side symbols.
+Lexicon EpsilonUgh
+    0:ugh #;

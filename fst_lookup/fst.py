@@ -134,24 +134,32 @@ class FST:
                               get_input_label=get_input_label, get_output_label=get_output_label)
 
     def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
-        # TODO: REFACTOR THIS GROSS FUNCTION
+        """
+        Formats the transduction by making a few assumptions:
+
+         - Adjacent graphemes should be concatenated
+         - Multi-character symbols should stand alone (e.g., +Pl)
+         - Epsilons are never emitted in the output
+        """
+
         current_lemma = ''
         for symbol in transduction:
             if symbol is Epsilon:
-                if current_lemma:
-                    yield current_lemma
-                    current_lemma = ''
-                # ignore epsilons
+                # Skip epsilons
                 continue
             elif isinstance(symbol, MultiCharacterSymbol):
+                # We've seen a previous sequence of graphemes.
+                # Output it and reset!
                 if current_lemma:
                     yield current_lemma
                     current_lemma = ''
                 yield str(symbol)
             else:
+                # This MUST be a grapheme. Concatenated it to the output.
                 assert isinstance(symbol, Grapheme)
                 current_lemma += str(symbol)
 
+        # We may some graphemes remaining. Output them!
         if current_lemma:
             yield current_lemma
 

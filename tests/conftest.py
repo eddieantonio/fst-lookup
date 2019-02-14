@@ -5,6 +5,7 @@ import gzip
 from pathlib import Path
 
 import pytest  # type: ignore
+from fst_lookup import FST
 
 
 @pytest.fixture
@@ -36,3 +37,8 @@ def english_flags_fst_txt(shared_datadir: Path) -> str:
     """
     with gzip.open(str(shared_datadir / 'english-flags.fomabin'), 'rt') as text_file:
         return text_file.read()  # type: ignore
+
+
+@pytest.fixture
+def english_ipa_fst(shared_datadir: Path) -> FST:
+    return FST.from_file(shared_datadir / 'english-ipa.fomabin')

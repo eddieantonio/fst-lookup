@@ -7,6 +7,9 @@ dist/
 /*.foma
 /*.fomabin
 
+# Mypy
+.mypy_cache
+
 # Coverage report
 .coverage
 
