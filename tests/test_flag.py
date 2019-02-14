@@ -2,16 +2,16 @@
 # -*- coding: UTF-8 -*-
 
 """
-Contrived flag diacritic tests
+Test ALL OF THE FLAG DIACRITICS!
 """
 
 import pytest  # type: ignore
 
 from fst_lookup import FST
 
-# This constructs PART of an FST
-# The idea is to add arcs to this partial FST.
-#
+# This constructs a SUBSET of an FST.
+# The idea is, to test a particular set of flag diacritics, they must be added
+# to the partial FST to complete it. Adding arcs can be done with make_fst().
 #
 # Existing arcs:
 #
@@ -19,8 +19,12 @@ from fst_lookup import FST
 #   consume 'b', set x <- b; goto state 1
 #   consume 'c', [x is unset]; goto state 1
 #
-# You must add arcs that go from 1 to 2.
-# The arcs in between test features of the flag diacritics.
+# You may choose to use @P.x.a@/@P.x.b@ flags or @U.x.a@/@U.x.b@ flags for the
+# last two existing arcs.
+#
+# You must add arcs that go from state 1 to state 2. State 2 is the accepting
+# state.
+# The arcs you add should test features of the flag diacritics.
 HEADER = ("""
 ##foma-net 1.0##
 ##props##
@@ -45,11 +49,20 @@ HEADER = ("""
 ##states##
 """)
 
+#  The following arc and state ALWAYS exist:
 # if 'c', x is unset; goto 1
 ACCEPT_C = "0 99 0 1 0"
 # Let 2 be the accepting state:
 ACCEPTING_STATE = "2 -1 -1 1"
 
+FOOTER = """
+-1 -1 -1 -1 -1
+##end##
+"""
+
+# You may choose to use POSITIVE_SET_ARCS or UNIFY_ARCS.
+
+# Use @P.x.a@ and @P.x.b@ to set flags.
 POSITIVE_SET_ARCS = (
     # if a, set x <- a; goto 1
     "0 97 0 3 0",
@@ -59,6 +72,7 @@ POSITIVE_SET_ARCS = (
     "4 112 1 0"
 )
 
+# Use @U.x.a@ and @U.x.b@ to set flags.
 UNIFY_ARCS = (
     # if a, set x <- a; goto 1
     "0 97 0 3 0",
@@ -68,13 +82,11 @@ UNIFY_ARCS = (
     "4 102 1 0"
 )
 
-FOOTER = """
--1 -1 -1 -1 -1
-##end##
-"""
-
 
 def test_disallow_value() -> None:
+    """
+    Test the @D.FEAT.VAL@ flag.
+    """
     # Given 'a', this FST will print 'b'
     # Given 'c', this FST will print both 'a', and 'b'
     fst = make_fst(
@@ -90,6 +102,9 @@ def test_disallow_value() -> None:
 
 
 def test_require_value() -> None:
+    """
+    Test the @R.FEAT.VAL@ flag.
+    """
     # Given 'a', this FST will print 'b'
     # Given 'c', this FST will print both 'a', and 'b'
     fst = make_fst(
@@ -105,6 +120,9 @@ def test_require_value() -> None:
 
 
 def test_disallow_value_with_unify() -> None:
+    """
+    Tests the @U.FEAT.VAL@ flags in conjunction with the @D.FEAT.VAL@ flags.
+    """
     # Given 'a', this FST will print 'b'
     # Given 'c', this FST will print both 'a', and 'b'
     fst = make_fst(
@@ -121,6 +139,9 @@ def test_disallow_value_with_unify() -> None:
 
 
 def test_require_value_with_unify() -> None:
+    """
+    Tests the @U.FEAT.VAL@ flags in conjunction with the @R.FEAT.VAL@ flags.
+    """
     # Given 'a', this FST will print 'b'
     # Given 'c', this FST will print both 'a', and 'b'
     fst = make_fst(
@@ -137,6 +158,10 @@ def test_require_value_with_unify() -> None:
 
 
 def test_unify_twice() -> None:
+    """
+    Tests the @U.FEAT.VAL@ flags
+    (set feature to value; unify feature with value).
+    """
     # Given 'a', this FST will print 'a' (like require)
     # Given 'b', this FST will print 'b' (like require)
     # Given 'c', this FST will print both 'a', and 'b'
@@ -197,6 +222,9 @@ def make_fst(*custom_arcs: str, a_and_b='positive') -> FST:
     """
     To make a complete FST, add one or more arcs that go from state 1 to state 2.
     There are existing arcs to state 1 that set x <- a, set x <- b, and do not define x.
+
+    a_and_b can be either 'positive' for @P.x.V@ flags or 'unify' for @U.x.V@
+    flags.
     """
 
     a_and_b_arcs = UNIFY_ARCS if a_and_b == 'unify' else POSITIVE_SET_ARCS
