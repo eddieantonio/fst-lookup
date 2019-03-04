@@ -90,11 +90,59 @@ class FST:
             symbols = list(self.to_symbols(analysis))
         except OutOfAlphabetError:
             return
-        forms = self._transduce(symbols, get_input_label=lambda arc: arc.upper,
-                                get_output_label=lambda arc: arc.lower)
+        forms = self._generate(symbols)
         for transduction in forms:
             yield ''.join(str(symbol) for symbol in transduction
                           if symbol is not Epsilon)
+
+    def _generate(self, symbols: List[Symbol], ε=Epsilon) -> Iterable[RawTransduction]:
+        """
+        This special cases the Transducer to make it faster for the case of
+        implementing paradigm generation.
+        """
+
+        # Optimization: assume searching a small tuple is faster than searching a small set.
+        accepting_states = tuple(self.accepting_states)
+        arcs = self.arcs_from
+
+        # TODO: Handle a maximum transduction depth, for cyclic FSTs.
+        def accept(state: StateID, transduction: List[Symbol], flag_stack):
+            if state in accepting_states:
+                if len(symbols) > 0:
+                    return
+                yield tuple(transduction)
+
+            for arc in arcs[state]:
+                # assuming upper: deep form    e.g., eat+V+Past
+                #          lower: surface form e.g., ate
+                # (Blame XFST)
+                input_label = arc.upper
+
+                if input_label is ε:
+                    # Transduce WITHOUT consuming input
+                    transduction.append(arc.lower)
+                    yield from accept(arc.destination, transduction, flag_stack)
+                    transduction.pop()
+                elif len(symbols) > 0 and input_label == symbols[0]:
+                    # Transduce, consuming the symbol as a label
+                    transduction.append(arc.lower)
+                    consumed = symbols.pop(0)
+                    yield from accept(arc.destination, transduction, flag_stack)
+                    symbols.insert(0, consumed)
+                    transduction.pop()
+                elif input_label.is_flag_diacritic:
+                    # Evaluate flag diacritic
+                    flag = input_label
+                    flags = flag_stack[-1]
+
+                    if flag.test(flags):  # type: ignore
+                        next_flags = flags.copy()
+                        flag.apply(next_flags)  # type: ignore
+                        # Transduce WITHOUT consuming input OR emitting output
+                        # label (output should be the flag again).
+                        yield from accept(arc.destination, transduction, flag_stack + [next_flags])
+
+        yield from accept(self.initial_state, [], [{}])
 
     def to_symbols(self, surface_form: str) -> Iterable[Symbol]:
         """
