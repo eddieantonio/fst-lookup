@@ -2,3 +2,7 @@
 *.txt
 *.dot
 *.pdf
+
+# For now, ignore this FST, as its copy right is unclear.
+kwk_napa_g2p.xfst
+kwk_napa_g2p.fomabin
