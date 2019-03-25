@@ -11,11 +11,22 @@ Note:  this REQUIRES the Plains Cree analyzer:
 Place this in the tests/regressions/data/ directory.
 """
 
+import pytest  # type: ignore
+
 from fst_lookup import FST
 
 
 def test_concatenate_lemma(shared_datadir):
-    fst = FST.from_file(shared_datadir / 'crk-descriptive-analyzer.fomabin')
+    """
+    Test https://github.com/eddieantonio/fst-lookup/issues/4
+
+    Skips if the file is not found.
+    """
+    fst_file = shared_datadir / 'crk-descriptive-analyzer.fomabin'
+    if not fst_file.exists():
+        pytest.skip('cannot find ' + str(fst_file))
+
+    fst = FST.from_file(fst_file)
 
     actual = list(fst.analyze('pimitâskosin'))
     assert [('pimitâskosin', '+V', '+AI', '+Ind', '+Prs', '+3Sg')] == actual
