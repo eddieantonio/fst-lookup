@@ -120,6 +120,25 @@ def test_parse_symbols() -> None:
     }
 
 
+def test_parse_bad_symbols() -> None:
+    """
+    Makes sure we crash if the FST tries to define a symbol entry twice.
+    """
+    bad_fst = ("""##foma-net 1.0##
+##props##
+2 390211 90019 390213 5 -1 1 2 2 1 0 2
+##sigma##
+0 @_EPSILON_SYMBOL_@
+3 @P.UN.ON@
+0 +Err/Orth
+##states##
+-1 -1 -1 -1 -1
+##end##
+""")
+    with pytest.raises(FSTParseError):
+        parse_text(bad_fst)
+
+
 def stringified_set(symbols):
     """
     Helper that stringifies all of the values in a symbols dictionary.
