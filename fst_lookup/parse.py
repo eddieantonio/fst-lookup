@@ -71,20 +71,8 @@ class SymbolTable:
                 if isinstance(v, regular_symbol)}
 
     @property
-    def flag_diacritics(self) -> Dict[int, FlagDiacritic]:
-        return {i: sym for i, sym in self._symbols.items()
-                if isinstance(sym, FlagDiacritic)}
-
-    @property
-    def graphemes(self) -> Dict[int, Grapheme]:
-        return {i: sym for i, sym in self._symbols.items()
-                if isinstance(sym, Grapheme)}
-
-    @property
-    def specials(self) -> Dict[int, Symbol]:
-        regular = (Grapheme, MultiCharacterSymbol, FlagDiacritic)
-        return {i: sym for i, sym in self._symbols.items()
-                if not isinstance(sym, regular)}
+    def has_epsilon(self) -> bool:
+        return 0 in self._symbols
 
 
 class FSTParse(NamedTuple('FSTParse', [('symbols', SymbolTable),
@@ -120,7 +108,7 @@ class FSTParse(NamedTuple('FSTParse', [('symbols', SymbolTable),
 
     @property
     def has_epsilon(self) -> bool:
-        return 0 in self.symbols.specials
+        return self.symbols.has_epsilon
 
 
 class FomaParser:
