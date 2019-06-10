@@ -3,6 +3,10 @@
 build/
 dist/
 
+# Cache files.
+__pycache__/
+.pytest_cache/
+
 # FSTs I happen to have lying around.
 /*.foma
 /*.fomabin
