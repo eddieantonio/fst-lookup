@@ -16,7 +16,6 @@
 # limitations under the License.
 
 import re
-from collections import ChainMap
 from enum import Enum
 from typing import (Callable, Dict, List, Mapping, NamedTuple, Optional, Set,
                     Tuple)
@@ -47,37 +46,44 @@ class SymbolTable:
     Keeps track of ALL of the symbols in an FST.
     """
     def __init__(self) -> None:
-        self.multichar_symbols = {}  # type: Dict[int, MultiCharacterSymbol]
-        self.graphemes = {}  # type: Dict[int, Grapheme]
-        self.flag_diacritics = {}  # type: Dict[int, FlagDiacritic]
-        # Will contain:
-        # 0 @_EPSILON_SYMBOL_@
-        # 1 @_UNKNOWN_SYMBOL_@
-        # 2 @_IDENTITY_SYMBOL_@
-        self.specials = {}  # type: Dict[int, Symbol]
-
-        # Lookup ALL of them simultaneously:
-        self._combined = ChainMap(self.multichar_symbols, self.graphemes,
-                                  self.flag_diacritics, self.specials)
-
         # TODO: differentiate between input alphabet and output alphabet
-        #       the union of the two is sigma
+        #       the union of input and output is sigma
+        self._symbols = {}  # type: Dict[int, Symbol]
 
     def __getitem__(self, idx: int):
-        return self._combined[idx]
+        return self._symbols[idx]
 
     def add(self, symbol_id: int, symbol: Symbol) -> None:
         """
         Add a symbol to the symbol table.
         """
-        if isinstance(symbol, Grapheme):
-            self.graphemes[symbol_id] = symbol
-        elif isinstance(symbol, MultiCharacterSymbol):
-            self.multichar_symbols[symbol_id] = symbol
-        elif isinstance(symbol, FlagDiacritic):
-            self.flag_diacritics[symbol_id] = symbol
-        else:
-            self.specials[symbol_id] = symbol
+        if symbol_id in self._symbols:
+            raise IndexError(
+                'Duplicate symbols for index %d: old: %r; new: %r' % (
+                    symbol_id, self[symbol_id], symbol
+                ))
+        self._symbols[symbol_id] = symbol
+
+    @property
+    def multichar_symbols(self) -> Dict[int, MultiCharacterSymbol]:
+        return {i: sym for i, sym in self._symbols.items()
+                if isinstance(sym, MultiCharacterSymbol)}
+
+    @property
+    def flag_diacritics(self) -> Dict[int, FlagDiacritic]:
+        return {i: sym for i, sym in self._symbols.items()
+                if isinstance(sym, FlagDiacritic)}
+
+    @property
+    def graphemes(self) -> Dict[int, Grapheme]:
+        return {i: sym for i, sym in self._symbols.items()
+                if isinstance(sym, Grapheme)}
+
+    @property
+    def specials(self) -> Dict[int, Symbol]:
+        regular = (Grapheme, MultiCharacterSymbol, FlagDiacritic)
+        return {i: sym for i, sym in self._symbols.items()
+                if not isinstance(sym, regular)}
 
 
 class FSTParse(NamedTuple('FSTParse', [('symbols', SymbolTable),
