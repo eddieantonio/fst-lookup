@@ -65,11 +65,6 @@ class SymbolTable:
         self._symbols[symbol_id] = symbol
 
     @property
-    def multichar_symbols(self) -> Dict[int, MultiCharacterSymbol]:
-        return {i: sym for i, sym in self._symbols.items()
-                if isinstance(sym, MultiCharacterSymbol)}
-
-    @property
     def sigma(self) -> Dict[int, Symbol]:
         regular_symbol = (Grapheme, MultiCharacterSymbol, FlagDiacritic)
         return {k: v for k, v in self._symbols.items()
@@ -102,15 +97,18 @@ class FSTParse(NamedTuple('FSTParse', [('symbols', SymbolTable),
 
     @property
     def multichar_symbols(self) -> Dict[int, MultiCharacterSymbol]:
-        return self.symbols.multichar_symbols
+        return {i: sym for i, sym in self.symbols.sigma.items()
+                if isinstance(sym, MultiCharacterSymbol)}
 
     @property
     def flag_diacritics(self) -> Dict[int, FlagDiacritic]:
-        return self.symbols.flag_diacritics
+        return {i: sym for i, sym in self.symbols.sigma.items()
+                if isinstance(sym, FlagDiacritic)}
 
     @property
     def graphemes(self) -> Dict[int, Grapheme]:
-        return self.symbols.graphemes
+        return {i: sym for i, sym in self.symbols.sigma.items()
+                if isinstance(sym, Grapheme)}
 
     @property
     def sigma(self) -> Dict[int, Symbol]:
