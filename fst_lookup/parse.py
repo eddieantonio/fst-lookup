@@ -58,7 +58,7 @@ class SymbolTable:
         Add a symbol to the symbol table.
         """
         if symbol_id in self._symbols:
-            raise IndexError(
+            raise FSTParseError(
                 'Duplicate symbols for index %d: old: %r; new: %r' % (
                     symbol_id, self[symbol_id], symbol
                 ))
