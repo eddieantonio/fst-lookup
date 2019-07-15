@@ -113,7 +113,7 @@ class FST:
 
         status = subprocess.run(
             [
-                self._hfstol_exe_path,
+                str(self._hfstol_exe_path),
                 "--quiet",
                 "--pipe-mode",
                 self._hfstol_path,
@@ -124,8 +124,7 @@ class FST:
             shell=False,
         )
 
-        analyses = []
-
+        analyses:HfstolAnalyses = []
 
         old_surface_form = None
         for line in status.stdout.decode("UTF-8").splitlines():
