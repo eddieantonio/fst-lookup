@@ -113,7 +113,7 @@ class FST:
                 str(self._hfstol_exe_path),
                 "--quiet",
                 "--pipe-mode",
-                self._hfstol_path,
+                str(self._hfstol_path),
             ],
             input=lines,
             stdout=subprocess.PIPE,
