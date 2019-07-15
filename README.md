@@ -25,6 +25,7 @@ Import the library, and load an FST from a file:
 ```python
 >>> from fst_lookup import FST
 >>> fst = FST.from_file('eat.fomabin')
+
 ```
 
 ### Assumed format of the FSTs
@@ -71,7 +72,6 @@ tags, or the _lemma_ (base form of the word).
  ('eat', '+V', '+3P', '+Sg')]
 ```
 
-
 ### Generate a word form
 
 To _generate_ a form (take a linguistic analysis, and get its concrete
@@ -87,6 +87,28 @@ a list.
 ```python
 >>> list(fst.generate('eat+V+Past')))
 ['ate']
+```
+
+### Analyze word forms in bulk efficiently
+
+To _analyze_ word forms in bulk, you have the option to use `hfst-optimized-lookup` program.
+Call the `analyze_in_bulk()` function. For large quatities of words, it can be two orders of magnitude faster than calling `analyze` one by one:
+
+It requires `hfst` executable installed and a `.hfstol` file. For linux system it can be an easy `sudo apt get install hfst`. For other systems check [this](https://github.com/hfst/hfst#installation).
+
+```python
+fst = FST.from_file(hfstol_path='my/English.hfstol')
+```
+
+```python
+def analyze_in_bulk(self, surface_forms: Iterable[str]) -> List[List[str]]
+```
+
+Note the output is produced by hfst and is different than `analyze`, basically it's the concatenated version
+
+```python
+>>> fst.analyze(['eats', 'balloons', 'jjksiwks', 'does'])
+[('eat+N+Mass', 'eat+V+3P+Sg'), ('balloon+N+Mass'), (''), ('do+V+3P+Sg')]
 ```
 
 

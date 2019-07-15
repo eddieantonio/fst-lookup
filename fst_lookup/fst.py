@@ -16,11 +16,14 @@
 
 import gzip
 import re
+import shutil
+import subprocess
 from collections import defaultdict
 from pathlib import Path
 from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
-                    Tuple, Union)
+                    Tuple, Union, Optional)
 
+from fst_lookup.parse import FSTParse
 from .data import Arc, StateID
 from .flags import FlagDiacritic
 from .parse import FSTParse, parse_text
@@ -33,6 +36,8 @@ RawTransduction = Tuple[Symbol, ...]
 SymbolFromArc = Callable[[Arc], Symbol]
 # An analysis is a tuple of strings.
 Analyses = Iterable[Tuple[str, ...]]
+# An Hfstol analysis is a string
+HfstolAnalyses = List[List[str]]
 
 
 class OutOfAlphabetError(Exception):
@@ -47,32 +52,44 @@ class FST:
     A finite-state transducer that can convert between one string and a set of
     output strings.
     """
+    _parse: Optional[FSTParse]
+    _hfstol_exe_path: Optional[PathLike]
+    _hfstol_path: Optional[PathLike]
 
-    def __init__(self, parse: FSTParse) -> None:
-        self.initial_state = min(parse.states)
-        self.accepting_states = frozenset(parse.accepting_states)
+    def __init__(self, parse: Optional[FSTParse], hfstol_path: Optional[PathLike] = None,
+                 hfstol_exe_path: Optional[PathLike] = None) -> None:
 
-        self.str2symbol = {
-            str(sym): sym for sym in parse.sigma.values()
-            if sym.is_graphical_symbol
-        }
+        self._parse = parse
+        if parse is not None:
+            self.initial_state = min(parse.states)
+            self.accepting_states = frozenset(parse.accepting_states)
 
-        # Prepare a regular expression to symbolify all input.
-        # Ensure the longest symbols are first, so that they are match first
-        # by the regular expresion.
-        symbols = sorted(self.str2symbol.keys(), key=len, reverse=True)
-        self.symbol_pattern = re.compile(
-            '|'.join(re.escape(entry) for entry in symbols)
-        )
+            self.str2symbol = {
+                str(sym): sym for sym in parse.sigma.values()
+                if sym.is_graphical_symbol
+            }
 
-        self.arcs_from = defaultdict(set)  # type: Dict[StateID, Set[Arc]]
-        for arc in parse.arcs:
-            self.arcs_from[arc.state].add(arc)
+            # Prepare a regular expression to symbolify all input.
+            # Ensure the longest symbols are first, so that they are match first
+            # by the regular expresion.
+            symbols = sorted(self.str2symbol.keys(), key=len, reverse=True)
+            self.symbol_pattern = re.compile(
+                '|'.join(re.escape(entry) for entry in symbols)
+            )
+
+            self.arcs_from = defaultdict(set)  # type: Dict[StateID, Set[Arc]]
+            for arc in parse.arcs:
+                self.arcs_from[arc.state].add(arc)
+
+        self._hfstol_path = hfstol_path
+        self._hfstol_exe_path = hfstol_exe_path
 
     def analyze(self, surface_form: str) -> Analyses:
         """
         Given a surface form, this yields all possible analyses in the FST.
         """
+        assert self._parse is not None, ".fomabin file is not supplied to enable individual word analysis"
+
         try:
             symbols = list(self.to_symbols(surface_form))
         except OutOfAlphabetError:
@@ -82,10 +99,71 @@ class FST:
         for analysis in analyses:
             yield tuple(self._format_transduction(analysis))
 
+    def analyze_in_bulk(self, surface_forms: Iterable[str]) -> HfstolAnalyses:
+        """
+        use hfstol to do word analysis in bulk. May have two orders of magnitude of performance gain compared to
+        invoking analyze() for every word.
+
+        Note: The returned analyses are formatted different than analyze().
+        """
+        assert self._hfstol_path is not None, ".hfstol file is not supplied to enable analysis in bulk"
+
+        # hfst-optimized-lookup expects each analysis on a separate line:
+        lines = "\n".join(surface_forms).encode("UTF-8")
+
+        status = subprocess.run(
+            [
+                self._hfstol_exe_path,
+                "--quiet",
+                "--pipe-mode",
+                self._hfstol_path,
+            ],
+            input=lines,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=False,
+        )
+
+        analyses = []
+
+
+        old_surface_form = None
+        for line in status.stdout.decode("UTF-8").splitlines():
+            # Remove extraneous whitespace.
+            line = line.strip()
+            # Skip empty lines.
+            if not line:
+                continue
+
+            # Each line will be in this form:
+            #   verbatim-analysis \t wordform
+            # where \t is a tab character
+            # e.g.,
+            #   nôhkom+N+A+D+Px1Pl+Sg \t nôhkominân
+            # If the analysis doesn't match, the transduction will have +?:
+            # e.g.,
+            #   nôhkom+N+A+I+Px1Pl+Sg	nôhkom+N+A+I+Px1Pl+Sg	+?
+            surface_form, word_form, *rest = line.split("\t")
+            if old_surface_form is None:
+                analyses.append([])
+                old_surface_form = surface_form
+            else:
+                if surface_form != old_surface_form:
+                    analyses.append([])
+            # Generating this word form failed!
+            if "+?" in rest:
+                analyses[-1].append('')
+            else:
+                analyses[-1].append(word_form)
+
+        return analyses
+
     def generate(self, analysis: str) -> Iterable[str]:
         """
         Given an analysis, this yields all possible surface forms in the FST.
         """
+        assert self._parse is not None, ".fomabin file is not supplied to enable individual word generation"
+
         try:
             symbols = list(self.to_symbols(analysis))
         except OutOfAlphabetError:
@@ -110,12 +188,34 @@ class FST:
             text = text[match.end():]
 
     @classmethod
-    def from_file(cls, path: PathLike) -> 'FST':
+    def from_file(cls, fomabin_path: Optional[PathLike] = None, hfstol_path: Optional[PathLike] = None,
+                  hfstol_exe_path: Optional[PathLike] = None) -> 'FST':
         """
         Read the FST as output by FOMA.
+
+        :keyword fomabin_path: Supply .fomabin file to do single word analysis and generation
+        :keyword hfstol_path: Supply .hfstol file if you want to do word analysis in bulk. Using .hfstol file to analyze words in bulk may have two orders of magnitude of performance gain compared to using .fomabin file for every word.
+        :keyword hfstol_exe_path: Supply hfstol exe if you want to specify it specifically. If omitted, the analyze will search for the executable after the default name "hfst-optimized-lookup".
+
         """
-        with gzip.open(str(path), 'rt', encoding='UTF-8') as text_file:
-            return cls.from_text(text_file.read())
+        assert any([fomabin_path, hfstol_path]), 'Provide at least one of .fomabin or .hfstol file'
+
+        if hfstol_path is not None:
+            if hfstol_exe_path is None:
+                hfstol_exe_path = shutil.which("hfst-optimized-lookup")
+                if hfstol_exe_path is None:
+                    raise ImportError(
+                        "hfst-optimized-lookup is not installed.\n"
+                        "Please install the HFST suite on your system "
+                        "before using hfstol.\n"
+                        "See: https://github.com/hfst/hfst#installation"
+                    )
+        parse = None
+        if fomabin_path is not None:
+            with gzip.open(str(fomabin_path), 'rt', encoding='UTF-8') as text_file:
+                parse = parse_text(text_file.read())
+
+        return FST(parse, hfstol_path, hfstol_exe_path)
 
     @classmethod
     def from_text(self, att_text: str) -> 'FST':
@@ -168,14 +268,15 @@ class Transducer(Iterable[RawTransduction]):
     """
     Does a single transduction
     """
+
     def __init__(
-        self,
-        initial_state: StateID,
-        symbols: Iterable[Symbol],
-        get_input_label: SymbolFromArc,
-        get_output_label: SymbolFromArc,
-        accepting_states: FrozenSet[StateID],
-        arcs_from: Dict[StateID, Set[Arc]],
+            self,
+            initial_state: StateID,
+            symbols: Iterable[Symbol],
+            get_input_label: SymbolFromArc,
+            get_output_label: SymbolFromArc,
+            accepting_states: FrozenSet[StateID],
+            arcs_from: Dict[StateID, Set[Arc]],
     ) -> None:
         self.initial_state = initial_state
         self.symbols = list(symbols)
@@ -188,10 +289,10 @@ class Transducer(Iterable[RawTransduction]):
         yield from self._accept(self.initial_state, [], [{}])
 
     def _accept(
-        self,
-        state: StateID,
-        transduction: List[Symbol],
-        flag_stack: List[Dict[str, str]]
+            self,
+            state: StateID,
+            transduction: List[Symbol],
+            flag_stack: List[Dict[str, str]]
     ) -> Iterable[RawTransduction]:
         # TODO: Handle a maximum transduction depth, for cyclic FSTs.
         if state in self.accepting_states:
@@ -224,7 +325,7 @@ class Transducer(Iterable[RawTransduction]):
                     # Transduce WITHOUT consuming input OR emitting output
                     # label (output should be the flag again).
                     assert input_label == self.get_output_label(arc), (
-                        'Arc does not have flags on both labels ' + repr(arc)
+                            'Arc does not have flags on both labels ' + repr(arc)
                     )
                     yield from self._accept(arc.destination, transduction,
                                             flag_stack + [next_flags])
