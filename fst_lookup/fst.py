@@ -53,7 +53,6 @@ class FST:
     output strings.
     """
 
-
     def __init__(self, parse: Optional[FSTParse], hfstol_path: Optional[PathLike] = None,
                  hfstol_exe_path: Optional[PathLike] = None) -> None:
 
@@ -122,7 +121,7 @@ class FST:
             shell=False,
         )
 
-        analyses:HfstolAnalyses = []
+        analyses= []  # type: HfstolAnalyses
 
         old_surface_form = None
         for line in status.stdout.decode("UTF-8").splitlines():
