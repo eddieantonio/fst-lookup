@@ -142,10 +142,10 @@ class FST:
             surface_form, word_form, *rest = line.split("\t")
             if old_surface_form is None:
                 analyses.append([])
-                old_surface_form = surface_form
             else:
                 if surface_form != old_surface_form:
                     analyses.append([])
+            old_surface_form = surface_form
             # Generating this word form failed!
             if "+?" in rest:
                 analyses[-1].append('')
