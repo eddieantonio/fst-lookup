@@ -52,9 +52,7 @@ class FST:
     A finite-state transducer that can convert between one string and a set of
     output strings.
     """
-    _parse: Optional[FSTParse]
-    _hfstol_exe_path: Optional[PathLike]
-    _hfstol_path: Optional[PathLike]
+
 
     def __init__(self, parse: Optional[FSTParse], hfstol_path: Optional[PathLike] = None,
                  hfstol_exe_path: Optional[PathLike] = None) -> None:
