@@ -37,7 +37,7 @@ SymbolFromArc = Callable[[Arc], Symbol]
 # An analysis is a tuple of strings.
 Analyses = Iterable[Tuple[str, ...]]
 # An Hfstol analysis is always a string, the concatenated version of <Analyses>
-HfstolAnalyses = Tuple[str]
+HfstolAnalyses = Tuple[str, ...]
 
 
 class OutOfAlphabetError(Exception):
