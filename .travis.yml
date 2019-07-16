@@ -6,6 +6,7 @@ python:
 install:
  - pip install pipenv codecov
  - pipenv install --dev
+ - sudo apt-get -y install hfst
 script:
   - pipenv run -- mypy -p fst_lookup
   - pipenv run -- py.test

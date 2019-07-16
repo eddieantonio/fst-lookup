@@ -19,13 +19,13 @@ import re
 import shutil
 import subprocess
 from collections import defaultdict
+from enum import Enum, auto
+from os import path
 from pathlib import Path
 from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
                     Tuple, Union, Optional)
 
-from fst_lookup.parse import FSTParse
 from .data import Arc, StateID
-from .flags import FlagDiacritic
 from .parse import FSTParse, parse_text
 from .symbol import Epsilon, Grapheme, MultiCharacterSymbol, Symbol
 
@@ -36,8 +36,8 @@ RawTransduction = Tuple[Symbol, ...]
 SymbolFromArc = Callable[[Arc], Symbol]
 # An analysis is a tuple of strings.
 Analyses = Iterable[Tuple[str, ...]]
-# An Hfstol analysis is a string
-HfstolAnalyses = List[List[str]]
+# An Hfstol analysis is always a string, the concatenated version of <Analyses>
+HfstolAnalyses = List[str]
 
 
 class OutOfAlphabetError(Exception):
@@ -47,16 +47,20 @@ class OutOfAlphabetError(Exception):
     """
 
 
+class FstType(Enum):
+    FOMA = auto()
+    HFSTOL = auto()
+
+
 class FST:
     """
     A finite-state transducer that can convert between one string and a set of
     output strings.
     """
 
-    def __init__(self, parse: Optional[FSTParse], hfstol_path: Optional[PathLike] = None,
+    def __init__(self, parse: Optional[FSTParse] = None, hfstol_file_path: Optional[PathLike] = None,
                  hfstol_exe_path: Optional[PathLike] = None) -> None:
 
-        self._parse = parse
         if parse is not None:
             self.initial_state = min(parse.states)
             self.accepting_states = frozenset(parse.accepting_states)
@@ -77,43 +81,45 @@ class FST:
             self.arcs_from = defaultdict(set)  # type: Dict[StateID, Set[Arc]]
             for arc in parse.arcs:
                 self.arcs_from[arc.state].add(arc)
+            self._fst_type = FstType.FOMA
+        elif hfstol_file_path is not None:
+            self._hfstol_file_path = hfstol_file_path
+            self._hfstol_exe_path = hfstol_exe_path
+            self._fst_type = FstType.HFSTOL
+        else:
+            raise Exception("Failed to load fst file")
 
-        self._hfstol_path = hfstol_path
-        self._hfstol_exe_path = hfstol_exe_path
-
-    def analyze(self, surface_form: str) -> Analyses:
+    def analyze(self, surface_form: str) -> Union[Analyses, HfstolAnalyses]:
         """
-        Given a surface form, this yields all possible analyses in the FST.
+        Given a surface form or a collection of surface forms, this yields all possible analyses in the FST. Note if the fst uses .hfstol file, analysis will be concatenatd. eg. 'eat+V' instead of ('eat', '+V')
         """
-        assert self._parse is not None, ".fomabin file is not supplied to enable individual word analysis"
+        if self._fst_type is FstType.FOMA:
+            try:
+                symbols = list(self.to_symbols(surface_form))
+            except OutOfAlphabetError:
+                return
+            analyses = self._transduce(symbols, get_input_label=lambda arc: arc.lower,
+                                       get_output_label=lambda arc: arc.upper)
+            for analysis in analyses:
+                yield tuple(self._format_transduction(analysis))
+        else:  # FstType.HFSTOL
+            for analysis in tuple(self._call_hfstol([surface_form]))[0]:
+                yield analysis
 
-        try:
-            symbols = list(self.to_symbols(surface_form))
-        except OutOfAlphabetError:
-            return
-        analyses = self._transduce(symbols, get_input_label=lambda arc: arc.lower,
-                                   get_output_label=lambda arc: arc.upper)
-        for analysis in analyses:
-            yield tuple(self._format_transduction(analysis))
-
-    def analyze_in_bulk(self, surface_forms: Iterable[str]) -> HfstolAnalyses:
+    def _call_hfstol(self, inputs: Iterable[str]) -> Iterable[HfstolAnalyses]:
         """
-        use hfstol to do word analysis in bulk. May have two orders of magnitude of performance gain compared to
-        invoking analyze() for every word.
-
-        Note: The returned analyses are formatted different than analyze().
+        call hfstol, parse the result and yield from the results
         """
-        assert self._hfstol_path is not None, ".hfstol file is not supplied to enable analysis in bulk"
 
         # hfst-optimized-lookup expects each analysis on a separate line:
-        lines = "\n".join(surface_forms).encode("UTF-8")
+        lines = "\n".join(inputs).encode("UTF-8")
 
         status = subprocess.run(
             [
                 str(self._hfstol_exe_path),
                 "--quiet",
                 "--pipe-mode",
-                str(self._hfstol_path),
+                str(self._hfstol_file_path),
             ],
             input=lines,
             stdout=subprocess.PIPE,
@@ -121,9 +127,8 @@ class FST:
             shell=False,
         )
 
-        analyses= []  # type: HfstolAnalyses
-
-        old_surface_form = None
+        old_input = None
+        res_buffer = []
         for line in status.stdout.decode("UTF-8").splitlines():
             # Remove extraneous whitespace.
             line = line.strip()
@@ -132,34 +137,38 @@ class FST:
                 continue
 
             # Each line will be in this form:
-            #   verbatim-analysis \t wordform
-            # where \t is a tab character
+            #    <original_input>\t<res>
+            # e.g. in the case of analyzer file
+            # nôhkominân    nôhkom+N+A+D+Px1Pl+Sg
+            # e.g. in the case of generator file
+            # nôhkom+N+A+D+Px1Pl+Sg     nôhkominân
+            # If the hfstol can't compute, the transduction will have +?:
             # e.g.,
-            #   nôhkom+N+A+D+Px1Pl+Sg \t nôhkominân
-            # If the analysis doesn't match, the transduction will have +?:
-            # e.g.,
-            #   nôhkom+N+A+I+Px1Pl+Sg	nôhkom+N+A+I+Px1Pl+Sg	+?
-            surface_form, word_form, *rest = line.split("\t")
-            if old_surface_form is None:
-                analyses.append([])
-            else:
-                if surface_form != old_surface_form:
-                    analyses.append([])
-            old_surface_form = surface_form
-            # Generating this word form failed!
+            #   sadijfijfe	sadijfijfe	+?
+            original_input, res, *rest = line.split("\t")
             if "+?" in rest:
-                analyses[-1].append('')
-            else:
-                analyses[-1].append(word_form)
+                res = ''
+            res_buffer.append(res)
+            if old_input is not None:
+                # Generating this word form failed!
+                if original_input != old_input:
+                    yield tuple(res_buffer)
+            old_input = original_input
+        yield tuple(res_buffer)
 
-        return analyses
+    def analyze_in_bulk(self, surface_forms: Iterable[str]) -> Iterable[Union[Analyses, HfstolAnalyses]]:
+        """
+        analyze a bunch of words at once
+        """
+        for surface_form in surface_forms:
+            yield self.analyze(surface_form)
 
     def generate(self, analysis: str) -> Iterable[str]:
         """
         Given an analysis, this yields all possible surface forms in the FST.
         """
-        assert self._parse is not None, ".fomabin file is not supplied to enable individual word generation"
 
+        assert self._fst_type is FstType.FOMA, 'hfstol does not support generation'
         try:
             symbols = list(self.to_symbols(analysis))
         except OutOfAlphabetError:
@@ -184,19 +193,16 @@ class FST:
             text = text[match.end():]
 
     @classmethod
-    def from_file(cls, fomabin_path: Optional[PathLike] = None, hfstol_path: Optional[PathLike] = None,
-                  hfstol_exe_path: Optional[PathLike] = None) -> 'FST':
+    def from_file(cls, fst_file_path: PathLike, hfstol_exe_path: Optional[PathLike] = None) -> 'FST':
         """
         Read the FST as output by FOMA.
 
-        :keyword fomabin_path: Supply .fomabin file to do single word analysis and generation
-        :keyword hfstol_path: Supply .hfstol file if you want to do word analysis in bulk. Using .hfstol file to analyze words in bulk may have two orders of magnitude of performance gain compared to using .fomabin file for every word.
-        :keyword hfstol_exe_path: Supply hfstol exe if you want to specify it specifically. If omitted, the analyze will search for the executable after the default name "hfst-optimized-lookup".
-
+        :param hfstol_exe_path: Supply hfstol exe if you uses .hfstol file and want to specify the executable specifically. If omitted, the analyze will search for the executable after the default name "hfst-optimized-lookup".
+        :param fst_file_path: .fomabin file or .hfstol file
         """
-        assert any([fomabin_path, hfstol_path]), 'Provide at least one of .fomabin or .hfstol file'
 
-        if hfstol_path is not None:
+        if path.splitext(fst_file_path)[-1] == '.hfstol':
+
             if hfstol_exe_path is None:
                 hfstol_exe_path = shutil.which("hfst-optimized-lookup")
                 if hfstol_exe_path is None:
@@ -206,15 +212,16 @@ class FST:
                         "before using hfstol.\n"
                         "See: https://github.com/hfst/hfst#installation"
                     )
-        parse = None
-        if fomabin_path is not None:
-            with gzip.open(str(fomabin_path), 'rt', encoding='UTF-8') as text_file:
+            return FST(hfstol_file_path=fst_file_path, hfstol_exe_path=hfstol_exe_path)
+        else:  # .fomabin
+
+            with gzip.open(str(fst_file_path), 'rt', encoding='UTF-8') as text_file:
                 parse = parse_text(text_file.read())
 
-        return FST(parse, hfstol_path, hfstol_exe_path)
+            return FST(parse=parse, hfstol_exe_path=hfstol_exe_path)
 
     @classmethod
-    def from_text(self, att_text: str) -> 'FST':
+    def from_text(cls, att_text: str) -> 'FST':
         """
         Parse the FST in the text format (un-gzip'd).
         """

@@ -100,3 +100,31 @@ def test_analyze_concatenation(english_ipa_fst: FST):
     """
     result, = english_ipa_fst.analyze('rough')
     assert result == ('ɹʌf',)
+
+def test_hfstol_analysis_in_bulk(cree_foma_analyzer: FST, cree_hfstol_analyzer: FST):
+    """
+    checks whether <analyze_in_bulk> with hfstol file generates consistent results with fomabin file
+    """
+    surface_forms = ('niskak', 'nipaw', 'e-nipayan')
+    bulk_analyses_hfstol = list(cree_hfstol_analyzer.analyze_in_bulk(surface_forms))
+    bulk_analyses_fomabin = list(cree_foma_analyzer.analyze_in_bulk(surface_forms))
+    for i, analysis in enumerate(bulk_analyses_hfstol):
+        assert set(analysis) == set(map(lambda x: ''.join(x), bulk_analyses_fomabin[i]))
+
+# not sure this is how fst is supposed to work
+def test_hfstol_generation_in_bulk(cree_foma_generator: FST, cree_hfstol_generator: FST):
+    """
+    checks whether <generate_in_bulk> with hfstol file generates consistent results with fomabin file
+    """
+    analyses = [''.join(('nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg')),
+                ''.join(('niska', '+N', '+A', '+Pl')),
+                ''.join(('nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg')),
+                ''.join(('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+1Sg')),
+                ''.join(('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+2Sg'))
+                ]
+
+    bulk_generation_hfstol = cree_hfstol_generator.analyze_in_bulk(analyses)
+    bulk_generation_fomabin = list(cree_foma_generator.analyze_in_bulk(analyses))
+    print(bulk_generation_fomabin)
+    for i, generated_words in enumerate(bulk_generation_hfstol):
+        assert tuple(generated_words) == tuple(tuple(bulk_generation_fomabin)[i])[0]

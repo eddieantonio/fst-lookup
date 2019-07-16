@@ -91,20 +91,16 @@ a list.
 
 ### Analyze word forms in bulk efficiently
 
-To _analyze_ word forms in bulk, you have the option to use `hfst-optimized-lookup` program.
-Call the `analyze_in_bulk()` function. For large quatities of words, it can be two orders of magnitude faster than calling `analyze` one by one:
+To _analyze_ in bulk, you have the option to use `hfst-optimized-lookup`.
+Call the `analyze_in_bulk()` function. For large quatities of words, it can be two orders of magnitude faster than using `fomabin` to analyze one by one:
 
 It requires `hfst` executable installed and a `.hfstol` file. For linux system it can be an easy `sudo apt get install hfst`. For other systems check [this](https://github.com/hfst/hfst#installation).
 
 ```python
-fst = FST.from_file(hfstol_path='my/English.hfstol')
+fst = FST.from_file('/MattLegend27/English_descriptive_analyzer.hfstol')
 ```
 
-```python
-def analyze_in_bulk(self, surface_forms: Iterable[str]) -> List[List[str]]
-```
-
-Note the output is produced by hfst and is different than `analyze`, basically it's the concatenated version
+Note the output produced by hfstol and is different than that produced by fomabin, basically it's the concatenated version
 
 ```python
 >>> fst.analyze(['eats', 'balloons', 'jjksiwks', 'does'])

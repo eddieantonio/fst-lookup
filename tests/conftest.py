@@ -15,6 +15,35 @@ from typing import cast
 import pytest  # type: ignore
 from fst_lookup import FST
 
+@pytest.fixture
+def cree_hfstol_analyzer(shared_datadir: Path) -> FST:
+    """
+    Return the FST that deals with the cree language
+    """
+    return FST.from_file(shared_datadir / 'crk-descriptive-analyzer.hfstol')
+
+
+@pytest.fixture
+def cree_foma_analyzer(shared_datadir: Path) -> FST:
+    """
+    Return the FST that deals with the cree language
+    """
+    return FST.from_file(shared_datadir / 'crk-descriptive-analyzer.fomabin')
+
+@pytest.fixture
+def cree_foma_generator(shared_datadir: Path) -> FST:
+    """
+    Return the FST that deals with the cree language
+    """
+    return FST.from_file(shared_datadir / 'crk-normative-generator.fomabin')
+
+@pytest.fixture
+def cree_hfstol_generator(shared_datadir: Path) -> FST:
+    """
+    Return the FST that deals with the cree language
+    """
+    return FST.from_file(shared_datadir / 'crk-normative-generator.hfstol')
+
 
 @pytest.fixture
 def eat_fst(eat_fst_txt: str) -> FST:
