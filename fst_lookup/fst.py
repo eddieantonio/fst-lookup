@@ -19,7 +19,7 @@ import re
 import shutil
 import subprocess
 from collections import defaultdict
-from enum import Enum, auto
+from enum import Enum
 from os import path
 from pathlib import Path
 from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
@@ -48,8 +48,8 @@ class OutOfAlphabetError(Exception):
 
 
 class FstType(Enum):
-    FOMA = auto()
-    HFSTOL = auto()
+    FOMA = 0
+    HFSTOL = 1
 
 
 class FST:
@@ -128,7 +128,7 @@ class FST:
         )
 
         old_input = None
-        res_buffer = []
+        res_buffer = [] # type: List[str]
         for line in status.stdout.decode("UTF-8").splitlines():
             # Remove extraneous whitespace.
             line = line.strip()
