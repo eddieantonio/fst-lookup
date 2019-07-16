@@ -201,7 +201,7 @@ class FST:
         :param fst_file_path: .fomabin file or .hfstol file
         """
 
-        if path.splitext(fst_file_path)[-1] == '.hfstol':
+        if Path(fst_file_path).suffix == '.hfstol':
 
             if hfstol_exe_path is None:
                 hfstol_exe_path = shutil.which("hfst-optimized-lookup")
