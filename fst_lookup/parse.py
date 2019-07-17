@@ -118,8 +118,8 @@ class FomaParser:
 
     LineParser = Callable[[str], None]
 
-    def __init__(self, flip_labels: bool) -> None:
-        self.flip_labels = flip_labels
+    def __init__(self, invert_labels: bool) -> None:
+        self.invert_labels = invert_labels
         self.arcs = []  # type: List[Arc]
         self.accepting_states = set()  # type: Set[StateID]
         self.implied_state = None  # type: Optional[int]
@@ -210,7 +210,7 @@ class FomaParser:
         # Super important! make sure the order of these arguments is
         # consistent with the definition of Arc
         upper_label, lower_label = self.symbols[in_label], self.symbols[out_label]
-        if self.flip_labels:
+        if self.invert_labels:
             upper_label, lower_label = lower_label, upper_label
         arc = Arc(StateID(src), upper_label, lower_label, StateID(dest))
         self.arcs.append(arc)
@@ -252,14 +252,14 @@ class FomaParser:
         return self.finalize()
 
 
-def parse_text(att_text: str, flip_labels: bool = False) -> FSTParse:
+def parse_text(att_text: str, invert_labels: bool = False) -> FSTParse:
     """
     Parse the text of a FOMA binary FST. The text is retrieved by gunzip'ing
     the file.
 
     FOMA text is very similar to an AT&T format FST.
     """
-    return FomaParser(flip_labels).parse_text(att_text)
+    return FomaParser(invert_labels).parse_text(att_text)
 
 
 def parse_symbol(symbol: str) -> Symbol:

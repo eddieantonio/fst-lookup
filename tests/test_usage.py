@@ -25,7 +25,7 @@ def test_load_from_file_flipped(shared_datadir):
     LOWER side is the deep form
     (following HFST conventions rather and XFST conventions).
     """
-    fst = FST.from_file(shared_datadir / 'tae.fomabin', labels='flip')
+    fst = FST.from_file(shared_datadir / 'tae.fomabin', labels='invert')
 
     # The following tests are INTENTIONALLY the same as for
     # test_load_from_file(). However, the FST is different than in that test.
