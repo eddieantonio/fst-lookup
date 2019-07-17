@@ -1,5 +1,12 @@
 LEXC = $(wildcard *.lexc)
-all: $(LEXC:.lexc=.fomabin)
+all: $(LEXC:.lexc=.fomabin) tae.fomabin
+
+### Concrete targets ###
+# Flips the eat FST, because sometimes your FSTs are upside-down 🙃
+tae.fomabin: eat.fomabin
+	printf 'load stack %s\ninvert net\nsave stack %s' $< $@ | foma -p
+
+### Pattern rules ###
 
 # Compile a LEXC file to an FST.
 %.fomabin: %.lexc
