@@ -110,19 +110,19 @@ class FST:
             text = text[match.end():]
 
     @classmethod
-    def from_file(cls, path: PathLike) -> 'FST':
+    def from_file(cls, path: PathLike, labels: str = 'normal') -> 'FST':
         """
         Read the FST as output by FOMA.
         """
         with gzip.open(str(path), 'rt', encoding='UTF-8') as text_file:
-            return cls.from_text(text_file.read())
+            return cls.from_text(text_file.read(), labels=labels)
 
     @classmethod
-    def from_text(self, att_text: str) -> 'FST':
+    def from_text(self, att_text: str, labels='normal') -> 'FST':
         """
         Parse the FST in the text format (un-gzip'd).
         """
-        parse = parse_text(att_text)
+        parse = parse_text(att_text, flip_labels=True if labels == 'flip' else False)
         return FST(parse)
 
     def _transduce(self, symbols: List[Symbol],
