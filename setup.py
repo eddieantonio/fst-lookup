@@ -46,7 +46,7 @@ setup(
     # This is a one-line description or tagline of what your project does. This
     # corresponds to the "Summary" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#summary
-    description='Lookup FOMA FSTs',  # Optional
+    description='Lookup Foma FSTs',  # Optional
 
     # This is an optional longer description of your project that represents
     # the body of text which users will see when they visit PyPI.
@@ -92,7 +92,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
 
         # Pick your license as you wish
         'License :: OSI Approved :: Apache Software License',
@@ -109,7 +109,7 @@ setup(
     # project page. What does your project relate to?
     #
     # Note that this is a string of words separated by whitespace, not a list.
-    keywords='fst lookup transducer morphology',  # Optional
+    keywords='fst lookup transducer morphology foma',  # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().

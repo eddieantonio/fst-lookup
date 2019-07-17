@@ -6,9 +6,12 @@ FST Lookup
 [![PyPI version](https://img.shields.io/pypi/v/fst-lookup.svg)](https://pypi.org/project/fst-lookup/)
 [![calver YYYY.MM.DD](https://img.shields.io/badge/calver-YYYY.MM.DD-22bfda.svg)](http://calver.org/)
 
-Implements lookup for FOMA format finite state transducers.
+Implements lookup for [Foma][] finite state transducers.
 
 Supports Python 3.5 and up.
+
+[Foma]: https://fomafst.github.io/
+
 
 Install
 -------
@@ -32,7 +35,7 @@ Import the library, and load an FST from a file:
 `fst_lookup` assumes that the **lower** label corresponds to the surface
 form, while the **upper** label corresponds to the lemma, and linguistic
 tags and features: e.g., your `LEXC` will look something like
-this---note what is on each side of the colon (`:`):
+this—note what is on each side of the colon (`:`):
 
 ```lexc
 Multichar_Symbols +N +Sg +Pl
@@ -45,9 +48,9 @@ Lexicon Root
     sheep+N+Pl:sheep #;
 ```
 
-If your FST has labels on the opposite sides--e.g., the **upper** label
+If your FST has labels on the opposite sides—e.g., the **upper** label
 corresponds to the surface form and the **upper** label corresponds to
-the lemma and linguistic tags---then instantiate the FST by providing
+the lemma and linguistic tags—then instantiate the FST by providing
 the `labels="invert"` keyword argument:
 
 ```python
@@ -98,6 +101,51 @@ a list.
 >>> list(fst.generate('eat+V+Past')))
 ['ate']
 ```
+
+
+Contributing
+------------
+
+If you plan to contribute code, it is recommended you use [Pipenv].
+Fork and clone this repository, then install development dependencies
+by typing:
+
+    pipenv install
+
+Then, do all your development within a virtual environment, managed by
+Pipenv:
+
+    pipenv shell
+
+### Type-checking
+
+This project uses `mypy` to check static types. To invoke it on this
+package, type the following:
+
+    mypy -p fst_lookup
+
+### Running tests
+
+To run this project's tests, we use `py.test`:
+
+    py.test
+
+
+### Fixtures
+
+If you are creating or modifying existing test fixtures (i.e., mostly
+pre-built FSTs used for testing), you will need the following
+dependencies:
+
+ * GNU `make`
+ * [Foma][]
+
+Fixtures are stored in `tests/data/`. Here, you will use `make` to
+compile all pre-built FSTs from source:
+
+    make
+
+[Pipenv]: https://github.com/pypa/pipenv
 
 
 License
