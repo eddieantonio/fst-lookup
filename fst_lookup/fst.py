@@ -26,6 +26,7 @@ from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
                     Tuple, Union, Optional)
 
 from .data import Arc, StateID
+from .flags import FlagDiacritic
 from .parse import FSTParse, parse_text
 from .symbol import Epsilon, Grapheme, MultiCharacterSymbol, Symbol
 
@@ -167,8 +168,6 @@ class FST:
         """
         Given an analysis, this yields all possible surface forms in the FST.
         """
-
-        assert self._fst_type is FstType.FOMA, 'hfstol does not support generation'
         try:
             symbols = list(self.to_symbols(analysis))
         except OutOfAlphabetError:
@@ -193,39 +192,43 @@ class FST:
             text = text[match.end():]
 
     @classmethod
-    def from_file(cls, fst_file_path: PathLike, hfstol_exe_path: Optional[PathLike] = None) -> 'FST':
+    def from_file(cls, fst_file_path: PathLike, labels: str = "normal") -> 'FST':
         """
         Read the FST as output by FOMA.
 
-        :param hfstol_exe_path: Supply hfstol exe if you uses .hfstol file and want to specify the executable specifically. If omitted, the analyze will search for the executable after the default name "hfst-optimized-lookup".
-        :param fst_file_path: .fomabin file or .hfstol file
+        `labels` can be one of:
+          - "normal" (default): surface form is LOWER label: apply up to
+            analyze, apply down to generate; use this if you are following the
+            conventions of "Finite State Morphology" by Beesley & Karttunen.
+          - "invert": surface form is UPPER label: apply down to analyze, and
+            apply up to generate; HFST usually produces FSTs in this style, so
+            try to invert FSTs that aren't working using labels="normal".
+          - "hfstol": specify this if you supply a .hfstol file, let hfst-optimized-look up decide the direction.
         """
 
-        if Path(fst_file_path).suffix == '.hfstol':
+        if 'hfstol' in labels:
 
+
+            hfstol_exe_path = shutil.which("hfst-optimized-lookup")
             if hfstol_exe_path is None:
-                hfstol_exe_path = shutil.which("hfst-optimized-lookup")
-                if hfstol_exe_path is None:
-                    raise ImportError(
-                        "hfst-optimized-lookup is not installed.\n"
-                        "Please install the HFST suite on your system "
-                        "before using hfstol.\n"
-                        "See: https://github.com/hfst/hfst#installation"
-                    )
+                raise ImportError(
+                    "hfst-optimized-lookup is not installed.\n"
+                    "Please install the HFST suite on your system "
+                    "before using hfstol.\n"
+                    "See: https://github.com/hfst/hfst#installation"
+                )
             return FST(hfstol_file_path=fst_file_path, hfstol_exe_path=hfstol_exe_path)
         else:  # .fomabin
 
             with gzip.open(str(fst_file_path), 'rt', encoding='UTF-8') as text_file:
-                parse = parse_text(text_file.read())
-
-            return FST(parse=parse, hfstol_exe_path=hfstol_exe_path)
+                return cls.from_text(text_file.read(), labels=labels)
 
     @classmethod
-    def from_text(cls, att_text: str) -> 'FST':
+    def from_text(cls, att_text: str, labels='normal') -> 'FST':
         """
-        Parse the FST in the text format (un-gzip'd).
+        Parse the fomabin in the text format (un-gzip'd).
         """
-        parse = parse_text(att_text)
+        parse = parse_text(att_text, invert_labels=True if labels == 'invert' else False)
         return FST(parse)
 
     def _transduce(self, symbols: List[Symbol],

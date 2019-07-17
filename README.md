@@ -46,8 +46,18 @@ Lexicon Root
     sheep+N+Pl:sheep #;
 ```
 
-If your FST has labels on the opposite sides, you must invert the net
-before loading it into `fst_lookup`.
+If your FST has labels on the opposite sides--e.g., the **upper** label
+corresponds to the surface form and the **upper** label corresponds to
+the lemma and linguistic tags---then instantiate the FST by providing
+the `labels="invert"` keyword argument:
+
+```python
+fst = FST.from_file('eat-inverted.fomabin', labels="invert")
+```
+
+> **Hint**: FSTs originating from the HFST suite are often inverted, so
+> try to loading the FST inverted first if `.generate()` or `.analyze()`
+> aren't working correctly!
 
 
 ### Analyze a word form
