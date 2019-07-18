@@ -25,7 +25,6 @@ Import the library, and load an FST from a file:
 ```python
 >>> from fst_lookup import FST
 >>> fst = FST.from_file('eat.fomabin')
-
 ```
 
 ### Assumed format of the FSTs
