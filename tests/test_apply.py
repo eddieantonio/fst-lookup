@@ -164,7 +164,7 @@ def test_cree_foma_generation_in_bulk(cree_foma_generator: FST, surface_forms, a
     """
     Test that cree fomabin generation in bulk
     """
-    assert set((map(tuple, cree_foma_generator.generate_in_bulk(analyses)))) == set(surface_forms)
+    assert {tuple(result) for result in cree_foma_generator.generate_in_bulk(analyses)} == set(surface_forms)
 
 
 @pytest.mark.parametrize('surface_form,analyses', [
