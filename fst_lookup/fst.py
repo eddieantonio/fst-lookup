@@ -127,7 +127,8 @@ class FST:
 
         old_input = None
         res_buffer = []  # type: List[str]
-
+        print('lo and behold: ', inputs)
+        print(repr(status.stdout.decode("UTF-8")))
         for line in status.stdout.decode("UTF-8").splitlines():
             # Remove extraneous whitespace.
             line = line.strip()
