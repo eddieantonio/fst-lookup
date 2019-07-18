@@ -178,14 +178,14 @@ def test_cree_hfstol_analysis(cree_hfstol_analyzer: FST, surface_form, analyses)
     """
     Test that cree hfstol work
     """
-    assert set(cree_hfstol_analyzer.analyze(surface_form)) == set(map(lambda x: ''.join(x), analyses))
+    assert set(cree_hfstol_analyzer.analyze(surface_form)) == {''.join(x) for x in analyses}
 
 
 @pytest.mark.parametrize('word,analysis', [
     (('nîskâk',), ('nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg')),
     (('nipâw',), ('nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg')),
     (('ê-nipâyân',), ('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+1Sg')),
-    (tuple(), ('absolute-garbage', '+Trash', '+Waste')),
+    ((), ('absolute-garbage', '+Trash', '+Waste')),
 ])
 def test_cree_hfstol_generation(cree_hfstol_generator: FST, word, analysis):
     """
