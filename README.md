@@ -112,7 +112,7 @@ To _analyze_ in bulk, call the `analyze_in_bulk()` function.
 
 Note, if you use `.hfstol`, for large quatities of words, it can be orders of magnitude faster than using `fomabin`.
 
-With the FST for cree language, tests on a 2 core 4 threads cpu show `.hfstol` is 100 times faster when there are 500 words, 200 times faster when there are 1000 words.
+With the [FST for the Plains Cree language](https://github.com/UAlbertaALTLab/plains-cree-fsts), tests on a 2 core 4 threads cpu show `.hfstol` is 100 times faster when there are 500 words, 200 times faster when there are 1000 words.
 ```python
 fst = FST.from_file('/MattLegend27/home/English_descriptive_analyzer.hfstol', labels='hfstol')
 ```
