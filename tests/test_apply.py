@@ -135,7 +135,7 @@ def test_cree_foma_generation(cree_foma_generator: FST, word, analysis):
             (('nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg'),),
             (('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+1Sg'),
              ('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+2Sg'),),
-            tuple()
+            ()
     )
      )
 ])
