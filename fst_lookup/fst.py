@@ -155,7 +155,7 @@ class FST:
 
     def analyze_in_bulk(self, surface_forms: Iterable[str]) -> Iterable[Union[Analyses, HfstolAnalyses]]:
         """
-        analyze a bunch of words at once
+        Analyze a multiple of word forms at once.
         """
         if self._fst_type is FstType.FOMA:
             for surface_form in surface_forms:
