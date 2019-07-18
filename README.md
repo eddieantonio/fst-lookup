@@ -128,7 +128,7 @@ Note the output produced by hfstol and is different than that produced by fomabi
 
 Call the `generate_in_bulk()` function.
 
-With the FST for cree language, tests on a 2 core 4 threads cpu show `.hfstol` is 100 times faster when there are 150 words, 200 times faster when there are 200 words.
+With the FST for the Plains Cree language, tests on a 2 core/4 threads CPU show `.hfstol` is 100 times faster when there are 150 words, 200 times faster when there are 200 words.
 
 ```python
 fst = FST.from_file('/MattLegend27/home/English_descriptive_analyzer.hfstol', labels='hfstol')
