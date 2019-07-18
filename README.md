@@ -55,9 +55,17 @@ the `labels="invert"` keyword argument:
 fst = FST.from_file('eat-inverted.fomabin', labels="invert")
 ```
 
-> **Hint**: FSTs originating from the HFST suite are often inverted, so
-> try to loading the FST inverted first if `.generate()` or `.analyze()`
-> aren't working correctly!
+If you are using `.hfstol` file, `hfst-optimized-lookup` determines the direction and you can't change it. Specify `label='hfstol'` in that case.
+
+It requires `hfst-optimized-lookup` installed and a `.hfstol` file. For linux system it can be an easy `sudo apt get install hfst`. For other systems check [this](https://github.com/hfst/hfst#installation).
+
+
+```python
+fst = FST.from_file('eat.hfstol', labels="hfstol")
+```
+
+> **Hint**: FSTs originating from the HFST suite are often inverted, 
+> try to loading the FST inverted first for `.generate()` and load it normally for `.analyze()`
 
 
 ### Analyze a word form
@@ -99,22 +107,34 @@ a list.
 ['ate']
 ```
 
-### Analyze word forms in bulk efficiently
+### Analyze word forms in bulk
 
-To _analyze_ in bulk, you have the option to use `hfst-optimized-lookup`.
-Call the `analyze_in_bulk()` function. For large quatities of words, it can be two orders of magnitude faster than using `fomabin` to analyze one by one:
+To _analyze_ in bulk, call the `analyze_in_bulk()` function. 
 
-It requires `hfst` executable installed and a `.hfstol` file. For linux system it can be an easy `sudo apt get install hfst`. For other systems check [this](https://github.com/hfst/hfst#installation).
+Note, if you use `.hfstol`, for large quatities of words, it can be two orders of magnitude faster than using `fomabin`.
 
 ```python
-fst = FST.from_file('/MattLegend27/English_descriptive_analyzer.hfstol')
+fst = FST.from_file('/MattLegend27/home/English_descriptive_analyzer.hfstol', labels='hfstol')
 ```
 
 Note the output produced by hfstol and is different than that produced by fomabin, basically it's the concatenated version
 
 ```python
->>> fst.analyze(['eats', 'balloons', 'jjksiwks', 'does'])
-[('eat+N+Mass', 'eat+V+3P+Sg'), ('balloon+N+Mass'), (''), ('do+V+3P+Sg')]
+>>> fst.analyze_in_bulk(['eats', 'balloons', 'jjksiwks', 'does']) 
+[('eat+N+Mass', 'eat+V+3P+Sg'), ('balloon+N+Mass'), (), ('do+V+3P+Sg')] # it's a generator of generator, expanded for simplicity here
+```
+
+### Generate word forms in bulk
+
+Call the `generate_in_bulk()` function.
+
+```python
+fst = FST.from_file('/MattLegend27/home/English_descriptive_analyzer.hfstol', labels='hfstol')
+```
+
+```python
+>>> fst.generate_in_bulk(['eat+N+Mass', 'balloon+N+Mass', 'jjksiwks', 'do+V+3P+Sg'])
+[('eats',), ('balloons',), (), ('does',)] # it's a generator of generator, expanded for simplicity here
 ```
 
 

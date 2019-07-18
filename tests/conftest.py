@@ -13,14 +13,16 @@ from pathlib import Path
 from typing import cast
 
 import pytest  # type: ignore
+
 from fst_lookup import FST
+
 
 @pytest.fixture
 def cree_hfstol_analyzer(shared_datadir: Path) -> FST:
     """
     Return the FST that deals with the cree language
     """
-    return FST.from_file(shared_datadir / 'crk-descriptive-analyzer.hfstol')
+    return FST.from_file(shared_datadir / 'crk-descriptive-analyzer.hfstol', labels='hfstol')
 
 
 @pytest.fixture
@@ -30,19 +32,21 @@ def cree_foma_analyzer(shared_datadir: Path) -> FST:
     """
     return FST.from_file(shared_datadir / 'crk-descriptive-analyzer.fomabin')
 
+
 @pytest.fixture
 def cree_foma_generator(shared_datadir: Path) -> FST:
     """
     Return the FST that deals with the cree language
     """
-    return FST.from_file(shared_datadir / 'crk-normative-generator.fomabin')
+    return FST.from_file(shared_datadir / 'crk-normative-generator.fomabin', labels='invert')
+
 
 @pytest.fixture
 def cree_hfstol_generator(shared_datadir: Path) -> FST:
     """
     Return the FST that deals with the cree language
     """
-    return FST.from_file(shared_datadir / 'crk-normative-generator.hfstol')
+    return FST.from_file(shared_datadir / 'crk-normative-generator.hfstol', labels='hfstol')
 
 
 @pytest.fixture

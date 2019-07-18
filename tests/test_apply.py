@@ -101,30 +101,128 @@ def test_analyze_concatenation(english_ipa_fst: FST):
     result, = english_ipa_fst.analyze('rough')
     assert result == ('ɹʌf',)
 
-def test_hfstol_analysis_in_bulk(cree_foma_analyzer: FST, cree_hfstol_analyzer: FST):
-    """
-    checks whether <analyze_in_bulk> with hfstol file generates consistent results with fomabin file
-    """
-    surface_forms = ('niskak', 'nipaw', 'e-nipayan')
-    bulk_analyses_hfstol = list(cree_hfstol_analyzer.analyze_in_bulk(surface_forms))
-    bulk_analyses_fomabin = list(cree_foma_analyzer.analyze_in_bulk(surface_forms))
-    for i, analysis in enumerate(bulk_analyses_hfstol):
-        assert set(analysis) == set(map(lambda x: ''.join(x), bulk_analyses_fomabin[i]))
 
-# not sure this is how fst is supposed to work
-def test_hfstol_generation_in_bulk(cree_foma_generator: FST, cree_hfstol_generator: FST):
+@pytest.mark.parametrize('surface_form,analyses', [
+    ('niskak', [('nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg'), ('niska', '+N', '+A', '+Pl')]),
+    ('nipaw', [('nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg')]),
+    ('absolute-garbage', []),
+    ('e-nipayan', [('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+1Sg'),
+                   ('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+2Sg')]),
+])
+def test_cree_foma_analysis(cree_foma_analyzer: FST, surface_form, analyses):
     """
-    checks whether <generate_in_bulk> with hfstol file generates consistent results with fomabin file
+    Test that cree fomabin work
     """
-    analyses = [''.join(('nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg')),
-                ''.join(('niska', '+N', '+A', '+Pl')),
-                ''.join(('nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg')),
-                ''.join(('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+1Sg')),
-                ''.join(('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+2Sg'))
-                ]
+    assert set(cree_foma_analyzer.analyze(surface_form)) == set(analyses)
 
-    bulk_generation_hfstol = cree_hfstol_generator.analyze_in_bulk(analyses)
-    bulk_generation_fomabin = list(cree_foma_generator.analyze_in_bulk(analyses))
-    print(bulk_generation_fomabin)
-    for i, generated_words in enumerate(bulk_generation_hfstol):
-        assert tuple(generated_words) == tuple(tuple(bulk_generation_fomabin)[i])[0]
+
+@pytest.mark.parametrize('word,analysis', [
+    (('nîskâk',), ('nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg')),
+    (('nipâw',), ('nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg')),
+    (tuple(), ('absolute-garbage', '+LMAO', '+Shit')),
+    (('ê-nipâyân',), ('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+1Sg')),
+])
+def test_cree_foma_generation(cree_foma_generator: FST, word, analysis):
+    """
+    Test that cree fomabin work
+    """
+    assert set(cree_foma_generator.generate(''.join(analysis))) == set(word)
+
+
+@pytest.mark.parametrize('surface_forms,analyses', [
+    (('nîskâk', 'nipâw', 'ê-nipâyân', 'absolute-garbage'), (
+            (('nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg'), ('niska', '+N', '+A', '+Pl')),
+            (('nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg'),),
+            (('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+1Sg'),
+             ('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+2Sg'),),
+            tuple()
+    )
+     )
+])
+def test_cree_foma_analysis_in_bulk(cree_foma_analyzer: FST, surface_forms, analyses):
+    """
+    Test that cree fomabin analyses in bulk
+    """
+    assert set(
+
+        (map(lambda x: tuple(sorted(tuple(x))), cree_foma_analyzer.analyze_in_bulk(surface_forms)))
+
+    ) == set(
+        (map(lambda x: tuple(sorted(tuple(x))), analyses)))
+
+
+@pytest.mark.parametrize('surface_forms,analyses', [
+    ((('nîskâk',), ('nipâw',), ('ê-nipâyan',), tuple()), (
+            (''.join(['nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg']),
+             ''.join(['nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg']),
+             ''.join(['PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+2Sg']),
+             ''.join(['absolute', '+Garbage', '+lmao']),)
+    )
+     )
+])
+def test_cree_foma_generation_in_bulk(cree_foma_generator: FST, surface_forms, analyses):
+    """
+    Test that cree fomabin generation in bulk
+    """
+    assert set((map(tuple, cree_foma_generator.generate_in_bulk(analyses)))) == set(surface_forms)
+
+
+@pytest.mark.parametrize('surface_form,analyses', [
+    ('niskak', [('nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg'), ('niska', '+N', '+A', '+Pl')]),
+    ('nipaw', [('nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg')]),
+    ('absolute-garbage', []),
+    ('e-nipayan', [('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+1Sg'),
+                   ('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+2Sg')]),
+])
+def test_cree_hfstol_analysis(cree_hfstol_analyzer: FST, surface_form, analyses):
+    """
+    Test that cree hfstol work
+    """
+    assert set(cree_hfstol_analyzer.analyze(surface_form)) == set(map(lambda x: ''.join(x), analyses))
+
+
+@pytest.mark.parametrize('word,analysis', [
+    (('nîskâk',), ('nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg')),
+    (('nipâw',), ('nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg')),
+    (('ê-nipâyân',), ('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+1Sg')),
+    (tuple(), ('absolute-garbage', '+Trash', '+Waste')),
+])
+def test_cree_hfstol_generation(cree_hfstol_generator: FST, word, analysis):
+    """
+    Test that cree hfstol work
+    """
+    assert set(cree_hfstol_generator.generate(''.join(analysis))) == set(word)
+
+
+@pytest.mark.parametrize('surface_forms,analyses', [
+    (('nîskâk', 'nipâw', 'ê-nipâyân', 'absolute-garbage'), (
+            (''.join(['nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg']), ''.join(['niska', '+N', '+A', '+Pl'])),
+            (''.join(['nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg']),),
+            (''.join(['PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+1Sg']),
+             ''.join(['PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+2Sg']),),
+            tuple()
+    )
+     )
+])
+def test_cree_hfstol_analysis_in_bulk(cree_hfstol_analyzer: FST, surface_forms, analyses):
+    """
+    Test that cree hfstol analyses in bulk
+    """
+    assert set((map(lambda x: tuple(sorted(tuple(x))), cree_hfstol_analyzer.analyze_in_bulk(surface_forms)))) == set(
+        (map(lambda x: tuple(sorted(x)), analyses)))
+
+
+@pytest.mark.parametrize('surface_forms,analyses', [
+    ((('nîskâk',), ('nipâw',), ('ê-nipâyan',), tuple()), (
+            (''.join(['nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg']),
+             ''.join(['nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg']),
+             ''.join(['PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+2Sg']),
+             ''.join(['absolute-garbage', '+Trash', '+Trash', '+Trash']),)
+    )
+     )
+])
+def test_cree_hfstol_generation_in_bulk(cree_hfstol_generator: FST, surface_forms, analyses):
+    """
+    Test that cree fomabin generation in bulk
+    """
+    assert set((map(tuple, cree_hfstol_generator.generate_in_bulk(analyses)))) == set(surface_forms)

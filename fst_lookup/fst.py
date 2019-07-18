@@ -20,13 +20,11 @@ import shutil
 import subprocess
 from collections import defaultdict
 from enum import Enum
-from os import path
 from pathlib import Path
 from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
                     Tuple, Union, Optional)
 
 from .data import Arc, StateID
-from .flags import FlagDiacritic
 from .parse import FSTParse, parse_text
 from .symbol import Epsilon, Grapheme, MultiCharacterSymbol, Symbol
 
@@ -83,16 +81,15 @@ class FST:
             for arc in parse.arcs:
                 self.arcs_from[arc.state].add(arc)
             self._fst_type = FstType.FOMA
-        elif hfstol_file_path is not None:
+        else:  # hfstol_file_path is not none
             self._hfstol_file_path = hfstol_file_path
             self._hfstol_exe_path = hfstol_exe_path
             self._fst_type = FstType.HFSTOL
-        else:
-            raise Exception("Failed to load fst file")
 
     def analyze(self, surface_form: str) -> Union[Analyses, HfstolAnalyses]:
         """
-        Given a surface form or a collection of surface forms, this yields all possible analyses in the FST. Note if the fst uses .hfstol file, analysis will be concatenatd. eg. 'eat+V' instead of ('eat', '+V')
+        Given a surface form or a collection of surface forms, this yields all possible analyses in the FST.
+        Note if .hfstol file is used, analysis will be concatenatd. eg. 'eat+V' instead of ('eat', '+V')
         """
         if self._fst_type is FstType.FOMA:
             try:
@@ -129,7 +126,8 @@ class FST:
         )
 
         old_input = None
-        res_buffer = [] # type: List[str]
+        res_buffer = []  # type: List[str]
+
         for line in status.stdout.decode("UTF-8").splitlines():
             # Remove extraneous whitespace.
             line = line.strip()
@@ -147,13 +145,12 @@ class FST:
             # e.g.,
             #   sadijfijfe	sadijfijfe	+?
             original_input, res, *rest = line.split("\t")
-            if "+?" in rest:
-                res = ''
-            res_buffer.append(res)
-            if old_input is not None:
-                # Generating this word form failed!
-                if original_input != old_input:
-                    yield tuple(res_buffer)
+
+            if old_input is not None and original_input != old_input:
+                yield tuple(res_buffer)
+                res_buffer = []
+            if '+?' not in rest:
+                res_buffer.append(res)
             old_input = original_input
         yield tuple(res_buffer)
 
@@ -161,22 +158,39 @@ class FST:
         """
         analyze a bunch of words at once
         """
-        for surface_form in surface_forms:
-            yield self.analyze(surface_form)
+        if self._fst_type is FstType.FOMA:
+            for surface_form in surface_forms:
+                yield self.analyze(surface_form)
+        else:
+            yield from self._call_hfstol(surface_forms)
 
     def generate(self, analysis: str) -> Iterable[str]:
         """
         Given an analysis, this yields all possible surface forms in the FST.
         """
-        try:
-            symbols = list(self.to_symbols(analysis))
-        except OutOfAlphabetError:
-            return
-        forms = self._transduce(symbols, get_input_label=lambda arc: arc.upper,
-                                get_output_label=lambda arc: arc.lower)
-        for transduction in forms:
-            yield ''.join(str(symbol) for symbol in transduction
-                          if symbol is not Epsilon)
+        if self._fst_type is FstType.FOMA:
+            try:
+                symbols = list(self.to_symbols(analysis))
+            except OutOfAlphabetError:
+                return
+            forms = self._transduce(symbols, get_input_label=lambda arc: arc.upper,
+                                    get_output_label=lambda arc: arc.lower)
+            for transduction in forms:
+                yield ''.join(str(symbol) for symbol in transduction
+                              if symbol is not Epsilon)
+        else:
+            for generated in tuple(self._call_hfstol([analysis]))[0]:
+                yield generated
+
+    def generate_in_bulk(self, analyses: Iterable[str]) -> Iterable[Iterable[str]]:
+        """
+        generate a bunch at once
+        """
+        if self._fst_type is FstType.FOMA:
+            for analysis in analyses:
+                yield self.generate(analysis)
+        else:
+            yield from self._call_hfstol(analyses)
 
     def to_symbols(self, surface_form: str) -> Iterable[Symbol]:
         """
@@ -207,7 +221,6 @@ class FST:
         """
 
         if 'hfstol' in labels:
-
 
             hfstol_exe_path = shutil.which("hfst-optimized-lookup")
             if hfstol_exe_path is None:
