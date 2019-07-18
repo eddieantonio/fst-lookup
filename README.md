@@ -111,8 +111,9 @@ a list.
 
 To _analyze_ in bulk, call the `analyze_in_bulk()` function. 
 
-Note, if you use `.hfstol`, for large quatities of words, it can be two orders of magnitude faster than using `fomabin`.
+Note, if you use `.hfstol`, for large quatities of words, it can be orders of magnitude faster than using `fomabin`.
 
+With the FST for cree language, tests on a 2 core 4 threads cpu show `.hfstol` is 100 times faster when there are 500 words, 200 times faster when there are 1000 words.
 ```python
 fst = FST.from_file('/MattLegend27/home/English_descriptive_analyzer.hfstol', labels='hfstol')
 ```
@@ -127,6 +128,8 @@ Note the output produced by hfstol and is different than that produced by fomabi
 ### Generate word forms in bulk
 
 Call the `generate_in_bulk()` function.
+
+With the FST for cree language, tests on a 2 core 4 threads cpu show `.hfstol` is 100 times faster when there are 150 words, 200 times faster when there are 200 words.
 
 ```python
 fst = FST.from_file('/MattLegend27/home/English_descriptive_analyzer.hfstol', labels='hfstol')
