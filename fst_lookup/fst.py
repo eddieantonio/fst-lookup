@@ -127,8 +127,6 @@ class FST:
 
         old_input = None
         res_buffer = []  # type: List[str]
-        print('lo and behold: ', inputs)
-        print(repr(status.stdout.decode("UTF-8")))
         for line in status.stdout.decode("UTF-8").splitlines():
             # Remove extraneous whitespace.
             line = line.strip()
@@ -150,7 +148,7 @@ class FST:
             if old_input is not None and original_input != old_input:
                 yield tuple(res_buffer)
                 res_buffer = []
-            if '+?' not in rest:
+            if '+?' not in rest and '+?' not in res:
                 res_buffer.append(res)
             old_input = original_input
         yield tuple(res_buffer)
