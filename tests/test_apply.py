@@ -119,7 +119,7 @@ def test_cree_foma_analysis(cree_foma_analyzer: FST, surface_form, analyses):
 @pytest.mark.parametrize('word,analysis', [
     (('nîskâk',), ('nîskâw', '+V', '+II', '+Cnj', '+Prs', '+3Sg')),
     (('nipâw',), ('nipâw', '+V', '+AI', '+Ind', '+Prs', '+3Sg')),
-    (tuple(), ('absolute-garbage', '+LMAO', '+Shit')),
+    ((), ('absolute-garbage', '+LMAO', '+Heck')),
     (('ê-nipâyân',), ('PV/e+', 'nipâw', '+V', '+AI', '+Cnj', '+Prs', '+1Sg')),
 ])
 def test_cree_foma_generation(cree_foma_generator: FST, word, analysis):
