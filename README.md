@@ -57,9 +57,11 @@ the `labels="invert"` keyword argument:
 fst = FST.from_file('eat-inverted.fomabin', labels="invert")
 ```
 
-> **Hint**: FSTs originating from the HFST suite are often inverted, so
+> **Hint**: FSTs originating from the HFST suite are sometimes inverted, so
 > try to loading the FST inverted first if `.generate()` or `.analyze()`
 > aren't working correctly!
+
+> If you are working with [plain cree fomabins](!https://github.com/UAlbertaALTLab/plains-cree-fsts/releases) specifically, load generator files inverted; load analyzer files normally.
 
 
 ### Analyze a word form
