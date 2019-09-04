@@ -39,7 +39,7 @@ def english_ipa_fst(shared_datadir: Path) -> FST:
     Return the FST that transcribes -ough words to IPA, including
     through/though/enough/plough/trough/tough/rough/cough/dough.
     """
-    return FST.from_file(shared_datadir / 'english-ipa.fomabin')
+    return FST.from_file(shared_datadir / "english-ipa.fomabin")
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def eat_fst_txt(shared_datadir: Path) -> str:
         Sigma: +3P +Mass +N +Past +PastPart +PresPart +Sg +V a e g i n s t
         Size: 15.
     """
-    with gzip.open(str(shared_datadir / 'eat.fomabin'), 'rt') as text_file:
+    with gzip.open(str(shared_datadir / "eat.fomabin"), "rt") as text_file:
         return cast(str, text_file.read())
 
 
@@ -68,5 +68,5 @@ def english_flags_fst_txt(shared_datadir: Path) -> str:
         Sigma: +Adj +Inf +Pl +V @C.UN@ @D.UN@ @P.UN.ON@ UN+ a b d e i k l n o p r s u y
         Size: 22.
     """
-    with gzip.open(str(shared_datadir / 'english-flags.fomabin'), 'rt') as text_file:
+    with gzip.open(str(shared_datadir / "english-flags.fomabin"), "rt") as text_file:
         return cast(str, text_file.read())

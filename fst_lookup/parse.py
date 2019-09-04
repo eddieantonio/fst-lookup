@@ -27,12 +27,15 @@ from .flags import (Clear, DisallowFeature, DisallowValue, FlagDiacritic,
 from .symbol import (Epsilon, Grapheme, Identity, MultiCharacterSymbol, Symbol,
                      Unknown)
 
-FLAG_PATTERN = re.compile(r'''
+FLAG_PATTERN = re.compile(
+    r"""
     ^@(?:
         [UPNRDE][.]\w+[.]\w+ |
         [RDC][.]\w+
     )@$
-''', re.VERBOSE)
+""",
+    re.VERBOSE,
+)
 
 
 class FSTParseError(Exception):
@@ -45,6 +48,7 @@ class SymbolTable:
     """
     Keeps track of ALL of the symbols in an FST.
     """
+
     def __init__(self) -> None:
         # TODO: differentiate between input alphabet and output alphabet
         #       the union of input and output is sigma
@@ -59,44 +63,57 @@ class SymbolTable:
         """
         if symbol_id in self._symbols:
             raise FSTParseError(
-                'Duplicate symbols for index %d: old: %r; new: %r' % (
-                    symbol_id, self[symbol_id], symbol
-                ))
+                "Duplicate symbols for index %d: old: %r; new: %r"
+                % (symbol_id, self[symbol_id], symbol)
+            )
         self._symbols[symbol_id] = symbol
 
     @property
     def sigma(self) -> Dict[int, Symbol]:
         regular_symbol = (Grapheme, MultiCharacterSymbol, FlagDiacritic)
-        return {k: v for k, v in self._symbols.items()
-                if isinstance(v, regular_symbol)}
+        return {k: v for k, v in self._symbols.items() if isinstance(v, regular_symbol)}
 
     @property
     def has_epsilon(self) -> bool:
         return 0 in self._symbols
 
 
-class FSTParse(NamedTuple('FSTParse', [('symbols', SymbolTable),
-                                       ('arcs', Set[Arc]),
-                                       ('intermediate_states', Set[StateID]),
-                                       ('accepting_states', Set[StateID])])):
+class FSTParse(
+    NamedTuple(
+        "FSTParse",
+        [
+            ("symbols", SymbolTable),
+            ("arcs", Set[Arc]),
+            ("intermediate_states", Set[StateID]),
+            ("accepting_states", Set[StateID]),
+        ],
+    )
+):
     """
     The parsed data from an FST, in a nice neat pile.
     """
 
     @property
     def multichar_symbols(self) -> Dict[int, MultiCharacterSymbol]:
-        return {i: sym for i, sym in self.symbols.sigma.items()
-                if isinstance(sym, MultiCharacterSymbol)}
+        return {
+            i: sym
+            for i, sym in self.symbols.sigma.items()
+            if isinstance(sym, MultiCharacterSymbol)
+        }
 
     @property
     def flag_diacritics(self) -> Dict[int, FlagDiacritic]:
-        return {i: sym for i, sym in self.symbols.sigma.items()
-                if isinstance(sym, FlagDiacritic)}
+        return {
+            i: sym
+            for i, sym in self.symbols.sigma.items()
+            if isinstance(sym, FlagDiacritic)
+        }
 
     @property
     def graphemes(self) -> Dict[int, Grapheme]:
-        return {i: sym for i, sym in self.symbols.sigma.items()
-                if isinstance(sym, Grapheme)}
+        return {
+            i: sym for i, sym in self.symbols.sigma.items() if isinstance(sym, Grapheme)
+        }
 
     @property
     def sigma(self) -> Dict[int, Symbol]:
@@ -135,7 +152,7 @@ class FomaParser:
         """
         """
         if self.has_seen_header:
-            raise FSTParseError('Cannot handle multiple FSTs')
+            raise FSTParseError("Cannot handle multiple FSTs")
         self.has_seen_header = True
 
         # TODO: parse:
@@ -160,7 +177,7 @@ class FomaParser:
         """
         Adds a new entry to the symbol table.
         """
-        idx_str, _space, symbol_text = line.partition('\N{SPACE}')
+        idx_str, _space, symbol_text = line.partition("\N{SPACE}")
         idx = int(idx_str)
         self.symbols.add(idx, parse_symbol(symbol_text))
 
@@ -181,14 +198,14 @@ class FomaParser:
 
         if num_items == 2:
             if self.implied_state is None:
-                raise ValueError('No implied state')
+                raise ValueError("No implied state")
             src = self.implied_state
             # in/out, target (state num implied)
             in_label, dest = arc_def
             out_label = in_label
         elif num_items == 3:
             if self.implied_state is None:
-                raise ValueError('No implied state')
+                raise ValueError("No implied state")
             src = self.implied_state
             # in, out, target  (state num implied)
             in_label, out_label, dest = arc_def
@@ -223,27 +240,29 @@ class FomaParser:
         # Find all the details here:
         # https://github.com/mhulden/foma/blob/master/foma/io.c#L623-L821
         # Check header
-        if line.startswith('##'):
+        if line.startswith("##"):
             header = line[2:-2]
             self.handle_line = {
-                'foma-net 1.0': self.handle_header,
-                'props': self.handle_props,
-                'sigma': self.handle_sigma,
-                'states': self.handle_states,
-                'end': self.handle_end,
+                "foma-net 1.0": self.handle_header,
+                "props": self.handle_props,
+                "sigma": self.handle_sigma,
+                "states": self.handle_states,
+                "end": self.handle_end,
             }[header]
         else:
-            self.handle_line(line.rstrip('\n'))
+            self.handle_line(line.rstrip("\n"))
 
     def finalize(self) -> FSTParse:
         # After parsing, we should be in the ##end## state.
         assert self.handle_line == self.handle_end
 
         states = {StateID(arc.state) for arc in self.arcs}
-        return FSTParse(symbols=self.symbols,
-                        arcs=set(self.arcs),
-                        intermediate_states=states,
-                        accepting_states=self.accepting_states)
+        return FSTParse(
+            symbols=self.symbols,
+            arcs=set(self.arcs),
+            intermediate_states=states,
+            accepting_states=self.accepting_states,
+        )
 
     def parse_text(self, fst_text: str) -> FSTParse:
         for line in fst_text.splitlines():
@@ -265,13 +284,13 @@ def parse_text(att_text: str, invert_labels: bool = False) -> FSTParse:
 def parse_symbol(symbol: str) -> Symbol:
     if FLAG_PATTERN.match(symbol):
         return parse_flag(symbol)
-    elif symbol == '@_EPSILON_SYMBOL_@':
+    elif symbol == "@_EPSILON_SYMBOL_@":
         return Epsilon
-    elif symbol == '@_UNKNOWN_SYMBOL_@':
+    elif symbol == "@_UNKNOWN_SYMBOL_@":
         return Unknown
-    elif symbol == '@_IDENTITY_SYMBOL_@':
+    elif symbol == "@_IDENTITY_SYMBOL_@":
         return Identity
-    elif symbol.startswith('@') and symbol.endswith('@'):
+    elif symbol.startswith("@") and symbol.endswith("@"):
         raise NotImplementedError
     elif len(symbol) > 1:
         return MultiCharacterSymbol(symbol)
@@ -282,19 +301,19 @@ def parse_symbol(symbol: str) -> Symbol:
 
 def parse_flag(flag_diacritic: str) -> FlagDiacritic:
     assert FLAG_PATTERN.match(flag_diacritic)
-    opcode, *arguments = flag_diacritic.strip('@').split('.')
-    if opcode == 'U' and len(arguments) == 2:
+    opcode, *arguments = flag_diacritic.strip("@").split(".")
+    if opcode == "U" and len(arguments) == 2:
         return Unify(*arguments)
-    elif opcode == 'P' and len(arguments) == 2:
+    elif opcode == "P" and len(arguments) == 2:
         return Positive(*arguments)
-    elif opcode == 'R' and len(arguments) == 2:
+    elif opcode == "R" and len(arguments) == 2:
         return RequireValue(*arguments)
-    elif opcode == 'R' and len(arguments) == 1:
+    elif opcode == "R" and len(arguments) == 1:
         return RequireFeature(*arguments)
-    elif opcode == 'D' and len(arguments) == 1:
+    elif opcode == "D" and len(arguments) == 1:
         return DisallowFeature(*arguments)
-    elif opcode == 'D' and len(arguments) == 2:
+    elif opcode == "D" and len(arguments) == 2:
         return DisallowValue(*arguments)
-    elif opcode == 'C' and len(arguments) == 1:
+    elif opcode == "C" and len(arguments) == 1:
         return Clear(arguments[0])
-    raise ValueError('Cannot parse ' + flag_diacritic)
+    raise ValueError("Cannot parse " + flag_diacritic)

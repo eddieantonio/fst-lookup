@@ -53,8 +53,7 @@ class FST:
         self.accepting_states = frozenset(parse.accepting_states)
 
         self.str2symbol = {
-            str(sym): sym for sym in parse.sigma.values()
-            if sym.is_graphical_symbol
+            str(sym): sym for sym in parse.sigma.values() if sym.is_graphical_symbol
         }
 
         # Prepare a regular expression to symbolify all input.
@@ -62,7 +61,7 @@ class FST:
         # by the regular expresion.
         symbols = sorted(self.str2symbol.keys(), key=len, reverse=True)
         self.symbol_pattern = re.compile(
-            '|'.join(re.escape(entry) for entry in symbols)
+            "|".join(re.escape(entry) for entry in symbols)
         )
 
         self.arcs_from = defaultdict(set)  # type: Dict[StateID, Set[Arc]]
@@ -77,8 +76,11 @@ class FST:
             symbols = list(self.to_symbols(surface_form))
         except OutOfAlphabetError:
             return
-        analyses = self._transduce(symbols, get_input_label=lambda arc: arc.lower,
-                                   get_output_label=lambda arc: arc.upper)
+        analyses = self._transduce(
+            symbols,
+            get_input_label=lambda arc: arc.lower,
+            get_output_label=lambda arc: arc.upper,
+        )
         for analysis in analyses:
             yield tuple(self._format_transduction(analysis))
 
@@ -90,11 +92,15 @@ class FST:
             symbols = list(self.to_symbols(analysis))
         except OutOfAlphabetError:
             return
-        forms = self._transduce(symbols, get_input_label=lambda arc: arc.upper,
-                                get_output_label=lambda arc: arc.lower)
+        forms = self._transduce(
+            symbols,
+            get_input_label=lambda arc: arc.upper,
+            get_output_label=lambda arc: arc.lower,
+        )
         for transduction in forms:
-            yield ''.join(str(symbol) for symbol in transduction
-                          if symbol is not Epsilon)
+            yield "".join(
+                str(symbol) for symbol in transduction if symbol is not Epsilon
+            )
 
     def to_symbols(self, surface_form: str) -> Iterable[Symbol]:
         """
@@ -107,10 +113,10 @@ class FST:
                 raise OutOfAlphabetError("Cannot symbolify form: " + repr(surface_form))
             # Convert to a symbol
             yield self.str2symbol[match.group(0)]
-            text = text[match.end():]
+            text = text[match.end() :]
 
     @classmethod
-    def from_file(cls, path: PathLike, labels: str = "normal") -> 'FST':
+    def from_file(cls, path: PathLike, labels: str = "normal") -> "FST":
         """
         Read the FST as output by FOMA.
 
@@ -122,24 +128,33 @@ class FST:
             apply up to generate; HFST usually produces FSTs in this style, so
             try to invert FSTs that aren't working using labels="normal".
         """
-        with gzip.open(str(path), 'rt', encoding='UTF-8') as text_file:
+        with gzip.open(str(path), "rt", encoding="UTF-8") as text_file:
             return cls.from_text(text_file.read(), labels=labels)
 
     @classmethod
-    def from_text(self, att_text: str, labels='normal') -> 'FST':
+    def from_text(self, att_text: str, labels="normal") -> "FST":
         """
         Parse the FST in the text format (un-gzip'd).
         """
-        parse = parse_text(att_text, invert_labels=True if labels == 'invert' else False)
+        parse = parse_text(
+            att_text, invert_labels=True if labels == "invert" else False
+        )
         return FST(parse)
 
-    def _transduce(self, symbols: List[Symbol],
-                   get_input_label: SymbolFromArc, get_output_label: SymbolFromArc):
-        yield from Transducer(initial_state=self.initial_state,
-                              symbols=symbols,
-                              arcs_from=self.arcs_from,
-                              accepting_states=self.accepting_states,
-                              get_input_label=get_input_label, get_output_label=get_output_label)
+    def _transduce(
+        self,
+        symbols: List[Symbol],
+        get_input_label: SymbolFromArc,
+        get_output_label: SymbolFromArc,
+    ):
+        yield from Transducer(
+            initial_state=self.initial_state,
+            symbols=symbols,
+            arcs_from=self.arcs_from,
+            accepting_states=self.accepting_states,
+            get_input_label=get_input_label,
+            get_output_label=get_output_label,
+        )
 
     def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
         """
@@ -150,7 +165,7 @@ class FST:
          - Epsilons are never emitted in the output
         """
 
-        current_lemma = ''
+        current_lemma = ""
         for symbol in transduction:
             if symbol is Epsilon:
                 # Skip epsilons
@@ -160,7 +175,7 @@ class FST:
                 # Output it and reset!
                 if current_lemma:
                     yield current_lemma
-                    current_lemma = ''
+                    current_lemma = ""
                 yield str(symbol)
             else:
                 # This MUST be a grapheme. Concatenated it to the output.
@@ -176,6 +191,7 @@ class Transducer(Iterable[RawTransduction]):
     """
     Does a single transduction
     """
+
     def __init__(
         self,
         initial_state: StateID,
@@ -199,7 +215,7 @@ class Transducer(Iterable[RawTransduction]):
         self,
         state: StateID,
         transduction: List[Symbol],
-        flag_stack: List[Dict[str, str]]
+        flag_stack: List[Dict[str, str]],
     ) -> Iterable[RawTransduction]:
         # TODO: Handle a maximum transduction depth, for cyclic FSTs.
         if state in self.accepting_states:
@@ -231,8 +247,9 @@ class Transducer(Iterable[RawTransduction]):
                     flag.apply(next_flags)  # type: ignore
                     # Transduce WITHOUT consuming input OR emitting output
                     # label (output should be the flag again).
-                    assert input_label == self.get_output_label(arc), (
-                        'Arc does not have flags on both labels ' + repr(arc)
+                    assert input_label == self.get_output_label(
+                        arc
+                    ), "Arc does not have flags on both labels " + repr(arc)
+                    yield from self._accept(
+                        arc.destination, transduction, flag_stack + [next_flags]
                     )
-                    yield from self._accept(arc.destination, transduction,
-                                            flag_stack + [next_flags])

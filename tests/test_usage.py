@@ -8,14 +8,14 @@ def test_load_from_file(shared_datadir):
     """
     Integration test for loading the FST from a file.
     """
-    fst = FST.from_file(shared_datadir / 'eat.fomabin')
+    fst = FST.from_file(shared_datadir / "eat.fomabin")
     # Do a transduction that outputs multiple results.
-    assert set(fst.analyze('eats')) == {
-            ('eat', '+N', '+Mass'),
-            ('eat', '+V', '+3P', '+Sg'),
+    assert set(fst.analyze("eats")) == {
+        ("eat", "+N", "+Mass"),
+        ("eat", "+V", "+3P", "+Sg"),
     }
     # Transduce the other way!
-    assert set(fst.generate('eat' '+V' '+Past')) == {'ate'}
+    assert set(fst.generate("eat" "+V" "+Past")) == {"ate"}
 
 
 def test_load_from_file_flipped(shared_datadir):
@@ -25,15 +25,15 @@ def test_load_from_file_flipped(shared_datadir):
     LOWER side is the deep form
     (following HFST conventions rather and XFST conventions).
     """
-    fst = FST.from_file(shared_datadir / 'tae.fomabin', labels='invert')
+    fst = FST.from_file(shared_datadir / "tae.fomabin", labels="invert")
 
     # The following tests are INTENTIONALLY the same as for
     # test_load_from_file(). However, the FST is different than in that test.
 
     # Do a transduction that outputs multiple results.
-    assert set(fst.analyze('eats')) == {
-            ('eat', '+N', '+Mass'),
-            ('eat', '+V', '+3P', '+Sg'),
+    assert set(fst.analyze("eats")) == {
+        ("eat", "+N", "+Mass"),
+        ("eat", "+V", "+3P", "+Sg"),
     }
     # Transduce the other way!
-    assert set(fst.generate('eat' '+V' '+Past')) == {'ate'}
+    assert set(fst.generate("eat" "+V" "+Past")) == {"ate"}

@@ -6,7 +6,6 @@ Tests for parsing the text format.
 """
 
 import pytest  # type: ignore
-
 from fst_lookup.flags import Clear, DisallowFeature, Positive
 from fst_lookup.parse import FSTParseError, parse_flag, parse_text
 from fst_lookup.symbol import Symbol
@@ -18,9 +17,8 @@ def test_parse_simple(eat_fst_txt: str):
     """
     result = parse_text(eat_fst_txt)
     assert len(result.sigma) == 15
-    multichar_symbols = set('+3P +Mass +N +Past +PastPart '
-                            '+PresPart +Sg +V'.split())
-    graphemes = set('eats eaten eating ate'.replace(' ', ''))
+    multichar_symbols = set("+3P +Mass +N +Past +PastPart " "+PresPart +Sg +V".split())
+    graphemes = set("eats eaten eating ate".replace(" ", ""))
     assert len(multichar_symbols) + len(graphemes) == len(result.sigma)
     assert stringified_set(result.multichar_symbols) == set(multichar_symbols)
     assert stringified_set(result.graphemes) == graphemes
@@ -46,11 +44,12 @@ def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
     """
     result = parse_text(english_flags_fst_txt)
     assert len(result.sigma) == 22
-    flag_diacritics = set('@C.UN@ @D.UN@ @P.UN.ON@'.split())
-    multichar_symbols = set('+Adj +Inf +Pl +V UN+ '.split())
-    graphemes = set('a b d e i k l n o p r s u y'.split())
-    assert len(multichar_symbols) + len(graphemes) + \
-        len(flag_diacritics) == len(result.sigma)
+    flag_diacritics = set("@C.UN@ @D.UN@ @P.UN.ON@".split())
+    multichar_symbols = set("+Adj +Inf +Pl +V UN+ ".split())
+    graphemes = set("a b d e i k l n o p r s u y".split())
+    assert len(multichar_symbols) + len(graphemes) + len(flag_diacritics) == len(
+        result.sigma
+    )
     assert stringified_set(result.multichar_symbols) == set(multichar_symbols)
     assert stringified_set(result.flag_diacritics) == flag_diacritics
     assert stringified_set(result.graphemes) == graphemes
@@ -59,11 +58,14 @@ def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
     assert result.accepting_states == {20}
 
 
-@pytest.mark.parametrize('raw,parsed', [
-    ('@C.UN@', Clear('UN')),
-    ('@D.UN@', DisallowFeature('UN')),
-    ('@P.UN.ON@', Positive('UN', 'ON')),
-])
+@pytest.mark.parametrize(
+    "raw,parsed",
+    [
+        ("@C.UN@", Clear("UN")),
+        ("@D.UN@", DisallowFeature("UN")),
+        ("@P.UN.ON@", Positive("UN", "ON")),
+    ],
+)
 def test_parse_flag_diacritics(raw: str, parsed) -> None:
     """
     Test parsing each flag diacritic individually.
@@ -76,7 +78,8 @@ def test_parse_whitespace_in_sigma() -> None:
     """
     Ensures that whitespace within sigma is parsed correctly.
     """
-    result = parse_text("""##foma-net 1.0##
+    result = parse_text(
+        """##foma-net 1.0##
 ##props##
 2 390211 90019 390213 5 -1 1 2 2 1 0 2
 ##sigma##
@@ -89,10 +92,13 @@ def test_parse_whitespace_in_sigma() -> None:
 ##states##
 -1 -1 -1 -1 -1
 ##end##
-""")
+"""
+    )
     assert len(result.sigma) == 3
     assert stringified_set(result.graphemes) == {
-        ' ', '\N{NO-BREAK SPACE}', '\N{SOFT HYPHEN}'
+        " ",
+        "\N{NO-BREAK SPACE}",
+        "\N{SOFT HYPHEN}",
     }
 
 
@@ -100,7 +106,8 @@ def test_parse_symbols() -> None:
     """
     Ensures we parse symbols properly
     """
-    parse = parse_text("""##foma-net 1.0##
+    parse = parse_text(
+        """##foma-net 1.0##
 ##props##
 2 390211 90019 390213 5 -1 1 2 2 1 0 2
 ##sigma##
@@ -111,20 +118,19 @@ def test_parse_symbols() -> None:
 ##states##
 -1 -1 -1 -1 -1
 ##end##
-""")
+"""
+    )
 
     assert parse.has_epsilon
     assert all(isinstance(sym, Symbol) for sym in parse.sigma.values())
-    assert stringified_set(parse.sigma) == {
-        '@P.UN.ON@', '+Err/Orth', 'î'
-    }
+    assert stringified_set(parse.sigma) == {"@P.UN.ON@", "+Err/Orth", "î"}
 
 
 def test_parse_bad_symbols() -> None:
     """
     Makes sure we crash if the FST tries to define a symbol entry twice.
     """
-    bad_fst = ("""##foma-net 1.0##
+    bad_fst = """##foma-net 1.0##
 ##props##
 2 390211 90019 390213 5 -1 1 2 2 1 0 2
 ##sigma##
@@ -134,7 +140,7 @@ def test_parse_bad_symbols() -> None:
 ##states##
 -1 -1 -1 -1 -1
 ##end##
-""")
+"""
     with pytest.raises(FSTParseError):
         parse_text(bad_fst)
 

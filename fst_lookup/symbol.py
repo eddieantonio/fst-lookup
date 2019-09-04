@@ -36,11 +36,11 @@ class Symbol(ABC):
 
 class EpsilonType(Symbol):
     def __repr__(self) -> str:  # pragma: no cover
-        return 'Epsilon'
+        return "Epsilon"
 
     def __str__(self) -> str:  # pragma: no cover
         # Print an epsilon in reverse video, to distinguish it from a literal epsilon.
-        return '\033[7m' 'ε' '\033[27m'
+        return "\033[7m" "ε" "\033[27m"
 
 
 class UnknownType(Symbol):
@@ -60,7 +60,8 @@ class GraphicalSymbol(Symbol):
     """
     Base class for graphical symbols: Grapheme and MultiCharacterSymbol.
     """
-    __slots__ = '_value',
+
+    __slots__ = ("_value",)
 
     is_graphical_symbol = True
 
@@ -85,7 +86,7 @@ class GraphicalSymbol(Symbol):
         return self._value
 
     def __repr__(self) -> str:  # pragma: no cover
-        return '{:}({!r})'.format(type(self).__name__, self._value)
+        return "{:}({!r})".format(type(self).__name__, self._value)
 
 
 class Grapheme(GraphicalSymbol):

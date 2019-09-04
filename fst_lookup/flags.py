@@ -23,7 +23,7 @@ from typing import Dict
 
 from .symbol import Symbol
 
-__all__ = ['FlagDiacritic', 'Clear', 'Disallow', 'Positive']
+__all__ = ["FlagDiacritic", "Clear", "Disallow", "Positive"]
 
 
 class FlagDiacritic(Symbol):
@@ -31,9 +31,9 @@ class FlagDiacritic(Symbol):
     Base class for all flag diacritics
     """
 
-    __slots__ = 'feature',
+    __slots__ = ("feature",)
 
-    opcode = '!!INVALID!!'
+    opcode = "!!INVALID!!"
 
     # By setting this, we avoid an isinstance() check:
     is_flag_diacritic = True
@@ -51,10 +51,10 @@ class FlagDiacritic(Symbol):
         return hash((self.opcode, self.feature))
 
     def __repr__(self) -> str:  # pragma: no cover
-        return '{:s}({!r})'.format(type(self).__name__, self.feature)
+        return "{:s}({!r})".format(type(self).__name__, self.feature)
 
     def __str__(self) -> str:
-        return '@{}.{}@'.format(self.opcode, self.feature)
+        return "@{}.{}@".format(self.opcode, self.feature)
 
     def test(self, flags: Dict[str, str]) -> bool:  # pragma: no cover
         """
@@ -69,7 +69,7 @@ class FlagDiacritic(Symbol):
 
 
 class FlagDiacriticWithValue(FlagDiacritic):
-    __slots__ = 'value',
+    __slots__ = ("value",)
 
     def __init__(self, feature: str, value: str = None) -> None:
         super().__init__(feature)
@@ -83,11 +83,10 @@ class FlagDiacriticWithValue(FlagDiacritic):
         return hash((self.opcode, self.feature, self.value))
 
     def __repr__(self) -> str:  # pragma: no cover
-        return '{:s}({!r}, {!r})'.format(type(self).__name__,
-                                         self.feature, self.value)
+        return "{:s}({!r}, {!r})".format(type(self).__name__, self.feature, self.value)
 
     def __str__(self) -> str:
-        return '@{}.{}.{}@'.format(self.opcode, self.feature, self.value)
+        return "@{}.{}.{}@".format(self.opcode, self.feature, self.value)
 
 
 class Unify(FlagDiacriticWithValue):
@@ -97,7 +96,8 @@ class Unify(FlagDiacriticWithValue):
     If a feature is unset, set it to the given value.
     If a feature IS set, allow only when it is equal to the given value.
     """
-    opcode = 'U'
+
+    opcode = "U"
 
     def test(self, flags: Dict[str, str]) -> bool:
         if self.feature not in flags:
@@ -111,7 +111,7 @@ class Unify(FlagDiacriticWithValue):
 
 
 class Clear(FlagDiacritic):
-    opcode = 'C'
+    opcode = "C"
 
     def test(self, flags: Dict[str, str]) -> bool:
         """
@@ -124,7 +124,7 @@ class Clear(FlagDiacritic):
 
 
 class DisallowFeature(FlagDiacritic):
-    opcode = 'D'
+    opcode = "D"
 
     def test(self, flags: Dict[str, str]):
         return self.feature not in flags
@@ -135,14 +135,15 @@ class DisallowValue(FlagDiacriticWithValue):
     Accepts ONLY if the feature is not set to the given value.
     That is, rejects if the feature is set to the given value.
     """
-    opcode = 'D'
+
+    opcode = "D"
 
     def test(self, flags: Dict[str, str]) -> bool:
         return flags.get(self.feature) != self.value
 
 
 class Positive(FlagDiacriticWithValue):
-    opcode = 'P'
+    opcode = "P"
 
     def test(self, flags: Dict[str, str]) -> bool:
         return True
@@ -155,7 +156,8 @@ class RequireValue(FlagDiacriticWithValue):
     """
     Accepts ONLY if the feature is set to the given value.
     """
-    opcode = 'R'
+
+    opcode = "R"
 
     def test(self, flags: Dict[str, str]) -> bool:
         return flags.get(self.feature) == self.value
@@ -165,10 +167,12 @@ class RequireFeature(FlagDiacritic):
     """
     Accepts if the feature is set to any value.
     """
-    opcode = 'R'
+
+    opcode = "R"
 
     def test(self, flags: Dict[str, str]) -> bool:
         return self.feature in flags
+
 
 # TODO: implement @N.feat.val@
 # TODO: implement @E.feat.val@ (makes sense when values have a negative)
