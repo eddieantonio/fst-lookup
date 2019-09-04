@@ -1,13 +1,19 @@
 language: python
+dist: xenial
+
 python:
 - '3.5'
 - '3.6'
-- '3.7-dev'
+- '3.7'
+- '3.8-dev'
+
 install:
  - pip install pipenv codecov
  - pipenv install --dev
+
 script:
   - pipenv run -- mypy -p fst_lookup
   - pipenv run -- py.test
+
 after_success:
   - codecov
