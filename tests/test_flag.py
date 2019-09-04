@@ -6,7 +6,6 @@ Test ALL OF THE FLAG DIACRITICS!
 """
 
 import pytest  # type: ignore
-
 from fst_lookup import FST
 
 # This constructs a SUBSET of an FST.
@@ -25,7 +24,7 @@ from fst_lookup import FST
 # You must add arcs that go from state 1 to state 2. State 2 is the accepting
 # state.
 # The arcs you add should test features of the flag diacritics.
-HEADER = ("""
+HEADER = """
 ##foma-net 1.0##
 ##props##
 2 17 9 1 1 1 0 1 1 0 1 2 test
@@ -47,7 +46,7 @@ HEADER = ("""
 201 ✅
 202 ❌
 ##states##
-""")
+"""
 
 #  The following arc and state ALWAYS exist:
 # if 'c', x is unset; goto 1
@@ -69,7 +68,7 @@ POSITIVE_SET_ARCS = (
     "3 111 1 0",
     # if 'b', set x <- b; goto 1
     "0 98 0 4 0",
-    "4 112 1 0"
+    "4 112 1 0",
 )
 
 # Use @U.x.a@ and @U.x.b@ to set flags.
@@ -79,7 +78,7 @@ UNIFY_ARCS = (
     "3 101 1 0",
     # if 'b', set x <- b; goto 1
     "0 98 0 4 0",
-    "4 102 1 0"
+    "4 102 1 0",
 )
 
 
@@ -91,14 +90,16 @@ def test_disallow_value() -> None:
     # Given 'c', this FST will print both 'a', and 'b'
     fst = make_fst(
         # 1 -@D.x.a@-> 5; 5 -0:a-> (2)
-        "1 151 5 0", "5 0 97 2 0",
+        "1 151 5 0",
+        "5 0 97 2 0",
         # 1 -@D.x.b@-> 6; 6 -0:b-> (2)
-        "1 152 6 0", "6 0 98 2 0"
+        "1 152 6 0",
+        "6 0 98 2 0",
     )
 
-    assert set(fst.generate('a')) == {'b'}
-    assert set(fst.generate('b')) == {'a'}
-    assert set(fst.generate('c')) == {'a', 'b'}
+    assert set(fst.generate("a")) == {"b"}
+    assert set(fst.generate("b")) == {"a"}
+    assert set(fst.generate("c")) == {"a", "b"}
 
 
 def test_require_value() -> None:
@@ -109,14 +110,16 @@ def test_require_value() -> None:
     # Given 'c', this FST will print both 'a', and 'b'
     fst = make_fst(
         # 1 -@R.x.a@-> 5; 5 -0:a-> (2)
-        "1 161 5 0", "5 0 97 2 0",
+        "1 161 5 0",
+        "5 0 97 2 0",
         # 1 -@R.x.b@-> 6; 6 -0:b-> (2)
-        "1 162 6 0", "6 0 98 2 0"
+        "1 162 6 0",
+        "6 0 98 2 0",
     )
 
-    assert set(fst.generate('a')) == {'a'}
-    assert set(fst.generate('b')) == {'b'}
-    assert set(fst.generate('c')) == set()
+    assert set(fst.generate("a")) == {"a"}
+    assert set(fst.generate("b")) == {"b"}
+    assert set(fst.generate("c")) == set()
 
 
 def test_disallow_value_with_unify() -> None:
@@ -127,15 +130,17 @@ def test_disallow_value_with_unify() -> None:
     # Given 'c', this FST will print both 'a', and 'b'
     fst = make_fst(
         # 1 -@D.x.a@-> 5; 5 -0:a-> (2)
-        "1 151 5 0", "5 0 97 2 0",
+        "1 151 5 0",
+        "5 0 97 2 0",
         # 1 -@D.x.b@-> 6; 6 -0:b-> (2)
-        "1 152 6 0", "6 0 98 2 0",
-        a_and_b='unify'
+        "1 152 6 0",
+        "6 0 98 2 0",
+        a_and_b="unify",
     )
 
-    assert set(fst.generate('a')) == {'b'}
-    assert set(fst.generate('b')) == {'a'}
-    assert set(fst.generate('c')) == {'a', 'b'}
+    assert set(fst.generate("a")) == {"b"}
+    assert set(fst.generate("b")) == {"a"}
+    assert set(fst.generate("c")) == {"a", "b"}
 
 
 def test_require_value_with_unify() -> None:
@@ -146,15 +151,17 @@ def test_require_value_with_unify() -> None:
     # Given 'c', this FST will print both 'a', and 'b'
     fst = make_fst(
         # 1 -@R.x.a@-> 5; 5 -0:a-> (2)
-        "1 161 5 0", "5 0 97 2 0",
+        "1 161 5 0",
+        "5 0 97 2 0",
         # 1 -@R.x.b@-> 6; 6 -0:b-> (2)
-        "1 162 6 0", "6 0 98 2 0",
-        a_and_b='unify'
+        "1 162 6 0",
+        "6 0 98 2 0",
+        a_and_b="unify",
     )
 
-    assert set(fst.generate('a')) == {'a'}
-    assert set(fst.generate('b')) == {'b'}
-    assert set(fst.generate('c')) == set()
+    assert set(fst.generate("a")) == {"a"}
+    assert set(fst.generate("b")) == {"b"}
+    assert set(fst.generate("c")) == set()
 
 
 def test_unify_twice() -> None:
@@ -169,15 +176,17 @@ def test_unify_twice() -> None:
     #     unifying unconditionally.
     fst = make_fst(
         # 1 -@U.x.a@-> 5; 5 -0:a-> (2)
-        "1 101 5 0", "5 0 97 2 0",
+        "1 101 5 0",
+        "5 0 97 2 0",
         # 1 -@U.x.b@-> 6; 6 -0:b-> (2)
-        "1 102 6 0", "6 0 98 2 0",
-        a_and_b='unify'
+        "1 102 6 0",
+        "6 0 98 2 0",
+        a_and_b="unify",
     )
 
-    assert set(fst.generate('a')) == {'a'}
-    assert set(fst.generate('b')) == {'b'}
-    assert set(fst.generate('c')) == {'a', 'b'}
+    assert set(fst.generate("a")) == {"a"}
+    assert set(fst.generate("b")) == {"b"}
+    assert set(fst.generate("c")) == {"a", "b"}
 
 
 def test_disallow_feature() -> None:
@@ -189,14 +198,16 @@ def test_disallow_feature() -> None:
     # Given 'c', this FST will print both 'a', and 'b'
     fst = make_fst(
         # 1 -@D.x@-> 5; 5 -0:a-> (2)
-        "1 150 5 0", "5 0 97 2 0",
+        "1 150 5 0",
+        "5 0 97 2 0",
         # 1 -@D.x@-> 6; 6 -0:b-> (2)
-        "1 150 6 0", "6 0 98 2 0",
+        "1 150 6 0",
+        "6 0 98 2 0",
     )
 
-    assert set(fst.generate('a')) == set()
-    assert set(fst.generate('b')) == set()
-    assert set(fst.generate('c')) == {'a', 'b'}
+    assert set(fst.generate("a")) == set()
+    assert set(fst.generate("b")) == set()
+    assert set(fst.generate("c")) == {"a", "b"}
 
 
 def test_require_feature() -> None:
@@ -208,17 +219,19 @@ def test_require_feature() -> None:
     # Given 'c', this FST will reject
     fst = make_fst(
         # 1 -@D.x@-> 5; 5 -0:a-> (2)
-        "1 160 5 0", "5 0 97 2 0",
+        "1 160 5 0",
+        "5 0 97 2 0",
         # 1 -@D.x@-> 6; 6 -0:b-> (2)
-        "1 160 6 0", "6 0 98 2 0",
+        "1 160 6 0",
+        "6 0 98 2 0",
     )
 
-    assert set(fst.generate('a')) == {'a', 'b'}
-    assert set(fst.generate('b')) == {'a', 'b'}
-    assert set(fst.generate('c')) == set()
+    assert set(fst.generate("a")) == {"a", "b"}
+    assert set(fst.generate("b")) == {"a", "b"}
+    assert set(fst.generate("c")) == set()
 
 
-def make_fst(*custom_arcs: str, a_and_b='positive') -> FST:
+def make_fst(*custom_arcs: str, a_and_b="positive") -> FST:
     """
     To make a complete FST, add one or more arcs that go from state 1 to state 2.
     There are existing arcs to state 1 that set x <- a, set x <- b, and do not define x.
@@ -227,8 +240,8 @@ def make_fst(*custom_arcs: str, a_and_b='positive') -> FST:
     flags.
     """
 
-    a_and_b_arcs = UNIFY_ARCS if a_and_b == 'unify' else POSITIVE_SET_ARCS
+    a_and_b_arcs = UNIFY_ARCS if a_and_b == "unify" else POSITIVE_SET_ARCS
 
     arcs = (ACCEPT_C, ACCEPTING_STATE, *a_and_b_arcs, *custom_arcs)
-    source = HEADER + '\n'.join(arcs) + FOOTER
+    source = HEADER + "\n".join(arcs) + FOOTER
     return FST.from_text(source)

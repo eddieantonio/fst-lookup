@@ -18,21 +18,27 @@ from typing import Callable, NamedTuple, NewType
 
 from .symbol import Symbol
 
-StateID = NewType('StateID', int)
+StateID = NewType("StateID", int)
 
 
-class Arc(NamedTuple('ArcBase', [('state', StateID),
-                                 ('upper', Symbol),
-                                 ('lower', Symbol),
-                                 ('destination', StateID)])):
+class Arc(
+    NamedTuple(
+        "ArcBase",
+        [
+            ("state", StateID),
+            ("upper", Symbol),
+            ("lower", Symbol),
+            ("destination", StateID),
+        ],
+    )
+):
     """
     An arc (transition) in the FST.
     """
+
     def __str__(self) -> str:
         if self.upper == self.lower:
             label = str(self.upper)
         else:
-            label = str(self.upper) + ':' + str(self.lower)
-        return '{:d} ─{:s}→ {:d}'.format(
-            self.state, label, self.destination
-        )
+            label = str(self.upper) + ":" + str(self.lower)
+        return "{:d} ─{:s}→ {:d}".format(self.state, label, self.destination)
