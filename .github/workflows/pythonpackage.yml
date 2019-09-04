@@ -27,3 +27,11 @@ jobs:
     - name: Sort dependencies with isort
       run: |
         isort --apply
+    - name: Auto Commit changed files
+      uses: stefanzweifel/git-auto-commit-action@v2.0.0
+      with:
+        commit_author_email: easantos@ualberta.ca
+        commit_author_name: Eddie Antonio Santos
+        commit_message: "[bot] apply black and isort"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
