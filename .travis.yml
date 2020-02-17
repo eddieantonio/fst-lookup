@@ -9,10 +9,9 @@ python:
 install:
  - pip install poetry
  - poetry install -v
- - pip install -e .
 
 script:
-  - pytest --cov
+  - poetry run pytest
 
 after_success:
   - codecov

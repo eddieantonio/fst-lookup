@@ -20,6 +20,7 @@ pytest-datadir = "^1.3.1"
 black = "^19.10b0"
 isort = "^4.3.21"
 pytest-cov = "^2.8.1"
+codecov = "^2.0.15"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/eddieantonio/fst-lookup/issues"
