@@ -6,7 +6,8 @@ Tests for parsing the text format.
 """
 
 import pytest  # type: ignore
-from fst_lookup.flags import Clear, DisallowFeature, Positive
+
+from fst_lookup.flags import Clear, DisallowFeature, Positive, RequireValue
 from fst_lookup.parse import FSTParseError, parse_flag, parse_text
 from fst_lookup.symbol import Symbol
 
@@ -64,6 +65,7 @@ def test_parse_fst_with_flag_diacritics(english_flags_fst_txt: str) -> None:
         ("@C.UN@", Clear("UN")),
         ("@D.UN@", DisallowFeature("UN")),
         ("@P.UN.ON@", Positive("UN", "ON")),
+        ("@R.infl.VAI-n@", RequireValue("infl", "VAI-n")),
     ],
 )
 def test_parse_flag_diacritics(raw: str, parsed) -> None:
