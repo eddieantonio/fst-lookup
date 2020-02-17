@@ -17,21 +17,27 @@
 
 import re
 from enum import Enum
-from typing import (Callable, Dict, List, Mapping, NamedTuple, Optional, Set,
-                    Tuple)
+from typing import Callable, Dict, List, Mapping, NamedTuple, Optional, Set, Tuple
 
 from .data import Arc, StateID
 from .data import Symbol as _Symbol
-from .flags import (Clear, DisallowFeature, DisallowValue, FlagDiacritic,
-                    Positive, RequireFeature, RequireValue, Unify)
-from .symbol import (Epsilon, Grapheme, Identity, MultiCharacterSymbol, Symbol,
-                     Unknown)
+from .flags import (
+    Clear,
+    DisallowFeature,
+    DisallowValue,
+    FlagDiacritic,
+    Positive,
+    RequireFeature,
+    RequireValue,
+    Unify,
+)
+from .symbol import Epsilon, Grapheme, Identity, MultiCharacterSymbol, Symbol, Unknown
 
 FLAG_PATTERN = re.compile(
     r"""
     ^@(?:
-        [UPNRDE][.]\w+[.]\w+ |
-        [RDC][.]\w+
+        [UPNRDE] [.] (?:\w|-)+ [.] (?:\w|-)+ |
+        [RDC]    [.] (?:\w|-)+
     )@$
 """,
     re.VERBOSE,
