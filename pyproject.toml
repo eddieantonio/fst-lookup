@@ -4,6 +4,7 @@ version = "2020.2.17.post0"
 description = "Lookup Foma FSTs"
 authors = ["Eddie Antonio Santos <easantos@ualberta.ca>"]
 license = "Apache-2.0"
+readme = "README.md"
 homepage = "https://github.com/eddieantonio/fst-lookup"
 keywords = ["fst", "lookup", "transducer", "morphology", "foma"]
 classifiers = [
