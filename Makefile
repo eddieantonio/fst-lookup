@@ -1,7 +1,7 @@
 # Help make a release.
 release: fst_lookup/__version__.py
-	version="v$(shell poetry run python3 libexec/print-version.py)" \
-		git commit -a -m "$$version" \
+	version="v$(shell poetry run python3 libexec/print-version.py)" && \
+		git commit -a -m "$$version" &&\
 		git tag "$$version"
 
 fst_lookup/__version__.py: pyproject.toml
