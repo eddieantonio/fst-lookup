@@ -1,17 +1,27 @@
-language: python
+os: linux
 dist: bionic
-
+language: python
 python:
 - '3.6'
 - '3.7'
-- '3.8-dev'
+- 3.8-dev
 
+before_install:
+- pip install poetry
 install:
- - pip install poetry
- - poetry install -v
-
+- poetry install -vv
 script:
-  - poetry run pytest
-
+- mypy fst_lookup
+- poetry run pytest
 after_success:
-  - codecov
+- codecov
+deploy:
+  provider: script
+  script: poetry publish --build --username=__token__ --password="$PYPI_API_KEY"
+  on:
+    tags: true
+    python: '3.6'
+
+env:
+  global:
+    secure: OuvZe166APyMDLdS1O1sNw7BRPFP/Y9L0cCvFQ/qa310BdKNRDyQ3tik6X9NUI94LldrErmPZ4dLaVFUCqa1QELro8jgOvfmI/ALtvFOT/SpAHPaB2m5E5Gj8JDIJRRgDFWZgFVGFH53YSYQgpYrH+3vXw3SR5y0Uc7FXq+o5AahHF3UfeUMnqeEIKSQ/UnQ4m5O1QWkkeFBdAKpaFIAgerJApS7otOLd2D2cUd31iV8rTuxJkVz6iXxAOHLsJV0wzM13z04yMoPiPGxdD4i2JtoHLAC0/F1bZKD0mg2pIhwCCTka+Vfm7WhMyxg7zxydFKZ3jBBEI9G3gZ5d/AqOniGhLr43HzruVs1RMjjq88ApcwL2FPt576jVKoFCsJns1hiczgAdjfVU0Mwgy2veEmSzKWGHfyRVYVV75i2rCApXw7piHtjccyB8/E0IodYbXWUeF+oF6AQ4PT6hIdFXl/3jNeI0OhZh2C88mij0eFUxMpTHXqXIlr4zTS77nJ1WKnbXcHREtQ3dQNeCFLXCUJ4TMxoKNb53cL2Y+8vn/1MRSo8NDfh6uTJieq5Mmk7F5zILtFlmBAGSjlbRrecyGrFdVe8GqS35K3J7lcUlbHrdlwth05QBsWQ3PtHFia3dqIIH/GRADhi6VpnsQM9Qjwq50eZ5gFvn4N1BoNjJF8=
