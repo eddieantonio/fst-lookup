@@ -106,16 +106,16 @@ a list.
 Contributing
 ------------
 
-If you plan to contribute code, it is recommended you use [Pipenv].
+If you plan to contribute code, it is recommended you use [Poetry].
 Fork and clone this repository, then install development dependencies
 by typing:
 
-    pipenv install
+    poetry install
 
 Then, do all your development within a virtual environment, managed by
-Pipenv:
+Poetry:
 
-    pipenv shell
+    poetry shell
 
 ### Type-checking
 
@@ -128,7 +128,7 @@ package, type the following:
 
 To run this project's tests, we use `py.test`:
 
-    py.test
+    poetry run pytest
 
 
 ### Fixtures
@@ -145,7 +145,7 @@ compile all pre-built FSTs from source:
 
     make
 
-[Pipenv]: https://github.com/pypa/pipenv
+[Poetry]: https://github.com/python-poetry/poetry#poetry-dependency-management-for-python
 
 
 License
