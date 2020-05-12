@@ -321,6 +321,12 @@ class FomaParser:
         if line != "##end##":
             raise FSTParseError("Expected end")
 
+        try:
+            next(lines)
+        except StopIteration:
+            pass
+        else:
+            raise FSTParseError("Cannot handle multiple FSTs")
         self.handle_line = self.handle_end
 
     def parse_text(self, fst_text: str) -> FSTParse:
@@ -330,9 +336,6 @@ class FomaParser:
         self.parse_header(lines)
         self.parse_props(lines)
         self.parse_body(lines)
-
-        for line in lines:
-            self.parse_line(line)
 
         return self.finalize()
 
