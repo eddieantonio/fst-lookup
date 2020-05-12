@@ -305,7 +305,15 @@ class FomaParser:
         if next(lines) != "##sigma##":
             raise FSTParseError("Expected sigma")
 
-        self.handle_line = self.handle_sigma
+        line = next(lines)
+        while not line.startswith("##"):
+            self.handle_sigma(line)
+            line = next(lines)
+
+        if line != "##states##":
+            raise FSTParseError("Expected states")
+
+        self.handle_line = self.handle_states
 
     def parse_text(self, fst_text: str) -> FSTParse:
         lines = iter(fst_text.splitlines())
