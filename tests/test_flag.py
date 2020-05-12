@@ -6,6 +6,7 @@ Test ALL OF THE FLAG DIACRITICS!
 """
 
 import pytest  # type: ignore
+
 from fst_lookup import FST
 
 # This constructs a SUBSET of an FST.
@@ -243,5 +244,5 @@ def make_fst(*custom_arcs: str, a_and_b="positive") -> FST:
     a_and_b_arcs = UNIFY_ARCS if a_and_b == "unify" else POSITIVE_SET_ARCS
 
     arcs = (ACCEPT_C, ACCEPTING_STATE, *a_and_b_arcs, *custom_arcs)
-    source = HEADER + "\n".join(arcs) + FOOTER
+    source = HEADER.lstrip("\n") + "\n".join(arcs) + FOOTER
     return FST.from_text(source)

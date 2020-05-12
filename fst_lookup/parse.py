@@ -283,8 +283,18 @@ class FomaParser:
             accepting_states=self.accepting_states,
         )
 
+    def parse_header(self, line: str):
+        if line != "##foma-net 1.0##":
+            raise FSTParseError("Could not parse header")
+        self.handle_line = self.handle_props
+
     def parse_text(self, fst_text: str) -> FSTParse:
-        for line in fst_text.splitlines():
+        lines = iter(fst_text.splitlines())
+
+        # Parse section by section
+        self.parse_header(next(lines))
+
+        for line in lines:
             self.parse_line(line)
 
         return self.finalize()
