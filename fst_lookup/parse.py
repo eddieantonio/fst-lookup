@@ -28,6 +28,7 @@ from typing import (
     Tuple,
 )
 
+from ._parse import parse_arc_definition as parse_arc_definition_line  # type: ignore
 from .data import Arc, StateID
 from .flags import (
     Clear,
@@ -40,6 +41,15 @@ from .flags import (
     Unify,
 )
 from .symbol import Epsilon, Grapheme, Identity, MultiCharacterSymbol, Symbol, Unknown
+
+try:
+    # There should be a C extension to make parsing slightly faster
+    from ._parse import parse_arc_definition as parse_arc_definition_line
+except ImportError:
+
+    def parse_arc_definition_line(line: str) -> Tuple[int, ...]:
+        return tuple(int(num) for num in line.split())
+
 
 FLAG_PATTERN = re.compile(
     r"""
@@ -140,10 +150,6 @@ class FSTParse(
     @property
     def has_epsilon(self) -> bool:
         return self.symbols.has_epsilon
-
-
-def parse_arc_definition_line(line: str) -> Tuple[int, ...]:
-    return tuple(int(num) for num in line.split())
 
 
 class StateParser:
