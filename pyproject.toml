@@ -10,6 +10,7 @@ keywords = ["fst", "lookup", "transducer", "morphology", "foma"]
 classifiers = [
     "Development Status :: 5 - Production/Stable"
 ]
+build = "build.py"
 
 [tool.poetry.dependencies]
 python = "^3.6"
