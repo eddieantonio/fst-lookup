@@ -313,7 +313,15 @@ class FomaParser:
         if line != "##states##":
             raise FSTParseError("Expected states")
 
-        self.handle_line = self.handle_states
+        line = next(lines)
+        while not line.startswith("##"):
+            self.handle_states(line)
+            line = next(lines)
+
+        if line != "##end##":
+            raise FSTParseError("Expected end")
+
+        self.handle_line = self.handle_end
 
     def parse_text(self, fst_text: str) -> FSTParse:
         lines = iter(fst_text.splitlines())
