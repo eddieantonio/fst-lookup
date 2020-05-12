@@ -201,16 +201,7 @@ class FomaParser:
 
     def __init__(self, invert_labels: bool) -> None:
         self.symbols = SymbolTable()
-        self.state_parse = StateParser(self.symbols, invert_labels)
-        self.handle_states = self.state_parse.parse
-
-    @property
-    def arcs(self) -> Iterable[Arc]:
-        return self.state_parse.arcs
-
-    @property
-    def accepting_states(self) -> Set[StateID]:
-        return self.state_parse.accepting_states
+        self.invert_labels = invert_labels
 
     def finalize(self) -> FSTParse:
         states = {StateID(arc.state) for arc in self.arcs}
@@ -262,9 +253,14 @@ class FomaParser:
             raise FSTParseError("Expected states")
 
         line = next(lines)
+        state_parse = StateParser(self.symbols, self.invert_labels)
+        handle_states = state_parse.parse
         while not line.startswith("##"):
-            self.handle_states(line)
+            handle_states(line)
             line = next(lines)
+
+        self.arcs = state_parse.arcs
+        self.accepting_states = state_parse.accepting_states
 
         if line != "##end##":
             raise FSTParseError("Expected end")
