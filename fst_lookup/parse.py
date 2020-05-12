@@ -16,7 +16,17 @@
 # limitations under the License.
 
 import re
-from typing import Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+)
 
 from .data import Arc, StateID
 from .flags import (
@@ -132,6 +142,10 @@ class FSTParse(
         return self.symbols.has_epsilon
 
 
+def parse_arc_definition_line(line: str) -> Tuple[int, ...]:
+    return tuple(int(num) for num in line.split())
+
+
 class StateParser:
     def __init__(self, symbols: SymbolTable, should_invert_labels: bool):
         self.arcs = []  # type: List[Arc]
@@ -148,7 +162,7 @@ class StateParser:
           - finds the sentinel value
         """
 
-        arc_def = tuple(int(num) for num in line.split())
+        arc_def = parse_arc_definition_line(line)
         num_items = len(arc_def)
 
         if arc_def == (-1, -1, -1, -1, -1):
