@@ -221,27 +221,6 @@ class FomaParser:
     def handle_props(self, line: str):
         """
         """
-        if self.has_seen_header:
-            raise FSTParseError("Cannot handle multiple FSTs")
-        self.has_seen_header = True
-
-        # TODO: parse:
-        #  - arity
-        #  - arc_count
-        #  - state_count
-        #  - line_count
-        #  - final_count
-        #  - path_count
-        #  - is_deterministic
-        #  - is_pruned
-        #  - is_minimized
-        #  - is_epsilon_free
-        #  - is_loop_free
-        #  - is_completed
-        #  - name
-
-        # Foma will technically accept anything until it sees '##sigma##'
-        # but we won't, as that is gross.
 
     def handle_sigma(self, line: str):
         """
@@ -293,12 +272,48 @@ class FomaParser:
             raise FSTParseError("Could not parse props")
         self.handle_props(next(lines))
 
+        if self.has_seen_header:
+            raise FSTParseError("Cannot handle multiple FSTs")
+        self.has_seen_header = True
+
+        # TODO: parse:
+        #  - arity
+        #  - arc_count
+        #  - state_count
+        #  - line_count
+        #  - final_count
+        #  - path_count
+        #  - is_deterministic
+        #  - is_pruned
+        #  - is_minimized
+        #  - is_epsilon_free
+        #  - is_loop_free
+        #  - is_completed
+        #  - name
+
+        # Foma will technically accept anything until it sees '##sigma##'
+        # but we won't, as that is gross.
+
+    def parse_body(self, lines: Iterator[str]):
+        """
+        Body:
+         - sigma
+         - tables
+         - end
+        """
+
+        if next(lines) != "##sigma##":
+            raise FSTParseError("Expected sigma")
+
+        self.handle_line = self.handle_sigma
+
     def parse_text(self, fst_text: str) -> FSTParse:
         lines = iter(fst_text.splitlines())
 
         # Parse section by section
         self.parse_header(lines)
         self.parse_props(lines)
+        self.parse_body(lines)
 
         for line in lines:
             self.parse_line(line)
