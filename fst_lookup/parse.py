@@ -213,14 +213,6 @@ class FomaParser:
     def accepting_states(self) -> Set[StateID]:
         return self.state_parse.accepting_states
 
-    def handle_header(self, line: str):
-        # Nothing to do here... yet.
-        ...
-
-    def handle_props(self, line: str):
-        """
-        """
-
     def handle_sigma(self, line: str):
         """
         Adds a new entry to the symbol table.
@@ -228,10 +220,6 @@ class FomaParser:
         idx_str, _space, symbol_text = line.partition("\N{SPACE}")
         idx = int(idx_str)
         self.symbols.add(idx, parse_symbol(symbol_text))
-
-    def handle_end(self, line: str):
-        # Nothing to do here. Yet.
-        ...
 
     def finalize(self) -> FSTParse:
         states = {StateID(arc.state) for arc in self.arcs}
@@ -249,11 +237,8 @@ class FomaParser:
     def parse_props(self, lines: Iterator[str]):
         if next(lines) != "##props##":
             raise FSTParseError("Could not parse props")
-        self.handle_props(next(lines))
 
-        if self.has_seen_header:
-            raise FSTParseError("Cannot handle multiple FSTs")
-        self.has_seen_header = True
+        _line = next(lines)
 
         # TODO: parse:
         #  - arity
