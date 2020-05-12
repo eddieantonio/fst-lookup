@@ -160,7 +160,7 @@ class StateParser:
         self.accepting_states = set()  # type: Set[StateID]
         self.invert_labels = should_invert_labels
 
-    def parse(self, line: str):
+    def parse(self, lines: Iterator[str]) -> str:
         """
         Either:
           - appends an arc to the list;
@@ -168,48 +168,57 @@ class StateParser:
           - finds the sentinel value
         """
 
-        arc_def = parse_arc_definition_line(line)
-        num_items = len(arc_def)
+        line = next(lines)
+        while not line.startswith("##"):
+            arc_def = parse_arc_definition_line(line)
+            num_items = len(arc_def)
 
-        if arc_def == (-1, -1, -1, -1, -1):
-            # Sentinel value: there are no more arcs to define.
-            return
+            if arc_def == (-1, -1, -1, -1, -1):
+                # Sentinel value: there are no more arcs to define.
+                line = next(lines)
+                continue
 
-        if num_items == 2:
-            if self.implied_state is None:
-                raise ValueError("No implied state")
-            src = self.implied_state
-            # in/out, target (state num implied)
-            in_label, dest = arc_def
-            out_label = in_label
-        elif num_items == 3:
-            if self.implied_state is None:
-                raise ValueError("No implied state")
-            src = self.implied_state
-            # in, out, target  (state num implied)
-            in_label, out_label, dest = arc_def
-        elif num_items == 4:
-            # FIXME: there's a bug here in my interpretation of the final parameter.
-            # state num, in/out, target, final state
-            src, in_label, dest, _weight = arc_def
-            out_label = in_label
-            # FIXME: this is a STATE WITHOUT TRANSITIONS
-            if in_label == -1 or dest == -1:
-                # This is an accepting state
-                self.accepting_states.add(StateID(src))
-                return
-        elif num_items == 5:
-            # FIXME: last is final_state, not weight
-            src, in_label, out_label, dest, _weight = arc_def
+            if num_items == 2:
+                if self.implied_state is None:
+                    raise ValueError("No implied state")
+                src = self.implied_state
+                # in/out, target (state num implied)
+                in_label, dest = arc_def
+                out_label = in_label
+            elif num_items == 3:
+                if self.implied_state is None:
+                    raise ValueError("No implied state")
+                src = self.implied_state
+                # in, out, target  (state num implied)
+                in_label, out_label, dest = arc_def
+            elif num_items == 4:
+                # FIXME: there's a bug here in my interpretation of the final parameter.
+                # state num, in/out, target, final state
+                src, in_label, dest, _weight = arc_def
+                out_label = in_label
+                # FIXME: this is a STATE WITHOUT TRANSITIONS
+                if in_label == -1 or dest == -1:
+                    # This is an accepting state
+                    self.accepting_states.add(StateID(src))
+                    line = next(lines)
+                    continue
+            elif num_items == 5:
+                # FIXME: last is final_state, not weight
+                src, in_label, out_label, dest, _weight = arc_def
 
-        self.implied_state = src
-        # Super important! make sure the order of these arguments is
-        # consistent with the definition of Arc
-        upper_label, lower_label = self.symbols[in_label], self.symbols[out_label]
-        if self.invert_labels:
-            upper_label, lower_label = lower_label, upper_label
-        arc = Arc(StateID(src), upper_label, lower_label, StateID(dest))
-        self.arcs.append(arc)
+            self.implied_state = src
+            # Super important! make sure the order of these arguments is
+            # consistent with the definition of Arc
+            upper_label, lower_label = self.symbols[in_label], self.symbols[out_label]
+            if self.invert_labels:
+                upper_label, lower_label = lower_label, upper_label
+            arc = Arc(StateID(src), upper_label, lower_label, StateID(dest))
+            self.arcs.append(arc)
+
+            line = next(lines)
+
+        # leftover line
+        return line
 
 
 class FomaParser:
@@ -291,17 +300,11 @@ class FomaParser:
             raise FSTParseError("Cannot handle multiple FSTs")
 
     def parse_states(self, lines: Iterator[str]) -> str:
-        line = next(lines)
         state_parse = StateParser(self.symbols, self.invert_labels)
-        handle_states = state_parse.parse
-        while not line.startswith("##"):
-            handle_states(line)
-            line = next(lines)
-
+        leftover = state_parse.parse(lines)
         self.arcs = state_parse.arcs
         self.accepting_states = state_parse.accepting_states
-
-        return line
+        return leftover
 
     def parse_sigma(self, lines: Iterator[str]) -> str:
         """
