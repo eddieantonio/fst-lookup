@@ -288,11 +288,17 @@ class FomaParser:
             raise FSTParseError("Could not parse header")
         self.handle_line = self.handle_props
 
+    def parse_props(self, lines: Iterator[str]):
+        if next(lines) != "##props##":
+            raise FSTParseError("Could not parse props")
+        self.handle_props(next(lines))
+
     def parse_text(self, fst_text: str) -> FSTParse:
         lines = iter(fst_text.splitlines())
 
         # Parse section by section
         self.parse_header(lines)
+        self.parse_props(lines)
 
         for line in lines:
             self.parse_line(line)
