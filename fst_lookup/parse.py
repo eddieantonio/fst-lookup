@@ -153,6 +153,44 @@ class FSTParse(
 
 
 class StateParser:
+    """
+    By far, the slowest part of parsing is parsing the transition table.
+    It just tends to be really big!
+
+    Ideas on how to make it faster:
+
+     - reimplement the transition table in C using the following data
+       structures::
+
+            typedef PyObject Symbol;
+
+            typedef struct {
+                PyObject_HEAD
+                long st_id;
+            } StateID;
+
+            struct transition_t {
+                long from;
+                Symbol *upper;
+                Symbol *lower;
+                long to;
+            };
+
+            /* Pre-allocate all of the states. */
+            StateID* states[n_states];
+
+            /* Pre-allocate the list of all accepting states */
+            StateID* accepting_states[n_accepting];
+
+            /* Pre-allocate all of the transitions */
+            struct transition_t transitions[n_arcs];
+
+     - make a class in C that fishes out Arcs using the transition table upon
+       using __getitem__
+
+    Then create an iterator that returns the accepting states.
+    """
+
     def __init__(self, symbols: SymbolTable, should_invert_labels: bool):
         self.arcs = []  # type: List[Arc]
         self.symbols = symbols
