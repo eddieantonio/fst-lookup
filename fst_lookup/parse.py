@@ -200,7 +200,6 @@ class FomaParser:
     LineParser = Callable[[str], None]
 
     def __init__(self, invert_labels: bool) -> None:
-        self.handle_line = self.handle_header
         self.has_seen_header = False
         self.symbols = SymbolTable()
         self.state_parse = StateParser(self.symbols, invert_labels)
@@ -234,26 +233,7 @@ class FomaParser:
         # Nothing to do here. Yet.
         ...
 
-    def parse_line(self, line: str):
-        # Find all the details here:
-        # https://github.com/mhulden/foma/blob/master/foma/io.c#L623-L821
-        # Check header
-        if line.startswith("##"):
-            header = line[2:-2]
-            self.handle_line = {
-                "foma-net 1.0": self.handle_header,
-                "props": self.handle_props,
-                "sigma": self.handle_sigma,
-                "states": self.handle_states,
-                "end": self.handle_end,
-            }[header]
-        else:
-            self.handle_line(line.rstrip("\n"))
-
     def finalize(self) -> FSTParse:
-        # After parsing, we should be in the ##end## state.
-        assert self.handle_line == self.handle_end
-
         states = {StateID(arc.state) for arc in self.arcs}
         return FSTParse(
             symbols=self.symbols,
@@ -265,7 +245,6 @@ class FomaParser:
     def parse_header(self, lines: Iterator[str]):
         if next(lines) != "##foma-net 1.0##":
             raise FSTParseError("Could not parse header")
-        self.handle_line = self.handle_props
 
     def parse_props(self, lines: Iterator[str]):
         if next(lines) != "##props##":
@@ -327,7 +306,6 @@ class FomaParser:
             pass
         else:
             raise FSTParseError("Cannot handle multiple FSTs")
-        self.handle_line = self.handle_end
 
     def parse_text(self, fst_text: str) -> FSTParse:
         lines = iter(fst_text.splitlines())
