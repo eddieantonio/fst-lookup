@@ -27,6 +27,26 @@ static char parse_arc_definition_doctring[] =
     "parse an arc definition quickly";
 
 
+/**************************** Classes and types *****************************/
+
+static PyStructSequence_Field arc_fields[]= {
+    { "state", "state from which this arc belongs to" },
+    { "upper", "symbol to output/accept on upper side " },
+    { "lower", "symbol to output/accept on lower side " },
+    { "destination", "state to transition to" },
+    { NULL, NULL }
+};
+
+static PyStructSequence_Desc arc_desc = {
+    .name = "Arc",
+    .doc = "An arc (transition) in the FST",
+    .fields = arc_fields,
+    .n_in_sequence = 4,
+};
+
+
+/***************************** Exported methods *****************************/
+
 static PyObject *
 parse_parse_arc_definition(PyObject *self, PyObject *args)
 {
@@ -70,6 +90,8 @@ failure:
 }
 
 
+/******************************* Module Init ********************************/
+
 static PyMethodDef ParseMethods[] = {
     {"parse_arc_definition", parse_parse_arc_definition, METH_VARARGS, parse_arc_definition_doctring},
 
@@ -77,19 +99,36 @@ static PyMethodDef ParseMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-
 static struct PyModuleDef parse_module = {
     PyModuleDef_HEAD_INIT,
-    "_parse",           /* name of module */
-    module_doctring,    /* module documentation */
-    -1,                 /* size of per-interpreter state of the module, or -1 if
-                           the module is stateless */
-    ParseMethods
+    .m_name = "_parse",          /* name of module */
+    .m_doc = module_doctring,    /* module documentation */
+    .m_size = -1,                /* size of per-interpreter state of the module, or -1 if
+                                    the module is stateless */
+    .m_methods = ParseMethods,
+    .m_slots = NULL,             /* Use single-phase initialization */
 };
-
 
 PyMODINIT_FUNC
 PyInit__parse(void)
 {
-    return PyModule_Create(&parse_module);
+    PyObject *mod;
+    PyTypeObject *arc_type;
+
+    arc_type = PyStructSequence_NewType(&arc_desc);
+    if (PyType_Ready(arc_type) < 0) {
+        return NULL;
+    }
+
+    mod = PyModule_Create(&parse_module);
+    if (mod == NULL)
+        return NULL;
+
+    if (PyModule_AddObject(mod, "Arc", (PyObject *) arc_type) < 0) {
+        Py_DECREF(arc_type);
+        Py_DECREF(mod);
+        return NULL;
+    }
+
+    return mod;
 }
