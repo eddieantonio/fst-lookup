@@ -194,19 +194,19 @@ class StateParser:
                 # in, out, target  (state num implied)
                 in_label, out_label, dest = arc_def
             elif num_items == 4:
-                # FIXME: there's a bug here in my interpretation of the final parameter.
                 # state num, in/out, target, final state
-                src, in_label, dest, _weight = arc_def
+                src, in_label, dest, is_final = arc_def
                 out_label = in_label
-                # FIXME: this is a STATE WITHOUT TRANSITIONS
-                if in_label == -1 or dest == -1:
+                # FIXME: this is a FINAL STATE WITHOUT TRANSITIONS
+                if is_final == 1:
+                    assert in_label == -1 or dest == -1
                     # This is an accepting state
                     self.accepting_states.add(StateID(src))
                     line = next(lines)
                     continue
             elif num_items == 5:
                 # FIXME: last is final_state, not weight
-                src, in_label, out_label, dest, _weight = arc_def
+                src, in_label, out_label, dest, _is_final = arc_def
 
             self.implied_state = src
             # Super important! make sure the order of these arguments is
@@ -214,6 +214,9 @@ class StateParser:
             upper_label, lower_label = self.symbols[in_label], self.symbols[out_label]
             if self.invert_labels:
                 upper_label, lower_label = lower_label, upper_label
+
+            # TODO: this line is REALLY slow and creates a lot of garbage
+            # (memory that needs to be deallocated)
             arc = Arc(StateID(src), upper_label, lower_label, StateID(dest))
             self.arcs.append(arc)
 
