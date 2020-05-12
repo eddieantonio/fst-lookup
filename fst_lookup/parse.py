@@ -16,11 +16,9 @@
 # limitations under the License.
 
 import re
-from enum import Enum
-from typing import Callable, Dict, List, Mapping, NamedTuple, Optional, Set, Tuple
+from typing import Callable, Dict, List, NamedTuple, Optional, Set
 
 from .data import Arc, StateID
-from .data import Symbol as _Symbol
 from .flags import (
     Clear,
     DisallowFeature,
