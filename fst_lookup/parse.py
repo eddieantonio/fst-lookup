@@ -200,7 +200,6 @@ class FomaParser:
     LineParser = Callable[[str], None]
 
     def __init__(self, invert_labels: bool) -> None:
-        self.has_seen_header = False
         self.symbols = SymbolTable()
         self.state_parse = StateParser(self.symbols, invert_labels)
         self.handle_states = self.state_parse.parse
@@ -212,14 +211,6 @@ class FomaParser:
     @property
     def accepting_states(self) -> Set[StateID]:
         return self.state_parse.accepting_states
-
-    def handle_sigma(self, line: str):
-        """
-        Adds a new entry to the symbol table.
-        """
-        idx_str, _space, symbol_text = line.partition("\N{SPACE}")
-        idx = int(idx_str)
-        self.symbols.add(idx, parse_symbol(symbol_text))
 
     def finalize(self) -> FSTParse:
         states = {StateID(arc.state) for arc in self.arcs}
@@ -266,15 +257,8 @@ class FomaParser:
          - end
         """
 
-        if next(lines) != "##sigma##":
-            raise FSTParseError("Expected sigma")
-
-        line = next(lines)
-        while not line.startswith("##"):
-            self.handle_sigma(line)
-            line = next(lines)
-
-        if line != "##states##":
+        leftover = self.parse_sigma(lines)
+        if leftover != "##states##":
             raise FSTParseError("Expected states")
 
         line = next(lines)
@@ -291,6 +275,21 @@ class FomaParser:
             pass
         else:
             raise FSTParseError("Cannot handle multiple FSTs")
+
+    def parse_sigma(self, lines: Iterator[str]) -> str:
+        """
+        Adds a new entry to the symbol table.
+        """
+        if next(lines) != "##sigma##":
+            raise FSTParseError("Expected sigma")
+        line = next(lines)
+        while not line.startswith("##"):
+            idx_str, _space, symbol_text = line.partition("\N{SPACE}")
+            idx = int(idx_str)
+            self.symbols.add(idx, parse_symbol(symbol_text))
+            line = next(lines)
+
+        return line
 
     def parse_text(self, fst_text: str) -> FSTParse:
         lines = iter(fst_text.splitlines())
