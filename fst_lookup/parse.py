@@ -279,6 +279,10 @@ class FomaParser:
         if leftover != "##end##":
             raise FSTParseError("Expected end")
 
+    def ensure_file_contains_only_one_fst(self, lines: Iterator[str]):
+        """
+        This should be immediately after seeing the ##end## header.
+        """
         try:
             next(lines)
         except StopIteration:
@@ -319,6 +323,7 @@ class FomaParser:
         self.parse_header(lines)
         self.parse_props(lines)
         self.parse_body(lines)
+        self.ensure_file_contains_only_one_fst(lines)
 
         return self.finalize()
 
