@@ -268,6 +268,8 @@ class FomaParser:
          - ##end##
         """
 
+        if next(lines) != "##sigma##":
+            raise FSTParseError("Expected sigma")
         leftover = self.parse_sigma(lines)
 
         if leftover != "##states##":
@@ -301,8 +303,6 @@ class FomaParser:
         """
         Adds a new entry to the symbol table.
         """
-        if next(lines) != "##sigma##":
-            raise FSTParseError("Expected sigma")
         line = next(lines)
         while not line.startswith("##"):
             idx_str, _space, symbol_text = line.partition("\N{SPACE}")
