@@ -262,16 +262,29 @@ class FomaParser:
 
     def parse_body(self, lines: Iterator[str]):
         """
-        Body:
-         - sigma
-         - tables
-         - end
+        Handles the following sections:
+         - ##sigma##
+         - ##states##
+         - ##end##
         """
 
         leftover = self.parse_sigma(lines)
+
         if leftover != "##states##":
             raise FSTParseError("Expected states")
+        leftover = self.parse_states(lines)
 
+        if leftover != "##end##":
+            raise FSTParseError("Expected end")
+
+        try:
+            next(lines)
+        except StopIteration:
+            pass
+        else:
+            raise FSTParseError("Cannot handle multiple FSTs")
+
+    def parse_states(self, lines: Iterator[str]) -> str:
         line = next(lines)
         state_parse = StateParser(self.symbols, self.invert_labels)
         handle_states = state_parse.parse
@@ -282,15 +295,7 @@ class FomaParser:
         self.arcs = state_parse.arcs
         self.accepting_states = state_parse.accepting_states
 
-        if line != "##end##":
-            raise FSTParseError("Expected end")
-
-        try:
-            next(lines)
-        except StopIteration:
-            pass
-        else:
-            raise FSTParseError("Cannot handle multiple FSTs")
+        return line
 
     def parse_sigma(self, lines: Iterator[str]) -> str:
         """
