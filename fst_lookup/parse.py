@@ -16,7 +16,7 @@
 # limitations under the License.
 
 import re
-from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Set
+from typing import Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set
 
 from .data import Arc, StateID
 from .flags import (
@@ -283,8 +283,8 @@ class FomaParser:
             accepting_states=self.accepting_states,
         )
 
-    def parse_header(self, line: str):
-        if line != "##foma-net 1.0##":
+    def parse_header(self, lines: Iterator[str]):
+        if next(lines) != "##foma-net 1.0##":
             raise FSTParseError("Could not parse header")
         self.handle_line = self.handle_props
 
@@ -292,7 +292,7 @@ class FomaParser:
         lines = iter(fst_text.splitlines())
 
         # Parse section by section
-        self.parse_header(next(lines))
+        self.parse_header(lines)
 
         for line in lines:
             self.parse_line(line)
