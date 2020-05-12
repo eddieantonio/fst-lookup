@@ -168,12 +168,14 @@ class StateParser:
           - finds the sentinel value
         """
 
+        NO_MORE_ARCS = (-1, -1, -1, -1, -1)
+
         line = next(lines)
         while not line.startswith("##"):
             arc_def = parse_arc_definition_line(line)
             num_items = len(arc_def)
 
-            if arc_def == (-1, -1, -1, -1, -1):
+            if arc_def == NO_MORE_ARCS:
                 # Sentinel value: there are no more arcs to define.
                 line = next(lines)
                 continue
@@ -217,7 +219,7 @@ class StateParser:
 
             line = next(lines)
 
-        # leftover line
+        # What's left over here SHOULD be "##end##":
         return line
 
 
