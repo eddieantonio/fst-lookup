@@ -16,7 +16,7 @@
 # limitations under the License.
 
 import re
-from typing import Callable, Dict, List, NamedTuple, Optional, Set
+from typing import Callable, Dict, Iterable, List, NamedTuple, Optional, Set
 
 from .data import Arc, StateID
 from .flags import (
@@ -132,60 +132,15 @@ class FSTParse(
         return self.symbols.has_epsilon
 
 
-class FomaParser:
-    """
-    Parses a FOMA file, in plain-text.
-    """
-
-    LineParser = Callable[[str], None]
-
-    def __init__(self, invert_labels: bool) -> None:
-        self.invert_labels = invert_labels
+class StateParser:
+    def __init__(self, symbols: SymbolTable, should_invert_labels: bool):
         self.arcs = []  # type: List[Arc]
-        self.accepting_states = set()  # type: Set[StateID]
+        self.symbols = symbols
         self.implied_state = None  # type: Optional[int]
-        self.handle_line = self.handle_header
-        self.has_seen_header = False
-        self.symbols = SymbolTable()
+        self.accepting_states = set()  # type: Set[StateID]
+        self.invert_labels = should_invert_labels
 
-    def handle_header(self, line: str):
-        # Nothing to do here... yet.
-        ...
-
-    def handle_props(self, line: str):
-        """
-        """
-        if self.has_seen_header:
-            raise FSTParseError("Cannot handle multiple FSTs")
-        self.has_seen_header = True
-
-        # TODO: parse:
-        #  - arity
-        #  - arc_count
-        #  - state_count
-        #  - line_count
-        #  - final_count
-        #  - path_count
-        #  - is_deterministic
-        #  - is_pruned
-        #  - is_minimized
-        #  - is_epsilon_free
-        #  - is_loop_free
-        #  - is_completed
-        #  - name
-
-        # Foma will technically accept anything until it sees '##sigma##'
-        # but we won't, as that is gross.
-
-    def handle_sigma(self, line: str):
-        """
-        Adds a new entry to the symbol table.
-        """
-        idx_str, _space, symbol_text = line.partition("\N{SPACE}")
-        idx = int(idx_str)
-        self.symbols.add(idx, parse_symbol(symbol_text))
-
-    def handle_states(self, line: str):
+    def parse(self, line: str):
         """
         Either:
           - appends an arc to the list;
@@ -235,6 +190,66 @@ class FomaParser:
             upper_label, lower_label = lower_label, upper_label
         arc = Arc(StateID(src), upper_label, lower_label, StateID(dest))
         self.arcs.append(arc)
+
+
+class FomaParser:
+    """
+    Parses a FOMA file, in plain-text.
+    """
+
+    LineParser = Callable[[str], None]
+
+    def __init__(self, invert_labels: bool) -> None:
+        self.handle_line = self.handle_header
+        self.has_seen_header = False
+        self.symbols = SymbolTable()
+        self.state_parse = StateParser(self.symbols, invert_labels)
+        self.handle_states = self.state_parse.parse
+
+    @property
+    def arcs(self) -> Iterable[Arc]:
+        return self.state_parse.arcs
+
+    @property
+    def accepting_states(self) -> Set[StateID]:
+        return self.state_parse.accepting_states
+
+    def handle_header(self, line: str):
+        # Nothing to do here... yet.
+        ...
+
+    def handle_props(self, line: str):
+        """
+        """
+        if self.has_seen_header:
+            raise FSTParseError("Cannot handle multiple FSTs")
+        self.has_seen_header = True
+
+        # TODO: parse:
+        #  - arity
+        #  - arc_count
+        #  - state_count
+        #  - line_count
+        #  - final_count
+        #  - path_count
+        #  - is_deterministic
+        #  - is_pruned
+        #  - is_minimized
+        #  - is_epsilon_free
+        #  - is_loop_free
+        #  - is_completed
+        #  - name
+
+        # Foma will technically accept anything until it sees '##sigma##'
+        # but we won't, as that is gross.
+
+    def handle_sigma(self, line: str):
+        """
+        Adds a new entry to the symbol table.
+        """
+        idx_str, _space, symbol_text = line.partition("\N{SPACE}")
+        idx = int(idx_str)
+        self.symbols.add(idx, parse_symbol(symbol_text))
 
     def handle_end(self, line: str):
         # Nothing to do here. Yet.
