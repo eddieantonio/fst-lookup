@@ -27,3 +27,6 @@ __pycache__/
 # Profiling (speed)
 /profiling/
 pip-wheel-metadata
+
+# Local .vimrc
+.vimrc
