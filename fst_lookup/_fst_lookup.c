@@ -29,21 +29,45 @@ static char parse_arc_definition_doctring[] =
 
 /**************************** Classes and types *****************************/
 
-static PyStructSequence_Field arc_fields[]= {
-    { "state", "state from which this arc belongs to" },
-    { "upper", "symbol to output/accept on upper side " },
-    { "lower", "symbol to output/accept on lower side " },
-    { "destination", "state to transition to" },
-    { NULL, NULL }
-};
+/*------------------------------- Arc class --------------------------------*/
 
-static PyStructSequence_Desc arc_desc = {
-    .name = "Arc",
-    .doc = "An arc (transition) in the FST",
-    .fields = arc_fields,
-    .n_in_sequence = 4,
-};
+typedef struct {
+    PyObject_HEAD
 
+    unsigned long state;
+    PyObject *upper; /* Should be Symbol */
+    PyObject *lower; /* Should be Symbol */
+    unsigned long destination;
+} FSTLookupArc;
+
+/******************************* Arc methods ********************************/
+
+static PyObject *arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs) {
+    FSTLookupArc *instance = (FSTLookupArc *) subtype->tp_alloc(subtype, 0);
+    if (instance == NULL) {
+        return NULL;
+    }
+
+    instance->lower = Py_None;
+    Py_INCREF(Py_None);
+    instance->upper = Py_None;
+    Py_INCREF(Py_None);
+    instance->state = 0;
+    instance->destination = 0;
+
+    return (PyObject *) instance;
+}
+
+static PyObject* arc_repr(PyObject *self, PyObject *args) {
+    FSTLookupArc* arc = (FSTLookupArc*) self;
+    return PyUnicode_FromFormat(
+            "Arc(%lu, %R, %R, %lu)",
+            arc->state,
+            arc->upper,
+            arc->lower,
+            arc->destination
+    );
+}
 
 /***************************** Exported methods *****************************/
 
@@ -90,6 +114,16 @@ failure:
 }
 
 
+static PyTypeObject FSTLookupArc_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "fst_lookup._fst_lookup.Arc",
+    .tp_doc = "An arc (transition) in the FST",
+    .tp_basicsize = sizeof(FSTLookupArc),
+    .tp_itemsize = 0,
+    .tp_repr = (reprfunc) arc_repr,
+    .tp_new = arc_new,
+};
+
 /******************************* Module Init ********************************/
 
 static PyMethodDef FSTLookupMethods[] = {
@@ -113,19 +147,18 @@ PyMODINIT_FUNC
 PyInit__fst_lookup(void)
 {
     PyObject *mod;
-    PyTypeObject *arc_type;
 
-    arc_type = PyStructSequence_NewType(&arc_desc);
-    if (PyType_Ready(arc_type) < 0) {
+    if (PyType_Ready(&FSTLookupArc_Type) < 0) {
         return NULL;
     }
 
     mod = PyModule_Create(&fst_lookup_module);
-    if (mod == NULL)
+    if (mod == NULL) {
         return NULL;
+    }
 
-    if (PyModule_AddObject(mod, "Arc", (PyObject *) arc_type) < 0) {
-        Py_DECREF(arc_type);
+    if (PyModule_AddObject(mod, "Arc", (PyObject *) &FSTLookupArc_Type) < 0) {
+        Py_DECREF(&FSTLookupArc_Type);
         Py_DECREF(mod);
         return NULL;
     }
