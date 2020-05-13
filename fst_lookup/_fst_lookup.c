@@ -16,6 +16,7 @@
  */
 
 #include <Python.h>
+#include "structmember.h"
 
 #include <stdbool.h>
 #include <assert.h>
@@ -39,6 +40,14 @@ typedef struct {
     PyObject *lower; /* Should be Symbol */
     unsigned long destination;
 } Arc;
+
+static PyMemberDef Arc_members[] = {
+    {"state", T_ULONG, offsetof(Arc, state), READONLY, "the origin of the arc"},
+    {"upper", T_OBJECT_EX, offsetof(Arc, upper), READONLY, "where the arc transitions to"},
+    {"lower", T_OBJECT_EX, offsetof(Arc, lower), READONLY, "where the arc transitions to"},
+    {"destination", T_ULONG, offsetof(Arc, destination), READONLY, "where the arc transitions to"},
+    {NULL},
+};
 
 /******************************* Arc methods ********************************/
 
@@ -66,13 +75,9 @@ static PyObject *arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs
     return (PyObject *) instance;
 }
 
-static void arc_dealloc(PyObject *self) {
-    Arc *instance = (Arc *) self;
-
-    Py_XDECREF(instance->upper);
-    instance->upper = NULL;
-    Py_XDECREF(instance->lower);
-    instance->lower = NULL;
+static void arc_dealloc(Arc *self) {
+    Py_XDECREF(self->upper);
+    Py_XDECREF(self->lower);
 
     /* Boilerplate deallocation based on the type. */
     PyTypeObject *tp = Py_TYPE(self);
@@ -80,14 +85,13 @@ static void arc_dealloc(PyObject *self) {
     Py_DECREF(tp);
 }
 
-static PyObject* arc_repr(PyObject *self, PyObject *args) {
-    Arc* arc = (Arc*) self;
+static PyObject* arc_repr(Arc *self, PyObject *args) {
     return PyUnicode_FromFormat(
             "Arc(%lu, %R, %R, %lu)",
-            arc->state,
-            arc->upper,
-            arc->lower,
-            arc->destination
+            self->state,
+            self->upper,
+            self->lower,
+            self->destination
     );
 }
 
@@ -142,9 +146,10 @@ static PyTypeObject FSTLookupArc_Type = {
     .tp_doc = "An arc (transition) in the FST",
     .tp_basicsize = sizeof(Arc),
     .tp_itemsize = 0,
+    .tp_members = Arc_members,
     .tp_repr = (reprfunc) arc_repr,
     .tp_new = arc_new,
-    .tp_dealloc = arc_dealloc,
+    .tp_dealloc = (destructor) arc_dealloc,
 };
 
 /******************************* Module Init ********************************/
