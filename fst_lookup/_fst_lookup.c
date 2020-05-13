@@ -141,7 +141,7 @@ failure:
 }
 
 
-static PyTypeObject FSTLookupArc_Type = {
+static PyTypeObject Arc_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "fst_lookup._fst_lookup.Arc",
     .tp_doc = "An arc (transition) in the FST",
@@ -178,7 +178,7 @@ PyInit__fst_lookup(void)
 {
     PyObject *mod;
 
-    if (PyType_Ready(&FSTLookupArc_Type) < 0) {
+    if (PyType_Ready(&Arc_Type) < 0) {
         return NULL;
     }
 
@@ -187,9 +187,9 @@ PyInit__fst_lookup(void)
         return NULL;
     }
 
-    Py_INCREF(&FSTLookupArc_Type);
-    if (PyModule_AddObject(mod, "Arc", (PyObject *) &FSTLookupArc_Type) < 0) {
-        Py_DECREF(&FSTLookupArc_Type);
+    Py_INCREF(&Arc_Type);
+    if (PyModule_AddObject(mod, "Arc", (PyObject *) &Arc_Type) < 0) {
+        Py_DECREF(&Arc_Type);
         Py_DECREF(mod);
         return NULL;
     }
