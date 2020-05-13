@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#define PY_SSIZE_T_CLEAN
 
 #include <Python.h>
 #include "structmember.h"
@@ -35,9 +36,9 @@ static char parse_arc_definition_doctring[] =
 typedef struct {
     PyObject_HEAD
 
-    unsigned long state;
     PyObject *upper; /* Should be Symbol */
     PyObject *lower; /* Should be Symbol */
+    unsigned long state;
     unsigned long destination;
 } Arc;
 
@@ -52,7 +53,7 @@ static PyMemberDef Arc_members[] = {
 /******************************* Arc methods ********************************/
 
 static PyObject *arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs) {
-    Arc *instance;
+    Arc *self;
     unsigned long state, destination;
     PyObject *upper, *lower;
 
@@ -62,17 +63,19 @@ static PyObject *arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs
         return NULL;
     }
 
-    instance = (Arc *) subtype->tp_alloc(subtype, 0);
-    if (instance == NULL) {
+    self = (Arc *) subtype->tp_alloc(subtype, 0);
+    if (self == NULL) {
         return NULL;
     }
 
-    instance->upper = upper;
-    instance->lower = lower;
-    instance->state = state;
-    instance->destination = destination;
+    self->state = state;
+    self->upper = upper;
+    Py_INCREF(upper);
+    self->lower = lower;
+    Py_INCREF(lower);
+    self->destination = destination;
 
-    return (PyObject *) instance;
+    return (PyObject *) self;
 }
 
 static void arc_dealloc(Arc *self) {
@@ -80,9 +83,7 @@ static void arc_dealloc(Arc *self) {
     Py_XDECREF(self->lower);
 
     /* Boilerplate deallocation based on the type. */
-    PyTypeObject *tp = Py_TYPE(self);
-    tp->tp_free(self);
-    Py_DECREF(tp);
+    Py_TYPE(self)->tp_free(self);
 }
 
 static PyObject* arc_repr(Arc *self, PyObject *args) {
@@ -146,6 +147,7 @@ static PyTypeObject FSTLookupArc_Type = {
     .tp_doc = "An arc (transition) in the FST",
     .tp_basicsize = sizeof(Arc),
     .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_members = Arc_members,
     .tp_repr = (reprfunc) arc_repr,
     .tp_new = arc_new,
@@ -185,6 +187,7 @@ PyInit__fst_lookup(void)
         return NULL;
     }
 
+    Py_INCREF(&FSTLookupArc_Type);
     if (PyModule_AddObject(mod, "Arc", (PyObject *) &FSTLookupArc_Type) < 0) {
         Py_DECREF(&FSTLookupArc_Type);
         Py_DECREF(mod);
