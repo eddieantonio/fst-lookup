@@ -52,7 +52,7 @@ static PyMemberDef Arc_members[] = {
 
 /******************************* Arc methods ********************************/
 
-static PyObject *arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs) {
+static PyObject *Arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs) {
     Arc *self;
     unsigned long state, destination;
     PyObject *upper, *lower;
@@ -78,7 +78,7 @@ static PyObject *arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs
     return (PyObject *) self;
 }
 
-static void arc_dealloc(Arc *self) {
+static void Arc_dealloc(Arc *self) {
     Py_XDECREF(self->upper);
     Py_XDECREF(self->lower);
 
@@ -86,7 +86,7 @@ static void arc_dealloc(Arc *self) {
     Py_TYPE(self)->tp_free(self);
 }
 
-static PyObject* arc_repr(Arc *self, PyObject *args) {
+static PyObject* Arc_repr(Arc *self, PyObject *args) {
     return PyUnicode_FromFormat(
             "Arc(%lu, %R, %R, %lu)",
             self->state,
@@ -149,9 +149,9 @@ static PyTypeObject Arc_Type = {
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_members = Arc_members,
-    .tp_repr = (reprfunc) arc_repr,
-    .tp_new = arc_new,
-    .tp_dealloc = (destructor) arc_dealloc,
+    .tp_repr = (reprfunc) Arc_repr,
+    .tp_new = Arc_new,
+    .tp_dealloc = (destructor) Arc_dealloc,
 };
 
 /******************************* Module Init ********************************/
