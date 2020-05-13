@@ -38,12 +38,12 @@ typedef struct {
     PyObject *upper; /* Should be Symbol */
     PyObject *lower; /* Should be Symbol */
     unsigned long destination;
-} FSTLookupArc;
+} Arc;
 
 /******************************* Arc methods ********************************/
 
 static PyObject *arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs) {
-    FSTLookupArc *instance;
+    Arc *instance;
     unsigned long state, destination;
     PyObject *upper, *lower;
 
@@ -53,7 +53,7 @@ static PyObject *arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs
         return NULL;
     }
 
-    instance = (FSTLookupArc *) subtype->tp_alloc(subtype, 0);
+    instance = (Arc *) subtype->tp_alloc(subtype, 0);
     if (instance == NULL) {
         return NULL;
     }
@@ -67,7 +67,7 @@ static PyObject *arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs
 }
 
 static void arc_dealloc(PyObject *self) {
-    FSTLookupArc *instance = (FSTLookupArc *) self;
+    Arc *instance = (Arc *) self;
 
     Py_XDECREF(instance->upper);
     instance->upper = NULL;
@@ -81,7 +81,7 @@ static void arc_dealloc(PyObject *self) {
 }
 
 static PyObject* arc_repr(PyObject *self, PyObject *args) {
-    FSTLookupArc* arc = (FSTLookupArc*) self;
+    Arc* arc = (Arc*) self;
     return PyUnicode_FromFormat(
             "Arc(%lu, %R, %R, %lu)",
             arc->state,
@@ -140,7 +140,7 @@ static PyTypeObject FSTLookupArc_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "fst_lookup._fst_lookup.Arc",
     .tp_doc = "An arc (transition) in the FST",
-    .tp_basicsize = sizeof(FSTLookupArc),
+    .tp_basicsize = sizeof(Arc),
     .tp_itemsize = 0,
     .tp_repr = (reprfunc) arc_repr,
     .tp_new = arc_new,
