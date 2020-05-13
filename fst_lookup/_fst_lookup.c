@@ -86,6 +86,25 @@ static void Arc_dealloc(Arc *self) {
     Py_TYPE(self)->tp_free(self);
 }
 
+static PyObject* Arc_str(Arc *self, PyObject *args) {
+    if (self->upper == self->lower) {
+        return PyUnicode_FromFormat(
+                "%lu -%S-> %lu",
+                self->state,
+                self->upper,
+                self->destination
+        );
+    } else {
+        return PyUnicode_FromFormat(
+                "%lu -%S:%S-> %lu",
+                self->state,
+                self->upper,
+                self->lower,
+                self->destination
+        );
+    }
+}
+
 static PyObject* Arc_repr(Arc *self, PyObject *args) {
     return PyUnicode_FromFormat(
             "Arc(%lu, %R, %R, %lu)",
@@ -149,6 +168,7 @@ static PyTypeObject Arc_Type = {
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_members = Arc_members,
+    .tp_str = (reprfunc) Arc_str,
     .tp_repr = (reprfunc) Arc_repr,
     .tp_new = Arc_new,
     .tp_dealloc = (destructor) Arc_dealloc,

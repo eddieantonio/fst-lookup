@@ -37,4 +37,4 @@ class Arc:
             label = str(self.upper)
         else:
             label = str(self.upper) + ":" + str(self.lower)
-        return "{:d} ─{:s}→ {:d}".format(self.state, label, self.destination)
+        return "{:d} -{:s}-> {:d}".format(self.state, label, self.destination)
