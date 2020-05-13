@@ -43,19 +43,41 @@ typedef struct {
 /******************************* Arc methods ********************************/
 
 static PyObject *arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs) {
-    FSTLookupArc *instance = (FSTLookupArc *) subtype->tp_alloc(subtype, 0);
+    FSTLookupArc *instance;
+    unsigned long state, destination;
+    PyObject *upper, *lower;
+
+    static char* keywords[] = {"state", "upper", "lower", "destination", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "kOOk", keywords, &state, &upper, &lower, &destination)) {
+        return NULL;
+    }
+
+    instance = (FSTLookupArc *) subtype->tp_alloc(subtype, 0);
     if (instance == NULL) {
         return NULL;
     }
 
-    instance->lower = Py_None;
-    Py_INCREF(Py_None);
-    instance->upper = Py_None;
-    Py_INCREF(Py_None);
-    instance->state = 0;
-    instance->destination = 0;
+    instance->upper = upper;
+    instance->lower = lower;
+    instance->state = state;
+    instance->destination = destination;
 
     return (PyObject *) instance;
+}
+
+static void arc_dealloc(PyObject *self) {
+    FSTLookupArc *instance = (FSTLookupArc *) self;
+
+    Py_XDECREF(instance->upper);
+    instance->upper = NULL;
+    Py_XDECREF(instance->lower);
+    instance->lower = NULL;
+
+    /* Boilerplate deallocation based on the type. */
+    PyTypeObject *tp = Py_TYPE(self);
+    tp->tp_free(self);
+    Py_DECREF(tp);
 }
 
 static PyObject* arc_repr(PyObject *self, PyObject *args) {
@@ -122,6 +144,7 @@ static PyTypeObject FSTLookupArc_Type = {
     .tp_itemsize = 0,
     .tp_repr = (reprfunc) arc_repr,
     .tp_new = arc_new,
+    .tp_dealloc = arc_dealloc,
 };
 
 /******************************* Module Init ********************************/
