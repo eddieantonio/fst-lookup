@@ -192,10 +192,7 @@ class StateParser:
     """
 
     def __init__(self, symbols: SymbolTable, should_invert_labels: bool):
-        self.arcs = []  # type: List[Arc]
         self.symbols = symbols
-        self.implied_state = None  # type: Optional[int]
-        self.accepting_states = set()  # type: Set[StateID]
         self.invert_labels = should_invert_labels
 
     def parse(self, lines: Iterator[str]) -> str:
@@ -208,6 +205,10 @@ class StateParser:
 
         NO_MORE_ARCS = (-1, -1, -1, -1, -1)
 
+        self.arcs = arcs = []  # type: List[Arc]
+        self.accepting_states = accepting_states = set()  # type: Set[StateID]
+
+        implied_state = None  # type: Optional[int]
         line = next(lines)
         while not line.startswith("##"):
             arc_def = parse_arc_definition_line(line)
@@ -219,16 +220,16 @@ class StateParser:
                 continue
 
             if num_items == 2:
-                if self.implied_state is None:
+                if implied_state is None:
                     raise ValueError("No implied state")
-                src = self.implied_state
+                src = implied_state
                 # in/out, target (state num implied)
                 in_label, dest = arc_def
                 out_label = in_label
             elif num_items == 3:
-                if self.implied_state is None:
+                if implied_state is None:
                     raise ValueError("No implied state")
-                src = self.implied_state
+                src = implied_state
                 # in, out, target  (state num implied)
                 in_label, out_label, dest = arc_def
             elif num_items == 4:
@@ -239,14 +240,14 @@ class StateParser:
                 if is_final == 1:
                     assert in_label == -1 or dest == -1
                     # This is an accepting state
-                    self.accepting_states.add(StateID(src))
+                    accepting_states.add(StateID(src))
                     line = next(lines)
                     continue
             elif num_items == 5:
                 # FIXME: last is final_state, not weight
                 src, in_label, out_label, dest, _is_final = arc_def
 
-            self.implied_state = src
+            implied_state = src
             # Super important! make sure the order of these arguments is
             # consistent with the definition of Arc
             upper_label, lower_label = self.symbols[in_label], self.symbols[out_label]
@@ -256,7 +257,7 @@ class StateParser:
             # TODO: this line is REALLY slow and creates a lot of garbage
             # (memory that needs to be deallocated)
             arc = Arc(StateID(src), upper_label, lower_label, StateID(dest))
-            self.arcs.append(arc)
+            arcs.append(arc)
 
             line = next(lines)
 
