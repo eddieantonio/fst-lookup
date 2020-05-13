@@ -48,7 +48,7 @@ static PyStructSequence_Desc arc_desc = {
 /***************************** Exported methods *****************************/
 
 static PyObject *
-parse_parse_arc_definition(PyObject *self, PyObject *args)
+fst_lookup_parse_arc_definition(PyObject *self, PyObject *args)
 {
     PyObject *result = NULL;
     const char * restrict line;
@@ -92,25 +92,25 @@ failure:
 
 /******************************* Module Init ********************************/
 
-static PyMethodDef ParseMethods[] = {
-    {"parse_arc_definition", parse_parse_arc_definition, METH_VARARGS, parse_arc_definition_doctring},
+static PyMethodDef FSTLookupMethods[] = {
+    {"parse_arc_definition", fst_lookup_parse_arc_definition, METH_VARARGS, parse_arc_definition_doctring},
 
     /* Sentinel */
     {NULL, NULL, 0, NULL}
 };
 
-static struct PyModuleDef parse_module = {
+static struct PyModuleDef fst_lookup_module = {
     PyModuleDef_HEAD_INIT,
     .m_name = "_parse",          /* name of module */
     .m_doc = module_doctring,    /* module documentation */
     .m_size = -1,                /* size of per-interpreter state of the module, or -1 if
                                     the module is stateless */
-    .m_methods = ParseMethods,
+    .m_methods = FSTLookupMethods,
     .m_slots = NULL,             /* Use single-phase initialization */
 };
 
 PyMODINIT_FUNC
-PyInit__parse(void)
+PyInit__fst_lookup(void)
 {
     PyObject *mod;
     PyTypeObject *arc_type;
@@ -120,7 +120,7 @@ PyInit__parse(void)
         return NULL;
     }
 
-    mod = PyModule_Create(&parse_module);
+    mod = PyModule_Create(&fst_lookup_module);
     if (mod == NULL)
         return NULL;
 

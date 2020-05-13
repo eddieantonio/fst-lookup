@@ -4,7 +4,7 @@
 from distutils.command.build_ext import build_ext  # type: ignore
 from distutils.core import Extension
 
-extensions = [Extension("fst_lookup._parse", sources=["fst_lookup/_parse.c"])]
+extensions = [Extension("fst_lookup._fst_lookup", sources=["fst_lookup/_fst_lookup.c"])]
 
 
 def build(setup_kwargs):
