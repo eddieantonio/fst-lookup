@@ -52,18 +52,8 @@ static PyMemberDef Arc_members[] = {
 
 /******************************* Arc methods ********************************/
 
-static Arc *Arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs) {
-    Arc *self;
-    unsigned long state, destination;
-    PyObject *upper, *lower;
-
-    static char* keywords[] = {"state", "upper", "lower", "destination", NULL};
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "kOOk", keywords, &state, &upper, &lower, &destination)) {
-        return NULL;
-    }
-
-    self = (Arc *) subtype->tp_alloc(subtype, 0);
+static Arc *create_arc(PyTypeObject *subtype, unsigned long state, PyObject *upper, PyObject *lower, unsigned long destination) {
+    Arc* self = (Arc *) subtype->tp_alloc(subtype, 0);
     if (self == NULL) {
         return NULL;
     }
@@ -76,6 +66,19 @@ static Arc *Arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs) {
     self->destination = destination;
 
     return self;
+}
+
+static Arc *Arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs) {
+    unsigned long state, destination;
+    PyObject *upper, *lower;
+
+    static char* keywords[] = {"state", "upper", "lower", "destination", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "kOOk", keywords, &state, &upper, &lower, &destination)) {
+        return NULL;
+    }
+
+    return create_arc(subtype, state, upper, lower, destination);
 }
 
 static void Arc_dealloc(Arc *self) {
