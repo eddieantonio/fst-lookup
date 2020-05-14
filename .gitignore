@@ -30,3 +30,4 @@ pip-wheel-metadata
 
 # Local .vimrc
 .vimrc
+.hypothesis
