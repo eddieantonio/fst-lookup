@@ -215,8 +215,6 @@ class StateParser:
         while not line.startswith("##"):
             arc_def = parse_arc_definition_line(line)
             num_items = len(arc_def)
-            # It's safe to fetch the next line right away!
-            line = next(lines)
 
             arc_simple = NO_MORE_ARCS
 
@@ -257,6 +255,8 @@ class StateParser:
                     accepting_states.add(StateID(src))
                 implied_state = src
                 assert implied_state >= 0
+
+            line = next(lines)
 
         # What's left over here SHOULD be "##end##":
         return line
