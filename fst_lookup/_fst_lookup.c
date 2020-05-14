@@ -216,16 +216,18 @@ static PyTypeObject Arc_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "fst_lookup._fst_lookup.Arc",
     .tp_doc = "An arc (transition) in the FST",
+
     .tp_basicsize = sizeof(Arc),
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_members = Arc_members,
-    .tp_str = (reprfunc) Arc_str,
-    .tp_repr = (reprfunc) Arc_repr,
+
     .tp_new = Arc_new,
-    .tp_hash = (hashfunc) Arc_hash,
     .tp_dealloc = (destructor) Arc_dealloc,
     .tp_richcompare = (richcmpfunc) Arc_richcompare,
+    .tp_hash = (hashfunc) Arc_hash,
+    .tp_str = (reprfunc) Arc_str,
+    .tp_repr = (reprfunc) Arc_repr,
 };
 
 /******************************* Module Init ********************************/
