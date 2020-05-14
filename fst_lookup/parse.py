@@ -215,16 +215,13 @@ class StateParser:
         while not line.startswith("##"):
             arc_def = parse_arc_definition_line(line)
             num_items = len(arc_def)
-            # We can fetch the next line now...
+            # It's safe to fetch the next line right away!
             line = next(lines)
-
-            result = None  # type: Union[None, Arc, int]
 
             if arc_def == NO_MORE_ARCS:
                 # Sentinel value: there are no more arcs to define.
                 continue
-
-            if num_items == 2:
+            elif num_items == 2:
                 if implied_state < 0:
                     raise ValueError("No implied state")
                 src = implied_state
