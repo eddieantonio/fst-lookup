@@ -52,7 +52,7 @@ static PyMemberDef Arc_members[] = {
 
 /******************************* Arc methods ********************************/
 
-static PyObject *Arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs) {
+static Arc *Arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs) {
     Arc *self;
     unsigned long state, destination;
     PyObject *upper, *lower;
@@ -75,7 +75,7 @@ static PyObject *Arc_new(PyTypeObject *subtype, PyObject *args, PyObject *kwargs
     Py_INCREF(lower);
     self->destination = destination;
 
-    return (PyObject *) self;
+    return self;
 }
 
 static void Arc_dealloc(Arc *self) {
@@ -149,7 +149,7 @@ static PyObject* Arc_richcompare(Arc *self, PyObject *other, int op) {
     if (op == Py_NE) {
         comparison = !comparison;
     }
-    
+
     return PyBool_FromLong(comparison);
 }
 
@@ -157,13 +157,13 @@ Py_hash_t Arc_hash(Arc *self) {
     /*
      * ATTEMPT to spread Arc instances around by basing spreading them
      * around based on (state, upper, lower).
-     * 
+     *
      * For bigger hash tables, this encourages with similar states to be close
      * together.
      */
     Py_hash_t upper_bits = (self->state & 0xFFFF);
     Py_hash_t lower_bits = (PyObject_Hash(self->lower) & 0xFF) | ((PyObject_Hash(self->upper) & 0xFF) << 8);
-    
+
     return (upper_bits << 16) | lower_bits;
 }
 
@@ -222,7 +222,7 @@ static PyTypeObject Arc_Type = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_members = Arc_members,
 
-    .tp_new = Arc_new,
+    .tp_new = (newfunc) Arc_new,
     .tp_dealloc = (destructor) Arc_dealloc,
     .tp_richcompare = (richcmpfunc) Arc_richcompare,
     .tp_hash = (hashfunc) Arc_hash,
