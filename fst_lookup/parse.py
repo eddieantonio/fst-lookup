@@ -43,17 +43,6 @@ from .flags import (
 )
 from .symbol import Epsilon, Grapheme, Identity, MultiCharacterSymbol, Symbol, Unknown
 
-try:
-    # There should be a C extension to make parsing slightly faster
-    from ._fst_lookup import parse_arc_definition as parse_arc_definition_line
-except ImportError:
-
-    def parse_arc_definition_line(line: str) -> Tuple[int, ...]:
-        return tuple(int(num) for num in line.split())
-
-
-NO_MORE_ARCS = (-1, -1, -1, -1, -1)
-
 FLAG_PATTERN = re.compile(
     r"""
     ^@(?:
@@ -239,6 +228,12 @@ try:
     from ._fst_lookup import parse_state_line
 
 except ImportError:
+    # Fallback implementation:
+
+    NO_MORE_ARCS = (-1, -1, -1, -1, -1)
+
+    def parse_arc_definition_line(line: str) -> Tuple[int, ...]:
+        return tuple(int(num) for num in line.split())
 
     def parse_state_line(
         line: str,
