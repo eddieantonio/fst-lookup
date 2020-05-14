@@ -218,48 +218,45 @@ class StateParser:
             # It's safe to fetch the next line right away!
             line = next(lines)
 
-            if arc_def == NO_MORE_ARCS:
-                # Sentinel value: there are no more arcs to define.
-                continue
-            elif num_items == 2:
+            arc_simple = NO_MORE_ARCS
+
+            if num_items == 2:
                 if implied_state < 0:
                     raise ValueError("No implied state")
-                src = implied_state
-                # in/out, target (state num implied)
                 in_label, dest = arc_def
-                out_label = in_label
+                arc_simple = implied_state, in_label, in_label, dest, -1
             elif num_items == 3:
                 if implied_state < 0:
                     raise ValueError("No implied state")
-                src = implied_state
                 # in, out, target  (state num implied)
                 in_label, out_label, dest = arc_def
+                arc_simple = implied_state, in_label, out_label, dest, -1
             elif num_items == 4:
                 # state num, in/out, target, final state
                 src, in_label, dest, is_final = arc_def
-                out_label = in_label
-                # FIXME: this is a FINAL STATE WITHOUT TRANSITIONS
                 if is_final == 1:
                     assert in_label == -1 or dest == -1
-                    # This is an accepting state
-                    accepting_states.add(StateID(src))
-                    continue
+                arc_simple = src, in_label, in_label, dest, is_final
             elif num_items == 5:
-                # FIXME: last is final_state, not weight
-                src, in_label, out_label, dest, _is_final = arc_def
+                arc_simple = arc_def  # type: ignore
 
-            implied_state = src
-            assert implied_state >= 0
             # Super important! make sure the order of these arguments is
             # consistent with the definition of Arc
-            upper_label, lower_label = symbols[in_label], symbols[out_label]
-            if self.invert_labels:
-                upper_label, lower_label = lower_label, upper_label
+            if arc_simple != NO_MORE_ARCS:
+                src, in_label, out_label, dest, is_final = arc_simple
 
-            # TODO: this line is REALLY slow and creates a lot of garbage
-            # (memory that needs to be deallocated)
-            arc = Arc(StateID(src), upper_label, lower_label, StateID(dest))
-            arcs.append(arc)
+                if in_label >= 0 and out_label >= 0:
+                    upper_label, lower_label = symbols[in_label], symbols[out_label]
+                    if self.invert_labels:
+                        upper_label, lower_label = lower_label, upper_label
+                    # TODO: this line is REALLY slow and creates a lot of garbage
+                    # (memory that needs to be deallocated)
+                    arc = Arc(StateID(src), upper_label, lower_label, StateID(dest))
+                    arcs.append(arc)
+                if is_final > 0:
+                    accepting_states.add(StateID(src))
+                implied_state = src
+                assert implied_state >= 0
 
         # What's left over here SHOULD be "##end##":
         return line
