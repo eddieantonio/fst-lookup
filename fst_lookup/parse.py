@@ -208,6 +208,8 @@ class StateParser:
         self.accepting_states = accepting_states = set()  # type: Set[StateID]
 
         implied_state = None  # type: Optional[int]
+        symbols = self.symbols
+
         line = next(lines)
         while not line.startswith("##"):
             arc_def = parse_arc_definition_line(line)
@@ -249,7 +251,7 @@ class StateParser:
             implied_state = src
             # Super important! make sure the order of these arguments is
             # consistent with the definition of Arc
-            upper_label, lower_label = self.symbols[in_label], self.symbols[out_label]
+            upper_label, lower_label = symbols[in_label], symbols[out_label]
             if self.invert_labels:
                 upper_label, lower_label = lower_label, upper_label
 
