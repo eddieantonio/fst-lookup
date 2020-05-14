@@ -362,7 +362,7 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args) {
         Py_INCREF(arc);
     }
 
-    return PyTuple_Pack(3, PyLong_FromLong(accepting_state), arc, PyLong_FromLong(implied_state));
+    return PyTuple_Pack(3, PyLong_FromLong(implied_state), arc, PyLong_FromLong(accepting_state));
 }
 
 
