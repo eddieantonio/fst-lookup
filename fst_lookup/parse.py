@@ -22,6 +22,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Mapping,
     NamedTuple,
     Optional,
     Set,
@@ -70,7 +71,7 @@ class FSTParseError(Exception):
     """
 
 
-class SymbolTable:
+class SymbolTable(Mapping[int, Symbol]):
     """
     Keeps track of ALL of the symbols in an FST.
     """
@@ -82,6 +83,12 @@ class SymbolTable:
 
     def __getitem__(self, idx: int):
         return self._symbols[idx]
+
+    def __len__(self):
+        return len(self._symbols)
+
+    def __iter__(self):
+        return iter(self._symbols)
 
     def add(self, symbol_id: int, symbol: Symbol) -> None:
         """
@@ -228,10 +235,16 @@ class StateParser:
         return line
 
 
-if True:
+try:
+    from ._fst_lookup import parse_state_line
+
+except ImportError:
 
     def parse_state_line(
-        line: str, implied_state: int, symbols: SymbolTable, invert_labels: bool
+        line: str,
+        implied_state: int,
+        symbols: Mapping[int, Symbol],
+        invert_labels: bool,
     ) -> Tuple[int, Optional[Arc], StateID]:
         arc_def = parse_arc_definition_line(line)
         num_items = len(arc_def)

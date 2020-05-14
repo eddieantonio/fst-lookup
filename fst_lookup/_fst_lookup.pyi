@@ -1,8 +1,10 @@
-from typing import Tuple
+from typing import Mapping, Tuple, Optional
 from .typedefs import StateID
 from .symbol import Symbol
 
 def parse_arc_definition(line: str) -> Tuple[int, ...]: ...
+
+def parse_state_line(line: str, implied_state: int, symbols: Mapping[int, Symbol], invert_labels: bool) -> Tuple[int, Optional[Arc], StateID]: ...
 
 class Arc:
     def __init__(self, state: StateID, upper: Symbol, lower: Symbol, destination: StateID) -> None: ...
