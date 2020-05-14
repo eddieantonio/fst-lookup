@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #define PY_SSIZE_T_CLEAN
-
 #include <Python.h>
 #include "structmember.h"
 
@@ -168,12 +167,6 @@ Py_hash_t Arc_hash(Arc *self) {
     return (upper_bits << 16) | lower_bits;
 }
 
-/***************************** Exported methods *****************************/
-
-enum {
-    DO_NOT_ACCEPT = -1
-};
-
 static PyTypeObject Arc_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "fst_lookup._fst_lookup.Arc",
@@ -192,8 +185,15 @@ static PyTypeObject Arc_Type = {
     .tp_repr = (reprfunc) Arc_repr,
 };
 
+/***************************** Exported methods *****************************/
+
+
 static PyObject *
 fst_lookup_parse_state_line(PyObject *self, PyObject *args) {
+    enum {
+        DO_NOT_ACCEPT = -1
+    };
+
     const char *line;
     long implied_state;
     PyObject *symbol_table;
