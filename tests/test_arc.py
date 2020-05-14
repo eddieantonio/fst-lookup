@@ -23,3 +23,14 @@ def test_eq_trivial(state, upper, lower, dest):
     b = Arc(s0, upper, lower, s1)
 
     assert a == b
+
+
+@given(integers(min_value=0), characters(), characters(), integers(min_value=0))
+def test_eq_different_symbols(state, upper, lower, dest):
+    s0 = StateID(state)
+    s1 = StateID(dest)
+
+    a = Arc(s0, Grapheme(upper), Grapheme(lower), s1)
+    b = Arc(s0, Grapheme(upper), Grapheme(lower), s1)
+
+    assert a == b
