@@ -51,6 +51,8 @@ except ImportError:
         return tuple(int(num) for num in line.split())
 
 
+NO_MORE_ARCS = (-1, -1, -1, -1, -1)
+
 FLAG_PATTERN = re.compile(
     r"""
     ^@(?:
@@ -203,8 +205,6 @@ class StateParser:
           - finds the sentinel value
         """
 
-        NO_MORE_ARCS = (-1, -1, -1, -1, -1)
-
         self.arcs = arcs = []  # type: List[Arc]
         self.accepting_states = accepting_states = set()  # type: Set[StateID]
 
@@ -213,53 +213,71 @@ class StateParser:
 
         line = next(lines)
         while not line.startswith("##"):
-            arc_def = parse_arc_definition_line(line)
-            num_items = len(arc_def)
+            implied_state, arc, accepting_state = parse_state_line(
+                line, implied_state, symbols, self.invert_labels
+            )
 
-            arc_simple = NO_MORE_ARCS
-
-            if num_items == 2:
-                if implied_state < 0:
-                    raise ValueError("No implied state")
-                in_label, dest = arc_def
-                arc_simple = implied_state, in_label, in_label, dest, -1
-            elif num_items == 3:
-                if implied_state < 0:
-                    raise ValueError("No implied state")
-                # in, out, target  (state num implied)
-                in_label, out_label, dest = arc_def
-                arc_simple = implied_state, in_label, out_label, dest, -1
-            elif num_items == 4:
-                # state num, in/out, target, final state
-                src, in_label, dest, is_final = arc_def
-                if is_final == 1:
-                    assert in_label == -1 or dest == -1
-                arc_simple = src, in_label, in_label, dest, is_final
-            elif num_items == 5:
-                arc_simple = arc_def  # type: ignore
-
-            # Super important! make sure the order of these arguments is
-            # consistent with the definition of Arc
-            if arc_simple != NO_MORE_ARCS:
-                src, in_label, out_label, dest, is_final = arc_simple
-
-                if in_label >= 0 and out_label >= 0:
-                    upper_label, lower_label = symbols[in_label], symbols[out_label]
-                    if self.invert_labels:
-                        upper_label, lower_label = lower_label, upper_label
-                    # TODO: this line is REALLY slow and creates a lot of garbage
-                    # (memory that needs to be deallocated)
-                    arc = Arc(StateID(src), upper_label, lower_label, StateID(dest))
-                    arcs.append(arc)
-                if is_final > 0:
-                    accepting_states.add(StateID(src))
-                implied_state = src
-                assert implied_state >= 0
+            if arc is not None:
+                arcs.append(arc)
+            if accepting_state >= 0:
+                accepting_states.add(accepting_state)
 
             line = next(lines)
 
         # What's left over here SHOULD be "##end##":
         return line
+
+
+if True:
+
+    def parse_state_line(
+        line: str, implied_state: int, symbols: SymbolTable, invert_labels: bool
+    ) -> Tuple[int, Optional[Arc], StateID]:
+        arc_def = parse_arc_definition_line(line)
+        num_items = len(arc_def)
+
+        arc_simple = NO_MORE_ARCS
+
+        if num_items == 2:
+            if implied_state < 0:
+                raise ValueError("No implied state")
+            in_label, dest = arc_def
+            arc_simple = implied_state, in_label, in_label, dest, -1
+        elif num_items == 3:
+            if implied_state < 0:
+                raise ValueError("No implied state")
+            # in, out, target  (state num implied)
+            in_label, out_label, dest = arc_def
+            arc_simple = implied_state, in_label, out_label, dest, -1
+        elif num_items == 4:
+            # state num, in/out, target, final state
+            src, in_label, dest, is_final = arc_def
+            if is_final == 1:
+                assert in_label == -1 or dest == -1
+            arc_simple = src, in_label, in_label, dest, is_final
+        elif num_items == 5:
+            arc_simple = arc_def  # type: ignore
+
+        arc = None
+        accepting_state = -1
+
+        # Super important! make sure the order of these arguments is
+        # consistent with the definition of Arc
+        if arc_simple != NO_MORE_ARCS:
+            src, in_label, out_label, dest, is_final = arc_simple
+            accepting_state = src if is_final > 0 else -1
+
+            if in_label >= 0 and out_label >= 0:
+                upper_label, lower_label = symbols[in_label], symbols[out_label]
+                if invert_labels:
+                    upper_label, lower_label = lower_label, upper_label
+                # TODO: this line is REALLY slow and creates a lot of garbage
+                # (memory that needs to be deallocated)
+                arc = Arc(StateID(src), upper_label, lower_label, StateID(dest))
+            implied_state = src
+            assert implied_state >= 0
+
+        return implied_state, arc, StateID(accepting_state)
 
 
 class FomaParser:
