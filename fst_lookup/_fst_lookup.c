@@ -218,6 +218,24 @@ enum {
     DO_NOT_ACCEPT = -1
 };
 
+static PyTypeObject Arc_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "fst_lookup._fst_lookup.Arc",
+    .tp_doc = "An arc (transition) in the FST",
+
+    .tp_basicsize = sizeof(Arc),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_members = Arc_members,
+
+    .tp_new = (newfunc) Arc_new,
+    .tp_dealloc = (destructor) Arc_dealloc,
+    .tp_richcompare = (richcmpfunc) Arc_richcompare,
+    .tp_hash = (hashfunc) Arc_hash,
+    .tp_str = (reprfunc) Arc_str,
+    .tp_repr = (reprfunc) Arc_repr,
+};
+
 static PyObject *
 fst_lookup_parse_state_line(PyObject *self, PyObject *args) {
     const char *line;
@@ -228,7 +246,6 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args) {
     long arc_def[5];
     long src, in_label, out_label, dest;
     PyObject *result;
-    PyObject *arc;
 
     if (!PyArg_ParseTuple(args, "slOi", &line, &implied_state, &symbol_table, &should_invert))
         return NULL;
@@ -302,31 +319,52 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args) {
 
     implied_state = src;
 
-#if 0
-    PyObject * lower_label = PyObject_GetItem(symbol_table, PyLong_FromLong(in_label));
-    PyObject * upper_label = PyObject_GetItem(symbol_table, PyLong_FromLong(out_label));
-#endif
+    if (dest < 0) {
+        should_make_arc = false;
+    }
 
-    return PyTuple_Pack(3, PyLong_FromLong(accepting_state), Py_None, PyLong_FromLong(implied_state));
+    PyObject *arc;
+    if (should_make_arc) {
+        /* Ensure the symbols can be fetched from the symbol table 
+         * BEFORE we allocate anything!  */
+        Py_ssize_t table_size = PyObject_Size(symbol_table);
+        if (in_label >= table_size || in_label < 0) {
+            PyErr_SetString(PyExc_KeyError, "parsed an in-label outside the symbol table");
+            return NULL;
+        }
+        if (out_label >= table_size || out_label < 0) {
+            PyErr_SetString(PyExc_KeyError, "parsed an out-label outside the symbol table");
+            return NULL;
+        }
+
+        PyObject *key;
+
+        key = PyLong_FromLong(out_label);
+        PyObject * upper_label = PyObject_GetItem(symbol_table, key);
+        Py_DECREF(key);
+
+        key = PyLong_FromLong(in_label);
+        PyObject * lower_label = PyObject_GetItem(symbol_table, key);
+        assert(lower_label != NULL);
+        Py_DECREF(key);
+
+        if (should_invert) {
+            PyObject* swap = upper_label;
+            upper_label = lower_label;
+            lower_label = swap;
+        }
+
+        arc = (PyObject *) create_arc(&Arc_Type, src, upper_label, lower_label, dest);
+        Py_DECREF(upper_label);
+        Py_DECREF(lower_label);
+    } else {
+        arc = Py_None;
+        Py_INCREF(arc);
+    }
+
+    return PyTuple_Pack(3, PyLong_FromLong(accepting_state), arc, PyLong_FromLong(implied_state));
 }
 
-static PyTypeObject Arc_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "fst_lookup._fst_lookup.Arc",
-    .tp_doc = "An arc (transition) in the FST",
-
-    .tp_basicsize = sizeof(Arc),
-    .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_members = Arc_members,
-
-    .tp_new = (newfunc) Arc_new,
-    .tp_dealloc = (destructor) Arc_dealloc,
-    .tp_richcompare = (richcmpfunc) Arc_richcompare,
-    .tp_hash = (hashfunc) Arc_hash,
-    .tp_str = (reprfunc) Arc_str,
-    .tp_repr = (reprfunc) Arc_repr,
-};
 
 /******************************* Module Init ********************************/
 
