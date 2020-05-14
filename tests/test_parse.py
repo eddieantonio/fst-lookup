@@ -6,10 +6,10 @@ Tests for parsing the text format.
 """
 
 import pytest  # type: ignore
-
+from fst_lookup.data import Arc, StateID
 from fst_lookup.flags import Clear, DisallowFeature, Positive, RequireValue
 from fst_lookup.parse import FSTParseError, parse_flag, parse_text
-from fst_lookup.symbol import Symbol
+from fst_lookup.symbol import Epsilon, Symbol
 
 
 def test_parse_simple(eat_fst_txt: str):
@@ -145,6 +145,35 @@ def test_parse_bad_symbols() -> None:
 """
     with pytest.raises(FSTParseError):
         parse_text(bad_fst)
+
+
+def test_parse_states() -> None:
+    """
+    Ensure we parse all kinds of FST states/arcs.
+    """
+    fst_text = """##foma-net 1.0##
+##props##
+2 390211 90019 390213 5 -1 1 2 2 1 0 2
+##sigma##
+0 @_EPSILON_SYMBOL_@
+##states##
+0 0 0 0
+0 1
+0 0 2
+1 -1 -1 1
+2 0 0 2 1
+-1 -1 -1 -1 -1
+##end##
+"""
+    parse = parse_text(fst_text)
+    s0, s1, s2 = (StateID(i) for i in range(3))
+    assert parse.arcs == {
+        Arc(s0, Epsilon, Epsilon, s0),
+        Arc(s0, Epsilon, Epsilon, s1),
+        Arc(s0, Epsilon, Epsilon, s2),
+        Arc(s2, Epsilon, Epsilon, s2),
+    }
+    assert parse.accepting_states == {1, 2}
 
 
 def stringified_set(symbols):
