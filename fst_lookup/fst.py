@@ -18,8 +18,17 @@ import gzip
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import (Callable, Dict, FrozenSet, Iterable, Iterator, List, Set,
-                    Tuple, Union)
+from typing import (
+    Callable,
+    Dict,
+    FrozenSet,
+    Iterable,
+    Iterator,
+    List,
+    Set,
+    Tuple,
+    Union,
+)
 
 from .data import Arc, StateID
 from .flags import FlagDiacritic
@@ -33,6 +42,8 @@ RawTransduction = Tuple[Symbol, ...]
 SymbolFromArc = Callable[[Arc], Symbol]
 # An analysis is a tuple of strings.
 Analyses = Iterable[Tuple[str, ...]]
+
+VALID_LABEL_SETTINGS = ["normal", "invert"]
 
 
 class OutOfAlphabetError(Exception):
@@ -136,6 +147,11 @@ class FST:
         """
         Parse the FST in the text format (un-gzip'd).
         """
+        if labels not in VALID_LABEL_SETTINGS:
+            raise ValueError(
+                "expected labels to be one of of "
+                f"{VALID_LABEL_SETTINGS!r} but instead got {labels!r}"
+            )
         parse = parse_text(
             att_text, invert_labels=True if labels == "invert" else False
         )
