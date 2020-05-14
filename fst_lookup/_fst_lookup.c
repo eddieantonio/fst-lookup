@@ -30,7 +30,7 @@ typedef struct {
     PyObject_HEAD
 
     PyObject *upper; /* Should be Symbol */
-    PyObject *lower;     /* Should be Symbol */
+    PyObject *lower; /* Should be Symbol */
     unsigned long state;
     unsigned long destination;
 } Arc;
@@ -172,9 +172,12 @@ Arc_hash(Arc *self)
 }
 
 static PyTypeObject Arc_Type = {
+    // clang-format off
     PyVarObject_HEAD_INIT(NULL, 0)
+
     .tp_name = "fst_lookup._fst_lookup.Arc",
     .tp_doc = "An arc (transition) in the FST",
+    // clang-format on
 
     .tp_basicsize = sizeof(Arc),
     .tp_itemsize = 0,
