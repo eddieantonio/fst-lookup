@@ -26,6 +26,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    Union,
 )
 
 from .data import Arc, StateID
@@ -214,10 +215,13 @@ class StateParser:
         while not line.startswith("##"):
             arc_def = parse_arc_definition_line(line)
             num_items = len(arc_def)
+            # We can fetch the next line now...
+            line = next(lines)
+
+            result = None  # type: Union[None, Arc, int]
 
             if arc_def == NO_MORE_ARCS:
                 # Sentinel value: there are no more arcs to define.
-                line = next(lines)
                 continue
 
             if num_items == 2:
@@ -242,7 +246,6 @@ class StateParser:
                     assert in_label == -1 or dest == -1
                     # This is an accepting state
                     accepting_states.add(StateID(src))
-                    line = next(lines)
                     continue
             elif num_items == 5:
                 # FIXME: last is final_state, not weight
@@ -260,8 +263,6 @@ class StateParser:
             # (memory that needs to be deallocated)
             arc = Arc(StateID(src), upper_label, lower_label, StateID(dest))
             arcs.append(arc)
-
-            line = next(lines)
 
         # What's left over here SHOULD be "##end##":
         return line
