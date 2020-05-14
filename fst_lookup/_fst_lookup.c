@@ -115,6 +115,44 @@ static PyObject* Arc_repr(Arc *self, PyObject *args) {
     );
 }
 
+
+static bool Arc_eq_same_type(Arc *this, Arc *that) {
+    if ((this->state == that->state) && (this->destination == that->destination)) {
+        // try fast pointer comparison first...
+        if ((this->upper == that->upper) && (this->lower == that->lower)) {
+            return true;
+        }
+
+        return (PyObject_RichCompare(this->upper, that->upper, Py_EQ) == Py_True) &&
+            (PyObject_RichCompare(this->lower, that->lower, Py_EQ) == Py_True);
+    }
+
+    return false;
+}
+
+static long Arc_eq(Arc *self, PyObject *other) {
+    if (Py_TYPE(self) != Py_TYPE(other)) {
+        return false;
+    }
+
+    return Arc_eq_same_type(self, (Arc *) other);
+}
+
+static PyObject* Arc_richcompare(Arc *self, PyObject *other, int op) {
+    /* Not sure how to order Arcs... */
+    if (!((op == Py_EQ) || (op == Py_NE))) {
+        Py_INCREF(Py_NotImplemented);
+        return Py_NotImplemented;
+    }
+
+    long comparison = Arc_eq(self, other);
+    if (op == Py_NE) {
+        comparison = !comparison;
+    }
+    
+    return PyBool_FromLong(comparison);
+}
+
 Py_hash_t Arc_hash(Arc *self) {
     /*
      * ATTEMPT to spread Arc instances around by basing spreading them
@@ -187,6 +225,7 @@ static PyTypeObject Arc_Type = {
     .tp_new = Arc_new,
     .tp_hash = (hashfunc) Arc_hash,
     .tp_dealloc = (destructor) Arc_dealloc,
+    .tp_richcompare = (richcmpfunc) Arc_richcompare,
 };
 
 /******************************* Module Init ********************************/
