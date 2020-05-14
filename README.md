@@ -151,5 +151,5 @@ compile all pre-built FSTs from source:
 License
 -------
 
-Copyright © 2019 Eddie Antonio Santos. Released under the terms of the
+Copyright © 2019–2020 Eddie Antonio Santos. Released under the terms of the
 Apache license. See `LICENSE` for more info.

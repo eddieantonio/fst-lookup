@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-# Copyright 2019 Eddie Antonio Santos <easantos@ualberta.ca>
+# Copyright 2019–2020 Eddie Antonio Santos <easantos@ualberta.ca>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
