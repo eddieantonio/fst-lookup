@@ -44,8 +44,8 @@ typedef struct {
 
 static PyMemberDef Arc_members[] = {
     {"state", T_ULONG, offsetof(Arc, state), READONLY, "the origin of the arc"},
-    {"upper", T_OBJECT_EX, offsetof(Arc, upper), READONLY, "where the arc transitions to"},
-    {"lower", T_OBJECT_EX, offsetof(Arc, lower), READONLY, "where the arc transitions to"},
+    {"upper", T_OBJECT_EX, offsetof(Arc, upper), READONLY, "upper label"},
+    {"lower", T_OBJECT_EX, offsetof(Arc, lower), READONLY, "lower label"},
     {"destination", T_ULONG, offsetof(Arc, destination), READONLY, "where the arc transitions to"},
     {NULL},
 };
@@ -260,12 +260,11 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args) {
             &arc_def[4]
     );
 
-    bool should_make_arc = false;
+    bool should_make_arc = true;
     long accepting_state = DO_NOT_ACCEPT;
 
     switch (n_parsed) {
     case 2:
-        should_make_arc = true;
         if (implied_state < 0) {
             PyErr_SetString(PyExc_ValueError, "No implied state");
             return NULL;
@@ -277,7 +276,6 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args) {
         break;
 
     case 3:
-        should_make_arc = true;
         if (implied_state < 0) {
             PyErr_SetString(PyExc_ValueError, "No implied state");
             return NULL;
@@ -294,15 +292,15 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args) {
         out_label = in_label;
         dest = arc_def[2];
         if (arc_def[3] > 0) {
+            /* marked as a "final" state */
+            should_make_arc = false;
             accepting_state = src;
             assert(dest < 0);
             assert(in_label < 0);
-            should_make_arc = false;
         }
         break;
 
     case 5:
-        should_make_arc = true;
         src = arc_def[0];
         in_label = arc_def[1];
         out_label = arc_def[2];
@@ -325,28 +323,22 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args) {
 
     PyObject *arc;
     if (should_make_arc) {
-        /* Ensure the symbols can be fetched from the symbol table 
-         * BEFORE we allocate anything!  */
-        Py_ssize_t table_size = PyObject_Size(symbol_table);
-        if (in_label >= table_size || in_label < 0) {
-            PyErr_SetString(PyExc_KeyError, "parsed an in-label outside the symbol table");
-            return NULL;
-        }
-        if (out_label >= table_size || out_label < 0) {
-            PyErr_SetString(PyExc_KeyError, "parsed an out-label outside the symbol table");
-            return NULL;
-        }
-
         PyObject *key;
 
-        key = PyLong_FromLong(out_label);
+        key = PyLong_FromLong(in_label);
         PyObject * upper_label = PyObject_GetItem(symbol_table, key);
         Py_DECREF(key);
+        if (upper_label == NULL) {
+            return NULL;
+        }
 
-        key = PyLong_FromLong(in_label);
+        key = PyLong_FromLong(out_label);
         PyObject * lower_label = PyObject_GetItem(symbol_table, key);
-        assert(lower_label != NULL);
-        Py_DECREF(key);
+        if (lower_label == NULL) {
+            Py_DECREF(key);
+            Py_DECREF(upper_label);
+            return NULL;
+        }
 
         if (should_invert) {
             PyObject* swap = upper_label;
