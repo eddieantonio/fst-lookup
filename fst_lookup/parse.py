@@ -253,7 +253,7 @@ if True:
             # state num, in/out, target, final state
             src, in_label, dest, is_final = arc_def
             if is_final == 1:
-                assert in_label == -1 or dest == -1
+                assert in_label == -1 and dest == -1
             arc_simple = src, in_label, in_label, dest, is_final
         elif num_items == 5:
             arc_simple = arc_def  # type: ignore

@@ -211,6 +211,101 @@ failure:
     return NULL;
 }
 
+enum {
+    DO_NOT_ACCEPT = -1
+};
+
+static PyObject *
+fst_lookup_parse_state_line(PyObject *self, PyObject *args) {
+    const char *line;
+    long implied_state;
+    PyObject *symbol_table;
+    int should_invert;
+    int n_parsed;
+    long arc_def[5];
+    long src, in_label, out_label, dest;
+    PyObject *result;
+    PyObject *arc;
+
+    if (!PyArg_ParseTuple(args, "slOi", &line, &implied_state, &symbol_table, &should_invert))
+        return NULL;
+
+    n_parsed = sscanf(
+            line,
+            "%ld %ld %ld %ld %ld",
+            &arc_def[0],
+            &arc_def[1],
+            &arc_def[2],
+            &arc_def[3],
+            &arc_def[4]
+    );
+
+    bool should_make_arc = false;
+    long accepting_state = DO_NOT_ACCEPT;
+
+    switch (n_parsed) {
+    case 2:
+        should_make_arc = true;
+        if (implied_state < 0) {
+            PyErr_SetString(PyExc_ValueError, "No implied state");
+            return NULL;
+        }
+        src = implied_state;
+        in_label = arc_def[0];
+        out_label = in_label;
+        dest = arc_def[1];
+        break;
+
+    case 3:
+        should_make_arc = true;
+        if (implied_state < 0) {
+            PyErr_SetString(PyExc_ValueError, "No implied state");
+            return NULL;
+        }
+        src = implied_state;
+        in_label = arc_def[0];
+        out_label = arc_def[1];
+        dest = arc_def[2];
+        break;
+
+    case 4:
+        src = arc_def[0];
+        in_label = arc_def[1];
+        out_label = in_label;
+        dest = arc_def[2];
+        if (arc_def[3] > 0) {
+            accepting_state = src;
+            assert(dest < 0);
+            assert(in_label < 0);
+            should_make_arc = false;
+        }
+        break;
+
+    case 5:
+        should_make_arc = true;
+        src = arc_def[0];
+        in_label = arc_def[1];
+        out_label = arc_def[2];
+        dest = arc_def[3];
+        if (arc_def[4] > 0) {
+            accepting_state = src;
+        }
+        break;
+
+    default:
+        PyErr_SetString(PyExc_ValueError, "Invalid arc definition");
+        return NULL;
+    }
+
+    implied_state = src;
+
+#if 0
+    PyObject * lower_label = PyObject_GetItem(symbol_table, PyLong_FromLong(in_label));
+    PyObject * upper_label = PyObject_GetItem(symbol_table, PyLong_FromLong(out_label));
+#endif
+
+    return PyTuple_Pack(3, PyLong_FromLong(accepting_state), Py_None, PyLong_FromLong(implied_state));
+}
 
 static PyTypeObject Arc_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -234,6 +329,7 @@ static PyTypeObject Arc_Type = {
 
 static PyMethodDef FSTLookupMethods[] = {
     {"parse_arc_definition", fst_lookup_parse_arc_definition, METH_VARARGS, parse_arc_definition_doctring},
+    {"parse_state_line", fst_lookup_parse_state_line, METH_VARARGS, NULL},
 
     /* Sentinel */
     {NULL, NULL, 0, NULL}
