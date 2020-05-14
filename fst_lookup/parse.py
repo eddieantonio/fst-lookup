@@ -207,7 +207,7 @@ class StateParser:
         self.arcs = arcs = []  # type: List[Arc]
         self.accepting_states = accepting_states = set()  # type: Set[StateID]
 
-        implied_state = None  # type: Optional[int]
+        implied_state = -1  # type: int
         symbols = self.symbols
 
         line = next(lines)
@@ -221,14 +221,14 @@ class StateParser:
                 continue
 
             if num_items == 2:
-                if implied_state is None:
+                if implied_state < 0:
                     raise ValueError("No implied state")
                 src = implied_state
                 # in/out, target (state num implied)
                 in_label, dest = arc_def
                 out_label = in_label
             elif num_items == 3:
-                if implied_state is None:
+                if implied_state < 0:
                     raise ValueError("No implied state")
                 src = implied_state
                 # in, out, target  (state num implied)
@@ -249,6 +249,7 @@ class StateParser:
                 src, in_label, out_label, dest, _is_final = arc_def
 
             implied_state = src
+            assert implied_state >= 0
             # Super important! make sure the order of these arguments is
             # consistent with the definition of Arc
             upper_label, lower_label = symbols[in_label], symbols[out_label]
