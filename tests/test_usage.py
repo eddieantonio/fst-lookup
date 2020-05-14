@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
+import pytest  # type: ignore
+
 from fst_lookup import FST
 
 
@@ -37,3 +39,13 @@ def test_load_from_file_flipped(shared_datadir):
     }
     # Transduce the other way!
     assert set(fst.generate("eat" "+V" "+Past")) == {"ate"}
+
+
+@pytest.mark.parametrize("labels", [False, True, "inverse", "standard", "", None])
+def test_invalid_invocation(labels, shared_datadir):
+    """
+    Try using an incorrect parameters for labels
+    """
+
+    with pytest.raises(ValueError):
+        FST.from_file(shared_datadir / "eat.fomabin", labels=labels)
