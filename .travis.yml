@@ -17,7 +17,7 @@ after_success:
 - codecov
 deploy:
   provider: script
-  script: poetry publish --build --username=__token__ --password="$PYPI_API_KEY"
+  script: 'poetry build -f sdist && poetry publish --username=__token__ --password="$PYPI_API_KEY"'
   on:
     tags: true
     python: '3.6'
