@@ -208,7 +208,7 @@ class StateParser:
         symbols = self.symbols
 
         line = next(lines)
-        while not line.startswith("##"):
+        while not_a_header_line(line):
             implied_state, arc, accepting_state = parse_state_line(
                 line, implied_state, symbols, self.invert_labels
             )
@@ -286,6 +286,20 @@ except ImportError:
             assert implied_state >= 0
 
         return implied_state, arc, StateID(accepting_state)
+
+
+def not_a_header_line(line: str) -> bool:
+    """
+    Foma files have a bunch of "header" lines that looks like these:
+
+    ##SECTION-TITLE##
+
+    They separate different sections.
+
+    There's a few while-loops that use this condition. This is the correct
+    predicate for these loops.
+    """
+    return not line.startswith("##")
 
 
 class FomaParser:
@@ -378,7 +392,7 @@ class FomaParser:
         Adds a new entry to the symbol table.
         """
         line = next(lines)
-        while not line.startswith("##"):
+        while not_a_header_line(line):
             idx_str, _space, symbol_text = line.partition("\N{SPACE}")
             idx = int(idx_str)
             self.symbols.add(idx, parse_symbol(symbol_text))
