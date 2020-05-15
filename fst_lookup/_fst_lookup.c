@@ -218,17 +218,28 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args)
 {
     enum { DO_NOT_ACCEPT = -1 };
 
+    PyObject *arc = NULL;
+    PyObject *key = NULL;
+    PyObject *lower_label = NULL;
+    PyObject *ret = NULL;
+    PyObject *symbol_table = NULL;
+    PyObject *upper_label = NULL;
+
     const char *line;
     long implied_state;
-    PyObject *symbol_table;
     int should_invert;
     int n_parsed;
     long arc_def[5];
     long src, in_label, out_label, dest;
-    PyObject *result;
 
-    if (!PyArg_ParseTuple(args, "slOi", &line, &implied_state, &symbol_table, &should_invert))
-        return NULL;
+    if (!PyArg_ParseTuple(args, "slOi", &line, &implied_state, &symbol_table,
+                          &should_invert)) {
+        goto except;
+    }
+
+    if (symbol_table) {
+        Py_INCREF(symbol_table);
+    }
 
     n_parsed = sscanf(line, "%ld %ld %ld %ld %ld", &arc_def[0], &arc_def[1], &arc_def[2],
                       &arc_def[3], &arc_def[4]);
@@ -240,7 +251,7 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args)
         case 2:
             if (implied_state < 0) {
                 PyErr_SetString(PyExc_ValueError, "No implied state");
-                return NULL;
+                goto except;
             }
             src = implied_state;
             in_label = arc_def[0];
@@ -251,7 +262,7 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args)
         case 3:
             if (implied_state < 0) {
                 PyErr_SetString(PyExc_ValueError, "No implied state");
-                return NULL;
+                goto except;
             }
             src = implied_state;
             in_label = arc_def[0];
@@ -285,32 +296,27 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args)
 
         default:
             PyErr_SetString(PyExc_ValueError, "Invalid arc definition");
-            return NULL;
+            goto except;
     }
 
-    implied_state = src;
-
+    // when the arc points to an invalid arc, that automatically means
+    // it defines an accepting state, and not an actual arc.
     if (dest < 0) {
         should_make_arc = false;
     }
 
-    PyObject *arc;
     if (should_make_arc) {
-        PyObject *key;
-
         key = PyLong_FromLong(in_label);
-        PyObject *upper_label = PyObject_GetItem(symbol_table, key);
-        Py_DECREF(key);
+        upper_label = PyObject_GetItem(symbol_table, key);
         if (upper_label == NULL) {
-            return NULL;
+            goto except;
         }
 
+        Py_DECREF(key);
         key = PyLong_FromLong(out_label);
-        PyObject *lower_label = PyObject_GetItem(symbol_table, key);
+        lower_label = PyObject_GetItem(symbol_table, key);
         if (lower_label == NULL) {
-            Py_DECREF(key);
-            Py_DECREF(upper_label);
-            return NULL;
+            goto except;
         }
 
         if (should_invert) {
@@ -320,16 +326,28 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args)
         }
 
         arc = (PyObject *)create_arc(&Arc_Type, src, upper_label, lower_label, dest);
-        Py_DECREF(upper_label);
-        Py_DECREF(lower_label);
     }
     else {
         arc = Py_None;
         Py_INCREF(arc);
     }
 
-    return PyTuple_Pack(3, PyLong_FromLong(implied_state), arc,
-                        PyLong_FromLong(accepting_state));
+    ret =
+        PyTuple_Pack(3, PyLong_FromLong(src), arc, PyLong_FromLong(accepting_state));
+    goto finally;
+
+except:
+    Py_XDECREF(ret);
+    ret = NULL;
+
+finally:
+    Py_XDECREF(arc);
+    Py_XDECREF(key);
+    Py_XDECREF(lower_label);
+    Py_XDECREF(symbol_table);
+    Py_XDECREF(upper_label);
+
+    return ret;
 }
 
 /******************************* Module Init ********************************/
