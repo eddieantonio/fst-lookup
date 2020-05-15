@@ -2,6 +2,7 @@ from typing import Mapping, Tuple, Optional
 from .typedefs import StateID
 from .symbol import Symbol
 
+def not_a_header_line(line: str) -> bool: ...
 def parse_state_line(line: str, implied_state: int, symbols: Mapping[int, Symbol], invert_labels: bool) -> Tuple[int, Optional[Arc], StateID]: ...
 
 class Arc:

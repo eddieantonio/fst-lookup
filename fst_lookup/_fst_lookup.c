@@ -350,10 +350,46 @@ finally:
     return ret;
 }
 
+static PyObject *
+fst_lookup_not_a_header_line(PyObject* _module, PyObject *line) {
+    const Py_UCS4 HASH = '#';
+
+    PyObject *ret = NULL;
+
+    assert(line);
+    Py_INCREF(line);
+
+    if (!PyUnicode_CheckExact(line)) {
+        PyErr_SetString(PyExc_ValueError, "expected str arg");
+        goto except;
+    }
+
+    if ((PyUnicode_GET_LENGTH(line) < 1) || (PyUnicode_READ_CHAR(line, 0) != HASH)) {
+        ret = Py_True;
+        Py_INCREF(ret);
+        goto finally;
+    }
+
+    /* The line starts with a #, which means it's a header! */
+    assert(PyUnicode_READ_CHAR(line, 0) == HASH);
+    ret = Py_False;
+    Py_INCREF(ret);
+    goto finally;
+
+except:
+    Py_XDECREF(ret);
+    ret = NULL;
+
+finally:
+    Py_DECREF(line);
+    return ret;
+}
+
 /******************************* Module Init ********************************/
 
 static PyMethodDef FSTLookupMethods[] = {
     {"parse_state_line", fst_lookup_parse_state_line, METH_VARARGS, NULL},
+    {"not_a_header_line", fst_lookup_not_a_header_line, METH_O, NULL},
 
     /* Sentinel */
     {NULL, NULL, 0, NULL}};

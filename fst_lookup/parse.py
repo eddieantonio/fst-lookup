@@ -288,18 +288,24 @@ except ImportError:
         return implied_state, arc, StateID(accepting_state)
 
 
-def not_a_header_line(line: str) -> bool:
-    """
-    Foma files have a bunch of "header" lines that looks like these:
+try:
+    from ._fst_lookup import not_a_header_line
 
-    ##SECTION-TITLE##
+except ImportError:
+    # Fallback implementation:
 
-    They separate different sections.
+    def not_a_header_line(line: str) -> bool:
+        """
+        Foma files have a bunch of "header" lines that looks like these:
 
-    There's a few while-loops that use this condition. This is the correct
-    predicate for these loops.
-    """
-    return not line.startswith("##")
+        ##SECTION-TITLE##
+
+        They separate different sections.
+
+        There's a few while-loops that use this condition. This is the correct
+        predicate for these loops.
+        """
+        return not line.startswith("##")
 
 
 class FomaParser:
