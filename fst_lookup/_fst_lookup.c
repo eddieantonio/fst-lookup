@@ -114,17 +114,36 @@ Arc_repr(Arc *self, PyObject *args)
 static bool
 Arc_eq_same_type(Arc *this, Arc *that)
 {
+    PyObject *cmp = NULL;
+    bool ret = false;
+
     if ((this->state == that->state) && (this->destination == that->destination)) {
         // try fast pointer comparison first...
         if ((this->upper == that->upper) && (this->lower == that->lower)) {
-            return true;
+            ret = true;
+            goto finally;
         }
 
-        return (PyObject_RichCompare(this->upper, that->upper, Py_EQ) == Py_True) &&
-               (PyObject_RichCompare(this->lower, that->lower, Py_EQ) == Py_True);
+        cmp = PyObject_RichCompare(this->upper, that->upper, Py_EQ);
+        if (cmp != Py_True) {
+            ret = false;
+            goto finally;
+        }
+
+        Py_XDECREF(cmp);
+        cmp = PyObject_RichCompare(this->upper, that->upper, Py_EQ);
+        if (cmp != Py_True) {
+            ret = false;
+            goto finally;
+        }
+
+        ret = true;
+        goto finally;
     }
 
-    return false;
+finally:
+    Py_XDECREF(cmp);
+    return ret;
 }
 
 static long
