@@ -150,80 +150,6 @@ class FSTParse(
         return self.symbols.has_epsilon
 
 
-class StateParser:
-    """
-    By far, the slowest part of parsing is parsing the transition table.
-    It just tends to be really big!
-
-    Ideas on how to make it faster:
-
-     - reimplement the transition table in C using the following data
-       structures::
-
-            typedef PyObject Symbol;
-
-            typedef struct {
-                PyObject_HEAD
-                long st_id;
-            } StateID;
-
-            struct transition_t {
-                long from;
-                Symbol *upper;
-                Symbol *lower;
-                long to;
-            };
-
-            /* Pre-allocate all of the states. */
-            StateID* states[n_states];
-
-            /* Pre-allocate the list of all accepting states */
-            StateID* accepting_states[n_accepting];
-
-            /* Pre-allocate all of the transitions */
-            struct transition_t transitions[n_arcs];
-
-     - make a class in C that fishes out Arcs using the transition table upon
-       using __getitem__
-
-    Then create an iterator that returns the accepting states.
-    """
-
-    def __init__(self, symbols: SymbolTable, should_invert_labels: bool):
-        self.symbols = symbols
-        self.invert_labels = should_invert_labels
-
-    def parse(self, lines: Iterator[str]) -> str:
-        """
-        Either:
-          - appends an arc to the list;
-          - adds an accepting state; or
-          - finds the sentinel value
-        """
-
-        self.arcs = arcs = []  # type: List[Arc]
-        self.accepting_states = accepting_states = set()  # type: Set[StateID]
-
-        implied_state = -1  # type: int
-        symbols = self.symbols
-
-        line = next(lines)
-        while not_a_header_line(line):
-            implied_state, arc, accepting_state = parse_state_line(
-                line, implied_state, symbols, self.invert_labels
-            )
-
-            if arc is not None:
-                arcs.append(arc)
-            if accepting_state >= 0:
-                accepting_states.add(accepting_state)
-
-            line = next(lines)
-
-        # What's left over here SHOULD be "##end##":
-        return line
-
-
 try:
     from ._fst_lookup import parse_state_line
 
@@ -306,6 +232,90 @@ except ImportError:
         predicate for these loops.
         """
         return not line.startswith("##")
+
+
+class StateParser:
+    """
+    By far, the slowest part of parsing is parsing the transition table.
+    It just tends to be really big!
+
+    Ideas on how to make it faster:
+
+     - reimplement the transition table in C using the following data
+       structures::
+
+            typedef PyObject Symbol;
+
+            typedef struct {
+                PyObject_HEAD
+                long st_id;
+            } StateID;
+
+            struct transition_t {
+                long from;
+                Symbol *upper;
+                Symbol *lower;
+                long to;
+            };
+
+            /* Pre-allocate all of the states. */
+            StateID* states[n_states];
+
+            /* Pre-allocate the list of all accepting states */
+            StateID* accepting_states[n_accepting];
+
+            /* Pre-allocate all of the transitions */
+            struct transition_t transitions[n_arcs];
+
+     - make a class in C that fishes out Arcs using the transition table upon
+       using __getitem__
+
+    Then create an iterator that returns the accepting states.
+    """
+
+    def __init__(self, symbols: SymbolTable, should_invert_labels: bool):
+        self.symbols = symbols
+        self.invert_labels = should_invert_labels
+
+    def parse(
+        self,
+        lines: Iterator[str],
+        # Dumb hack to make these faster-to-access locals,
+        # rather than globals
+        parse_state_line_=parse_state_line,
+        not_a_header_line_=not_a_header_line,
+    ) -> str:
+        """
+        Either:
+          - appends an arc to the list;
+          - adds an accepting state; or
+          - finds the sentinel value
+        """
+
+        self.arcs = []  # type: List[Arc]
+        self.accepting_states = accepting_states = set()  # type: Set[StateID]
+
+        implied_state = -1  # type: int
+        # More dumb hacks to make these locals, rather than attribute accesses.
+        symbols = self.symbols
+        invert_labels = self.invert_labels
+        append = self.arcs.append
+
+        line = next(lines)
+        while not_a_header_line_(line):
+            implied_state, arc, accepting_state = parse_state_line_(
+                line, implied_state, symbols, invert_labels
+            )
+
+            if arc is not None:
+                append(arc)
+            if accepting_state >= 0:
+                accepting_states.add(accepting_state)
+
+            line = next(lines)
+
+        # What's left over here SHOULD be "##end##":
+        return line
 
 
 class FomaParser:
