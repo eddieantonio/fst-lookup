@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
+"""
+Controls the building of the C extension model.
+"""
+
 import os
 import sysconfig
 from ast import literal_eval
@@ -17,6 +21,7 @@ else:
 
 # Should we turn on debugging?
 DEBUG = literal_eval(os.environ.get("FST_LOOKUP_DEBUG", "False"))
+SHOULD_BUILD_EXTENSION = literal_eval(os.environ.get("FST_LOOKUP_BUILD_EXT", "True"))
 
 # Get compiler flags from the current Python version:
 extra_compile_args = sysconfig.get_config_vars("CFLAGS")
@@ -39,4 +44,5 @@ def build(setup_kwargs):
     """
     Setup to build a C extension.
     """
-    setup_kwargs.update({"ext_modules": extensions})
+    if SHOULD_BUILD_EXTENSION:
+        setup_kwargs.update({"ext_modules": extensions})
