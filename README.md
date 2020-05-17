@@ -130,6 +130,27 @@ To run this project's tests, we use `py.test`:
 
     poetry run pytest
 
+### C Extension
+
+Building the C extension is handled in `build.py`
+
+To disable building the C extension, add the following line to `.env`:
+
+```sh
+export FST_LOOKUP_BUILD_EXT=False
+```
+
+(by default, this is `True`).
+
+To enable debugging flags while working on the C extension, add the
+following line to `.env`:
+
+```sh
+export FST_LOOKUP_DEBUG=TRUE
+```
+
+(by default, this is `False`).
+
 
 ### Fixtures
 
@@ -150,6 +171,6 @@ compile all pre-built FSTs from source:
 
 License
 -------
-
+FST
 Copyright © 2019–2020 Eddie Antonio Santos. Released under the terms of the
 Apache license. See `LICENSE` for more info.
