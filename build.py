@@ -24,7 +24,7 @@ DEBUG = literal_eval(os.environ.get("FST_LOOKUP_DEBUG", "False"))
 SHOULD_BUILD_EXTENSION = literal_eval(os.environ.get("FST_LOOKUP_BUILD_EXT", "True"))
 
 # Get compiler flags from the current Python version:
-extra_compile_args = sysconfig.get_config_vars("CFLAGS")
+extra_compile_args = (sysconfig.get_config_var("CFLAGS") or "").split()
 extra_compile_args += ["-std=c99", "-Wall", "-Wextra"]
 
 if DEBUG:
