@@ -41,6 +41,8 @@ static PyMemberDef Arc_members[] = {
     {"lower", T_OBJECT_EX, offsetof(Arc, lower), READONLY, "lower label"},
     {"destination", T_ULONG, offsetof(Arc, destination), READONLY,
      "where the arc transitions to"},
+
+    /* Sentinel */
     {NULL, 0, 0, 0, NULL},
 };
 
@@ -396,7 +398,8 @@ static PyMethodDef FSTLookupMethods[] = {
     {"not_a_header_line", fst_lookup_not_a_header_line, METH_O, NULL},
 
     /* Sentinel */
-    {NULL, NULL, 0, NULL}};
+    {NULL, NULL, 0, NULL},
+};
 
 static struct PyModuleDef fst_lookup_module = {
     PyModuleDef_HEAD_INIT,
