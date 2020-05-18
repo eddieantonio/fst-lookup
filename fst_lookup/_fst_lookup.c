@@ -166,6 +166,10 @@ Arc_richcompare(Arc *self, PyObject *other, int op)
     }
 
     long comparison = Arc_eq(self, other);
+    if (PyErr_Occurred()) {
+        return NULL;
+    }
+
     if (op == Py_NE) {
         comparison = !comparison;
     }
