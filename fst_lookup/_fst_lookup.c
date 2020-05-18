@@ -41,7 +41,7 @@ static PyMemberDef Arc_members[] = {
     {"lower", T_OBJECT_EX, offsetof(Arc, lower), READONLY, "lower label"},
     {"destination", T_ULONG, offsetof(Arc, destination), READONLY,
      "where the arc transitions to"},
-    {NULL},
+    {NULL, 0, 0, 0, NULL},
 };
 
 /******************************* Arc methods ********************************/
@@ -92,7 +92,7 @@ Arc_dealloc(Arc *self)
 }
 
 static PyObject *
-Arc_str(Arc *self, PyObject *args)
+Arc_str(Arc *self, __attribute__((unused)) PyObject *args)
 {
     if (self->upper == self->lower) {
         return PyUnicode_FromFormat("%lu -%S-> %lu", self->state, self->upper,
@@ -105,7 +105,7 @@ Arc_str(Arc *self, PyObject *args)
 }
 
 static PyObject *
-Arc_repr(Arc *self, PyObject *args)
+Arc_repr(Arc *self, __attribute__((unused)) PyObject *args)
 {
     return PyUnicode_FromFormat("Arc(%lu, %R, %R, %lu)", self->state, self->upper, self->lower,
                                 self->destination);
@@ -214,7 +214,7 @@ static PyTypeObject Arc_Type = {
 /***************************** Exported methods *****************************/
 
 static PyObject *
-fst_lookup_parse_state_line(PyObject *self, PyObject *args)
+fst_lookup_parse_state_line(__attribute__((unused)) PyObject *self, PyObject *args)
 {
     enum { DO_NOT_ACCEPT = -1 };
 
@@ -332,8 +332,7 @@ fst_lookup_parse_state_line(PyObject *self, PyObject *args)
         Py_INCREF(arc);
     }
 
-    ret =
-        PyTuple_Pack(3, PyLong_FromLong(src), arc, PyLong_FromLong(accepting_state));
+    ret = PyTuple_Pack(3, PyLong_FromLong(src), arc, PyLong_FromLong(accepting_state));
     goto finally;
 
 except:
@@ -351,7 +350,8 @@ finally:
 }
 
 static PyObject *
-fst_lookup_not_a_header_line(PyObject* _module, PyObject *line) {
+fst_lookup_not_a_header_line(__attribute__((unused)) PyObject *module, PyObject *line)
+{
     const Py_UCS4 HASH = '#';
 
     PyObject *ret = NULL;
