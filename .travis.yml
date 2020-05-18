@@ -21,6 +21,7 @@ deploy:
   on:
     tags: true
     python: '3.6'
+    condition: $FST_LOOKUP_BUILD_EXT = False
 
 env:
   global:
