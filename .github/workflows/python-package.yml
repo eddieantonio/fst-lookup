@@ -19,21 +19,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install Poetry for Python ${{ matrix.python-version }}
-      uses: abatilo/actions-poetry@v1.5.0
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
       with:
-        python_version: ${{ matrix.python-version }}
-        poetry_version: 1.0.5
-        args: install
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry
+        poetry install -vv
     - name: Check types with mypy
-      uses: abatilo/actions-poetry@v1.5.0
-      with:
-        python_version: ${{ matrix.python-version }}
-        poetry_version: 1.0.5
-        args: mypy
+      run: |
+        poetry run mypy fst_lookup
     - name: Test with pytest
-      uses: abatilo/actions-poetry@v1.5.0
-      with:
-        python_version: ${{ matrix.python-version }}
-        poetry_version: 1.0.5
-        args: pytest 
+      run: |
+        poetry run pytest
