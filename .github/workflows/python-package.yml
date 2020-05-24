@@ -35,5 +35,7 @@ jobs:
       run: |
         poetry run pytest
     - name: Upload coverage
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       run: |
         poetry run codecov
