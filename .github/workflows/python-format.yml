@@ -11,17 +11,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [3.6]
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.6
     - name: Install linters
       run: |
         python -m pip install --upgrade pip
@@ -38,6 +34,6 @@ jobs:
       with:
         commit_author_email: easantos@ualberta.ca
         commit_author_name: Eddie Antonio Santos
-        commit_message: "[bot] apply black and isort"
+        commit_message: "auto: apply black and isort"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
