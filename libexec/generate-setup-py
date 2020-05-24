@@ -15,7 +15,7 @@ rm -rf dist/
 ed -s <<'EOF'
 e setup.py
 /long_description/a
-long_description_content_type='text/markdown',
+    'long_description_content_type': 'text/markdown',
 .
 w
 q
