@@ -1,0 +1,22 @@
+#!/bin/sh
+# -*- coding: UTF-8 -*-
+
+# This terrible script forces Poetry to generate a setup.py
+
+set -ex
+
+rm -rf dist/
+poetry build --format=sdist
+tar xzf dist/*.tar.gz
+mv fst-lookup-*/setup.py .
+rm -rf dist/
+
+# Now let's add the correct
+ed -s <<'EOF'
+e setup.py
+/long_description/a
+long_description_content_type='text/markdown',
+.
+w
+q
+EOF
