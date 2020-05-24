@@ -17,6 +17,7 @@
 import gzip
 import re
 from collections import defaultdict
+from os import PathLike
 from pathlib import Path
 from typing import (
     Callable,
@@ -36,7 +37,6 @@ from .parse import FSTParse, parse_text
 from .symbol import Epsilon, Grapheme, MultiCharacterSymbol, Symbol
 
 # Type aliases
-PathLike = Union[str, Path]  # similar to Python 3.6's os.PathLike
 RawTransduction = Tuple[Symbol, ...]
 # Gets a Symbol from an arc. func(arc: Arc) -> Symbol
 SymbolFromArc = Callable[[Arc], Symbol]
