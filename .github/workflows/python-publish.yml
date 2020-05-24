@@ -5,7 +5,7 @@ on:
     types: [created]
 
 jobs:
-  deploy:
+  publish:
 
     runs-on: ubuntu-latest
 
@@ -24,10 +24,11 @@ jobs:
       run: |
         poetry build --format=sdist
         tar xzf dist/*.tar.gz
-        mv fst_lookup-*/setup.py .
+        mv fst-lookup-*/setup.py .
+        rm -rf dist/
     - name: Build and publish
       env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
         python setup.py sdist bdist_wheel
