@@ -6,8 +6,8 @@ on:
      - 'v*'
 
 jobs:
-  publish:
-
+  # This one uses poetry.
+  publish-sdist:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,14 +20,76 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install poetry
-        pip install setuptools twine wheel
     - name: Coerce poetry into creating a setup.py
       run: |
-        ./libexec/generate-setup-py
+        make setup.py
+    - name: Upload setup.py for use in other actions
+      uses: actions/upload-artifact@v2
+      with:
+        path: setup.py
+    - name: Publish sdist
+      run: |
+        poetry publish
+
+  # This one does NOT use Poetry, but works on other platforms
+  publish-bdist:
+    needs: publish-sdist
+
+    run-on: [macos-latest, windows-latest]
+
+    strategy:
+      matrix:
+        python-version:
+          - 3.6
+          - 3.7
+          - 3.8
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies and setup repo
+      run: |
+        python -m pip install --upgrade pip
+        pip install setuptools twine wheel
+        # There is a line here that requires Poetry be installed,
+        # but we don't actually need it at all.
+        # It's easiest just to delete it.
+        rm -f pyproject.toml
+    - uses: actions/download-artifact@v2
+      with:
+        name: setup.py
     - name: Build and publish
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        python setup.py sdist
-        twine upload dist/*
+        python3 setup.py bdist_wheel
+        twine upload dist/
+
+  publish-bdist-manylinux:
+    needs: publish-sdist
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+         python-version: 3.x
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install twine
+        rm -f pyproject.toml
+    - name: Build manylinux Python wheels
+      uses: RalfG/python-wheels-manylinux-build@v0.2.2-manylinux2010_x86_64
+      with:
+        python-versions: 'cp36-cp36m cp37-cp37m cp38-cp38'
+    - name: Publish wheels tp PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        twine upload wheelhouse/*-manylinux*.whl
