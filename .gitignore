@@ -2,10 +2,13 @@
 *.egg-info/
 build/
 dist/
+# While using Poetry, this is a GENERATED file!
+/setup.py
 
 # Cache files.
 __pycache__/
 .pytest_cache/
+.hypothesis
 
 # FSTs I happen to have lying around.
 /*.foma
@@ -30,4 +33,3 @@ pip-wheel-metadata
 
 # Local .vimrc
 .vimrc
-.hypothesis
