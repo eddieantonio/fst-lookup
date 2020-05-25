@@ -4,7 +4,7 @@ all:
 	@false
 
 #: release - push a new release to GitHub
-release: fst_lookup/__version__.py
+release: sync-version
 	version="v$(shell poetry run python3 libexec/print-version.py)" && \
 		git commit -a -m "$$version" &&\
 		git tag "$$version"
@@ -13,6 +13,10 @@ release: fst_lookup/__version__.py
 
 #: sync-version - keep package version in sync with pyproject.toml
 sync-version: fst_lookup/__version__.py
+
+#: clean - remove build artifacts
+clean:
+	$(RM) -r setup.py build dist $(wildcard *.egg-info)
 
 fst_lookup/__version__.py: pyproject.toml
 	poetry run python3 libexec/update-version.py
