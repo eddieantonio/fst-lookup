@@ -35,45 +35,6 @@ jobs:
         poetry build --format=sdist
         poetry publish --username=__token__ --password="$PYPI_PASSWORD"
 
-  # This one does NOT use Poetry, but works on other platforms
-  publish-bdist:
-    needs: publish-sdist
-
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        # TODO: support windows
-        os: [macos-latest]
-        python-version:
-          - 3.6
-          - 3.7
-          - 3.8
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies and setup repo
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools twine wheel
-        # There is a line here that requires Poetry be installed,
-        # but we don't actually need it at all.
-        # It's easiest just to delete it.
-        rm -f pyproject.toml
-    - uses: actions/download-artifact@v2
-      with:
-        name: setup.py
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        python3 setup.py sdist bdist_wheel
-        twine upload dist/*.whl
-
   publish-bdist-manylinux:
     needs: publish-sdist
 
