@@ -70,8 +70,8 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        python3 setup.py bdist_wheel
-        twine upload dist/
+        python3 setup.py sdist bdist_wheel
+        twine upload dist/*.whl
 
   publish-bdist-manylinux:
     needs: publish-sdist
@@ -89,6 +89,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install twine
         rm -f pyproject.toml
+    - uses: actions/download-artifact@v2
+      with:
+        name: setup.py
     - name: Build manylinux Python wheels
       uses: RalfG/python-wheels-manylinux-build@v0.2.2-manylinux2010_x86_64
       with:
