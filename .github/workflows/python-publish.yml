@@ -42,7 +42,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest]
+        # TODO: support windows
+        os: [macos-latest]
         python-version:
           - 3.6
           - 3.7
