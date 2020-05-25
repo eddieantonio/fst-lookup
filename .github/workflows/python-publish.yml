@@ -28,8 +28,11 @@ jobs:
       with:
         path: setup.py
     - name: Publish sdist
+      env:
+        PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
-        poetry publish
+        poetry build --format=sdist
+        poetry publish --username=__token__ --password="$PYPI_PASSWORD"
 
   # This one does NOT use Poetry, but works on other platforms
   publish-bdist:
