@@ -16,9 +16,15 @@ sync-version: fst_lookup/__version__.py
 
 #: clean - remove build artifacts
 clean:
-	$(RM) -r setup.py build dist $(wildcard *.egg-info)
+	$(RM) -r setup.py build dist $(wildcard *.egg-info) $(wildcard fst-lookup-*/)
+
+
+############################## SPECIFIC TARGETS ##############################
 
 fst_lookup/__version__.py: pyproject.toml
 	poetry run python3 libexec/update-version.py
+
+setup.py: pyproject.toml
+	./libexec/generate-setup-py
 
 .PHONY: all release sync-version new-version
