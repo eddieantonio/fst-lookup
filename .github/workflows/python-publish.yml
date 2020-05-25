@@ -26,6 +26,7 @@ jobs:
     - name: Upload setup.py for use in other actions
       uses: actions/upload-artifact@v2
       with:
+        name: setup.py
         path: setup.py
     - name: Publish sdist
       env:
@@ -38,14 +39,15 @@ jobs:
   publish-bdist:
     needs: publish-sdist
 
-    runs-on: [macos-latest, windows-latest]
-
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [macos-latest, windows-latest
         python-version:
           - 3.6
           - 3.7
           - 3.8
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -77,8 +79,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/checkout@v2
     - name: Set up Python
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
          python-version: 3.x
     - name: Install dependencies
