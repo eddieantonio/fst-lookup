@@ -35,7 +35,7 @@ jobs:
   publish-bdist:
     needs: publish-sdist
 
-    run-on: [macos-latest, windows-latest]
+    runs-on: [macos-latest, windows-latest]
 
     strategy:
       matrix:
