@@ -27,4 +27,9 @@ fst_lookup/__version__.py: pyproject.toml
 setup.py: pyproject.toml
 	./libexec/generate-setup-py
 
+# This AWFUL command uses compiledb (https://github.com/nickdiego/compiledb)
+# to automatically generate compile_commands.json
+compile_commands.json: setup.py
+	python3 setup.py build_ext --force | grep -E '^(clang|gcc)' | compiledb
+
 .PHONY: all release sync-version new-version

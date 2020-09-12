@@ -33,3 +33,6 @@ pip-wheel-metadata
 
 # Local .vimrc
 .vimrc
+
+# JSON compilation database (useful for vim-ale)
+compile_commands.json
