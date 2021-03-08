@@ -447,7 +447,7 @@ def parse_symbol(symbol: str) -> Symbol:
         return Unknown
     elif symbol == "@_IDENTITY_SYMBOL_@":
         return Identity
-    elif symbol.startswith("@") and symbol.endswith("@"):
+    elif len(symbol) > 1 and symbol.startswith("@") and symbol.endswith("@"):
         raise NotImplementedError
     elif len(symbol) > 1:
         return MultiCharacterSymbol(symbol)
