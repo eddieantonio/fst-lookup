@@ -2,7 +2,7 @@
 name = "fst-lookup"
 version = "2021.4.16"
 description = "Lookup Foma FSTs"
-authors = ["Eddie Antonio Santos <easantos@ualberta.ca>"]
+authors = ["Eddie Antonio Santos <Eddie.Santos@nrc-cnrc.gc.ca>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/eddieantonio/fst-lookup"
