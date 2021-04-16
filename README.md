@@ -171,6 +171,7 @@ compile all pre-built FSTs from source:
 
 License
 -------
-FST
-Copyright © 2019–2020 Eddie Antonio Santos. Released under the terms of the
-Apache license. See `LICENSE` for more info.
+
+Copyright © 2019–2021 National Research Council Canada.
+
+Licensed under the MIT license.
