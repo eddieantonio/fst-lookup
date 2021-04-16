@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Fallback data types, implemented in Python, for platforms that cannot build
 the C extension.
