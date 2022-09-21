@@ -26,9 +26,6 @@ jobs:
     - name: Format with Black
       run: |
         black .
-    - name: Sort dependencies with isort
-      run: |
-        isort --apply
     - name: Auto Commit changed files
       uses: stefanzweifel/git-auto-commit-action@v2.0.0
       with:
