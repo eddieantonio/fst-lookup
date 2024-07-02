@@ -2,7 +2,7 @@
 Defines the flag diacritics base class, as well as all subclasses.
 """
 
-from typing import Dict
+from typing import Dict, Optional
 
 from .symbol import Symbol
 
@@ -54,7 +54,7 @@ class FlagDiacritic(Symbol):
 class FlagDiacriticWithValue(FlagDiacritic):
     __slots__ = ("value",)
 
-    def __init__(self, feature: str, value: str = None) -> None:
+    def __init__(self, feature: str, value: Optional[str] = None) -> None:
         super().__init__(feature)
         if value is not None:
             self.value = value
