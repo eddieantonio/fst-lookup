@@ -8,8 +8,9 @@ Controls the building of the C extension model.
 import os
 import sysconfig
 from ast import literal_eval
-from distutils.command.build_ext import build_ext  # type: ignore
-from distutils.core import Extension
+
+from setuptools import Extension  # type: ignore
+from setuptools.command.build_ext import build_ext  # type: ignore
 
 try:
     from dotenv import load_dotenv  # type: ignore
