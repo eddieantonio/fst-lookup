@@ -13,21 +13,22 @@ classifiers = [
 build = "build.py"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.8"
 
 [tool.poetry.dev-dependencies]
-mypy = "^0.812"
 pytest = "^5.3.5"
 pytest-datadir = "^1.3.1"
-black = "^19.10b0"
 isort = "^4.3.21"
 pytest-cov = "^2.8.1"
-codecov = "^2.0.15"
 hypothesis = "^5.14.0"
 python-dotenv = "^0.13.0"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/eddieantonio/fst-lookup/issues"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+mypy = "^1.10.1"
 
 [build-system]
 requires = ["poetry>=0.12"]
