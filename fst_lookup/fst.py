@@ -167,8 +167,8 @@ class FST:
 
         current_lemma = ""
         for symbol in transduction:
-            if symbol is Epsilon:
-                # Skip epsilons
+            if symbol is Epsilon or symbol.is_flag_diacritic:
+                # Skip epsilons and flag diacritics
                 continue
             elif isinstance(symbol, MultiCharacterSymbol):
                 # We've seen a previous sequence of graphemes.
@@ -247,9 +247,6 @@ class Transducer(Iterable[RawTransduction]):
                     flag.apply(next_flags)  # type: ignore
                     # Transduce WITHOUT consuming input OR emitting output
                     # label (output should be the flag again).
-                    assert input_label == self.get_output_label(
-                        arc
-                    ), "Arc does not have flags on both labels " + repr(arc)
                     yield from self._accept(
                         arc.destination, transduction, flag_stack + [next_flags]
                     )

@@ -29,5 +29,5 @@ def test_gh021_mismatched_flag_diacritic():
     fst = FST.from_text(FST_SOURCE)
     # The only acceptable string:
     output, = fst.analyze("a")
-    # The graphic output of the flag diacritic should be an empty string:
-    assert output == ""
+    # The graphic output of the flag diacritic should a single, emtpy transduction.
+    assert output == ()
