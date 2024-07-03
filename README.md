@@ -1,7 +1,7 @@
 FST Lookup
 ==========
 
-![Python test package](https://github.com/eddieantonio/fst-lookup/workflows/Python%20test%20package/badge.svg)
+[![Tests](https://github.com/eddieantonio/fst-lookup/actions/workflows/python-package.yml/badge.svg)](https://github.com/eddieantonio/fst-lookup/actions/workflows/python-package.yml)
 [![codecov](https://codecov.io/gh/eddieantonio/fst-lookup/branch/master/graph/badge.svg)](https://codecov.io/gh/eddieantonio/fst-lookup)
 [![PyPI version](https://img.shields.io/pypi/v/fst-lookup.svg)](https://pypi.org/project/fst-lookup/)
 [![calver YYYY.MM.DD](https://img.shields.io/badge/calver-YYYY.MM.DD-22bfda.svg)](http://calver.org/)
