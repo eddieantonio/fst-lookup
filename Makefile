@@ -24,9 +24,6 @@ clean:
 fst_lookup/__version__.py: pyproject.toml
 	poetry run python3 libexec/update-version.py
 
-setup.py: pyproject.toml
-	./libexec/generate-setup-py
-
 # This AWFUL command uses compiledb (https://github.com/nickdiego/compiledb)
 # to automatically generate compile_commands.json
 compile_commands.json: setup.py
