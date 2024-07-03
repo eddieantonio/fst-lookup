@@ -23,7 +23,7 @@ class Arc:
         self._destination = destination
 
     @property
-    def state(self) -> int:
+    def state(self) -> StateID:
         return self._state
 
     @property
@@ -35,7 +35,7 @@ class Arc:
         return self._lower
 
     @property
-    def destination(self) -> int:
+    def destination(self) -> StateID:
         return self._destination
 
     def __eq__(self, other) -> bool:

@@ -1,8 +1,7 @@
 import gzip
+import os
 import re
 from collections import defaultdict
-from os import PathLike
-from pathlib import Path
 from typing import (
     Callable,
     Dict,
@@ -16,7 +15,6 @@ from typing import (
 )
 
 from .data import Arc, StateID
-from .flags import FlagDiacritic
 from .parse import FSTParse, parse_text
 from .symbol import Epsilon, Grapheme, MultiCharacterSymbol, Symbol
 
@@ -53,7 +51,7 @@ class FST:
 
         # Prepare a regular expression to symbolify all input.
         # Ensure the longest symbols are first, so that they are match first
-        # by the regular expresion.
+        # by the regular expression.
         symbols = sorted(self.str2symbol.keys(), key=len, reverse=True)
         self.symbol_pattern = re.compile(
             "|".join(re.escape(entry) for entry in symbols)
@@ -111,7 +109,9 @@ class FST:
             text = text[match.end() :]
 
     @classmethod
-    def from_file(cls, path: PathLike, labels: str = "normal") -> "FST":
+    def from_file(
+        cls, path: Union[str, bytes, os.PathLike], labels: str = "normal"
+    ) -> "FST":
         """
         Read the FST as output by FOMA.
 
@@ -123,11 +123,11 @@ class FST:
             apply up to generate; HFST usually produces FSTs in this style, so
             try to invert FSTs that aren't working using labels="normal".
         """
-        with gzip.open(str(path), "rt", encoding="UTF-8") as text_file:
+        with gzip.open(path, "rt", encoding="UTF-8") as text_file:
             return cls.from_text(text_file.read(), labels=labels)
 
     @classmethod
-    def from_text(self, att_text: str, labels="normal") -> "FST":
+    def from_text(cls, att_text: str, labels="normal") -> "FST":
         """
         Parse the FST in the text format (un-gzip'd).
         """
@@ -156,7 +156,8 @@ class FST:
             get_output_label=get_output_label,
         )
 
-    def _format_transduction(self, transduction: Iterable[Symbol]) -> Iterable[str]:
+    @staticmethod
+    def _format_transduction(transduction: Iterable[Symbol]) -> Iterable[str]:
         """
         Formats the transduction by making a few assumptions:
 
@@ -167,8 +168,8 @@ class FST:
 
         current_lemma = ""
         for symbol in transduction:
-            if symbol is Epsilon:
-                # Skip epsilons
+            if symbol is Epsilon or symbol.is_flag_diacritic:
+                # Skip epsilons and flag diacritics
                 continue
             elif isinstance(symbol, MultiCharacterSymbol):
                 # We've seen a previous sequence of graphemes.
@@ -247,9 +248,6 @@ class Transducer(Iterable[RawTransduction]):
                     flag.apply(next_flags)  # type: ignore
                     # Transduce WITHOUT consuming input OR emitting output
                     # label (output should be the flag again).
-                    assert input_label == self.get_output_label(
-                        arc
-                    ), "Arc does not have flags on both labels " + repr(arc)
                     yield from self._accept(
                         arc.destination, transduction, flag_stack + [next_flags]
                     )
