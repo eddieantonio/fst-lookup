@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fst-lookup"
-version = "2021.4.16"
+version = "2024.7.3"
 description = "Lookup Foma FSTs"
 authors = ["Eddie Antonio Santos <Eddie.Santos@nrc-cnrc.gc.ca>"]
 license = "MIT"
