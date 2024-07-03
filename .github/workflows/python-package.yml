@@ -27,4 +27,8 @@ jobs:
         poetry run mypy fst_lookup
     - name: Test with pytest
       run: |
-        poetry run python3 -m pytest .
+        poetry run pytest --cov . --cov-report=xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
