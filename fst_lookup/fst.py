@@ -61,9 +61,9 @@ class FST:
         for arc in parse.arcs:
             self.arcs_from[arc.state].add(arc)
 
-    def analyze(self, surface_form: str) -> Analyses:
+    def analyze(self, surface_form: str, stemmer: bool = False) -> Analyses:
         """
-        Given a surface form, this yields all possible analyses in the FST.
+        Given a surface form, this yields all possible analyses (and stemms) in the FST.
         """
         try:
             symbols = list(self.to_symbols(surface_form))
@@ -75,7 +75,10 @@ class FST:
             get_output_label=lambda arc: arc.upper,
         )
         for analysis, stems in analyses:
-            yield tuple(self._format_transduction(analysis)), stems
+            if stemmer:
+                yield tuple(self._format_transduction(analysis)), stems
+            else:
+                yield tuple(self._format_transduction(analysis))
 
     def generate(self, analysis: str) -> Iterable[str]:
         """
