@@ -19,11 +19,11 @@ from .parse import FSTParse, parse_text
 from .symbol import Epsilon, Grapheme, MultiCharacterSymbol, Symbol
 
 # Type aliases
-RawTransduction = Tuple[Symbol, ...]
+RawTransduction = Tuple[Tuple[Symbol, ...], Tuple[Symbol, ...]]
 # Gets a Symbol from an arc. func(arc: Arc) -> Symbol
 SymbolFromArc = Callable[[Arc], Symbol]
 # An analysis is a tuple of strings.
-Analyses = Iterable[Tuple[str, ...]]
+Analyses = Iterable[Union[Tuple[str, ...], Tuple[Tuple[str, ...], ...]]]
 
 VALID_LABEL_SETTINGS = ["normal", "invert"]
 
@@ -76,7 +76,7 @@ class FST:
         )
         for analysis, stems in analyses:
             if stemmer:
-                yield tuple(self._format_transduction(analysis)), stems
+                yield tuple(self._format_transduction(analysis)), tuple(self._format_transduction(stems))
             else:
                 yield tuple(self._format_transduction(analysis))
 
@@ -232,7 +232,8 @@ class Transducer(Iterable[RawTransduction]):
                 combined_stems = combined_stems[:-1]
             if combined_stems.startswith("+"):
                 combined_stems = combined_stems[1:]
-            yield transduction, combined_stems
+            stems = [Grapheme(x) for x in combined_stems]
+            yield tuple(transduction), tuple(stems)
 
         for arc in self.arcs_from[state]:
             input_label = self.get_input_label(arc)
@@ -240,14 +241,14 @@ class Transducer(Iterable[RawTransduction]):
             if input_label is Epsilon:
                 # Transduce WITHOUT consuming input
                 transduction.append(self.get_output_label(arc))
-                stems.append('+')
+                stems.append(Grapheme('+'))
                 yield from self._accept(arc.destination, transduction, flag_stack, stems)
                 transduction.pop()
                 stems.pop()
             elif len(self.symbols) > 0 and input_label == self.symbols[0]:
                 # Transduce, consuming the symbol as a label
                 transduction.append(self.get_output_label(arc))
-                stems.append(self.get_input_label(arc))
+                stems.append(input_label)
                 consumed = self.symbols.pop(0)
                 yield from self._accept(arc.destination, transduction, flag_stack, stems)
                 self.symbols.insert(0, consumed)
