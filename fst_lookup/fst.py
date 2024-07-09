@@ -63,7 +63,7 @@ class FST:
 
     def analyze(self, surface_form: str, stemmer: bool = False) -> Analyses:
         """
-        Given a surface form, this yields all possible analyses (and stemms) in the FST.
+        Given a surface form, this yields all possible analyses (and optionally stems) in the FST.
         """
         try:
             symbols = list(self.to_symbols(surface_form))
