@@ -19,11 +19,11 @@ from .parse import FSTParse, parse_text
 from .symbol import Epsilon, Grapheme, MultiCharacterSymbol, Symbol
 
 # Type aliases
-RawTransduction = Tuple[Symbol, ...]
+RawTransduction = Tuple[Tuple[Symbol, ...], Tuple[Symbol, ...]]
 # Gets a Symbol from an arc. func(arc: Arc) -> Symbol
 SymbolFromArc = Callable[[Arc], Symbol]
 # An analysis is a tuple of strings.
-Analyses = Iterable[Tuple[str, ...]]
+Analyses = Iterable[Union[Tuple[str, ...], Tuple[Tuple[str, ...], ...]]]
 
 VALID_LABEL_SETTINGS = ["normal", "invert"]
 
@@ -61,9 +61,9 @@ class FST:
         for arc in parse.arcs:
             self.arcs_from[arc.state].add(arc)
 
-    def analyze(self, surface_form: str) -> Analyses:
+    def analyze(self, surface_form: str, stemmer: bool = False) -> Analyses:
         """
-        Given a surface form, this yields all possible analyses in the FST.
+        Given a surface form, this yields all possible analyses (and optionally stems) in the FST.
         """
         try:
             symbols = list(self.to_symbols(surface_form))
@@ -74,8 +74,11 @@ class FST:
             get_input_label=lambda arc: arc.lower,
             get_output_label=lambda arc: arc.upper,
         )
-        for analysis in analyses:
-            yield tuple(self._format_transduction(analysis))
+        for analysis, stems in analyses:
+            if stemmer:
+                yield tuple(self._format_transduction(analysis)), tuple(self._format_transduction(stems))
+            else:
+                yield tuple(self._format_transduction(analysis))
 
     def generate(self, analysis: str) -> Iterable[str]:
         """
@@ -90,7 +93,7 @@ class FST:
             get_input_label=lambda arc: arc.upper,
             get_output_label=lambda arc: arc.lower,
         )
-        for transduction in forms:
+        for transduction, _ in forms:
             yield "".join(
                 str(symbol) for symbol in transduction if symbol is not Epsilon
             )
@@ -210,19 +213,27 @@ class Transducer(Iterable[RawTransduction]):
         self.arcs_from = arcs_from
 
     def __iter__(self) -> Iterator[RawTransduction]:
-        yield from self._accept(self.initial_state, [], [{}])
+        yield from self._accept(self.initial_state, [], [{}], [])
 
     def _accept(
         self,
         state: StateID,
         transduction: List[Symbol],
         flag_stack: List[Dict[str, str]],
+        stems: List[Symbol]
     ) -> Iterable[RawTransduction]:
         # TODO: Handle a maximum transduction depth, for cyclic FSTs.
         if state in self.accepting_states:
             if len(self.symbols) > 0:
                 return
-            yield tuple(transduction)
+            combined_stems = ''.join([str(x) for x in stems])
+            combined_stems = re.sub(r"\++", "+", combined_stems)
+            if combined_stems.endswith("+"):
+                combined_stems = combined_stems[:-1]
+            if combined_stems.startswith("+"):
+                combined_stems = combined_stems[1:]
+            stems = [Grapheme(x) for x in combined_stems]
+            yield tuple(transduction), tuple(stems)
 
         for arc in self.arcs_from[state]:
             input_label = self.get_input_label(arc)
@@ -230,15 +241,19 @@ class Transducer(Iterable[RawTransduction]):
             if input_label is Epsilon:
                 # Transduce WITHOUT consuming input
                 transduction.append(self.get_output_label(arc))
-                yield from self._accept(arc.destination, transduction, flag_stack)
+                stems.append(Grapheme('+'))
+                yield from self._accept(arc.destination, transduction, flag_stack, stems)
                 transduction.pop()
+                stems.pop()
             elif len(self.symbols) > 0 and input_label == self.symbols[0]:
                 # Transduce, consuming the symbol as a label
                 transduction.append(self.get_output_label(arc))
+                stems.append(input_label)
                 consumed = self.symbols.pop(0)
-                yield from self._accept(arc.destination, transduction, flag_stack)
+                yield from self._accept(arc.destination, transduction, flag_stack, stems)
                 self.symbols.insert(0, consumed)
                 transduction.pop()
+                stems.pop()
             elif input_label.is_flag_diacritic:
                 # Evaluate flag diacritic
                 flag = input_label
@@ -249,5 +264,5 @@ class Transducer(Iterable[RawTransduction]):
                     # Transduce WITHOUT consuming input OR emitting output
                     # label (output should be the flag again).
                     yield from self._accept(
-                        arc.destination, transduction, flag_stack + [next_flags]
+                        arc.destination, transduction, flag_stack + [next_flags], stems
                     )
